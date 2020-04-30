@@ -6,7 +6,7 @@
 
 # Projects folder
 
-This folder contains the sources to build the electronic boards of every examples. 
+This folder contains the sources of every examples. 
 
 ## Prototyping boards projects
 
