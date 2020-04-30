@@ -16,6 +16,9 @@ This project demonstrate how to make and use a simple LED through Luos. Feel fre
 ## How to open the electronic design :electric_plug:
 You can open [a working example electronic design](https://github.com/Luos-io/Electronics) with Kicad. This design use Luos_components library for more information to install and use it read [our doc](https://docs.luos.io).
 
+## Linked driver
+This project is linked to the [LED driver](../../Drivers/Led).
+
 ## Don't hesitate to read [our documentation](https://docs.luos.io), or to post your questions/issues on the [Luos' Forum](https://community.luos.io). :books:
 
 [![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)

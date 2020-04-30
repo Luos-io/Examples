@@ -19,16 +19,14 @@ This folder contains the sources to build the electronic boards of every example
 
 Most of the projects are Luos prototyping boards (see [Protyping boards section](https://docs.luos.io/pages/prototyping_boards/proto-boards.html) in documentation).
 
-They are displayed under the name `<name of the board>_proj`
+#### Electronics basis
 
-#### Other projects
-
-The other folders contain hardwares librairies used by Luos to inspire you to create your own designs:
+The folder `0_electronics_basis` contains hardwares librairies used by Luos to inspire you to create your own designs:
  - **L0**: The base board for using Luos [prototyping boards](https://docs.luos.io/pages/prototyping_boards/proto-boards.html).
  - **STm32f0_disco_luos_shield**: a debugging shield equivalent to an L0 for STM32F072B-DISCO dev board.
  - **Breakout_board**: a small add-on board to make any board compatible with Luos.
  - **wiring_and_power**: a set of projects for Luos wires and power input boards.
- -- **00_Common_Libraries**: a set of Kicad libraries commonly used.
+ - **00_Common_Libraries**: a set of Kicad libraries commonly used.
 
 ### Apps folder
 
