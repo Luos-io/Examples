@@ -19,22 +19,22 @@ jobs:
         pip install platformio
     - name: Run PlatformIO
       run: |
-        platformio run -d examples/Projects/Button
-        platformio run -d examples/Projects/Controlled_motor
-        platformio run -d examples/Projects/Dc_motor
-        platformio run -d examples/Projects/Distance
-        platformio run -d examples/Projects/Dxl
-        platformio run -d examples/Projects/Gate
-        platformio run -d examples/Projects/Gpio  
-        platformio run -d examples/Projects/Handy 
-        platformio run -d examples/Projects/Imu
-        platformio run -d examples/Projects/Led
-        platformio run -d examples/Projects/Led_strip
-        platformio run -d examples/Projects/Light_sensor
-        platformio run -d examples/Projects/Load
-        platformio run -d examples/Projects/Potentiometer
-        platformio run -d examples/Projects/Power_switch
-        platformio run -d examples/Projects/Servo
-        platformio run -d examples/Projects/Stepper
+        platformio run -d Projects/Button
+        platformio run -d Projects/Controlled_motor
+        platformio run -d Projects/Dc_motor
+        platformio run -d Projects/Distance
+        platformio run -d Projects/Dxl
+        platformio run -d Projects/Gate
+        platformio run -d Projects/Gpio  
+        platformio run -d Projects/Handy 
+        platformio run -d Projects/Imu
+        platformio run -d Projects/Led
+        platformio run -d Projects/Led_strip
+        platformio run -d Projects/Light_sensor
+        platformio run -d Projects/Load
+        platformio run -d Projects/Potentiometer
+        platformio run -d Projects/Power_switch
+        platformio run -d Projects/Servo
+        platformio run -d Projects/Stepper
         
     
