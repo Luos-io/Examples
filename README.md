@@ -9,24 +9,6 @@ This repository is a submodule of the Luos repository. It contains examples and 
 
 Feel free to produce and use all our design to create your own projects.
 
-## How to start
-
-1. install KiCad: https://www.kicad-pcb.org/
-
-2. Once Kicad is installed, open it and setup libraries. There are 3 libs:
-
-	- **Schematic**: You must go on "Preferences" > "Manage Symbol Librairies". Click on the (+) button and type: Common_Lib in Nickname field  and type the path of the Common_Lib.lib file in Library Path field (Electronics/00_Common_Libraries/Common_Library/Common_Lib.lib).
-
-	- **PCB**: You must go on "Preferences" > "Manage Footprint Librairies". Click on the (+) button and type: Common_Footprint in Nickname field  and type the path of the Common_Footprint.pretty file in Library Path field(Electronics/00_Common_Libraries/Common_Footprint.pretty).
-
-	- **3D body**: You must go on "Preferences" > "Configure Paths". On the KISYS3DMOD line type the path of the Common_Mecanic Folder(Electronics\00_Common_Libraries\Common_Mecanic).
-
-
-3. Click on File > Open project
-
-4. Go to the KiCad project folder you want open and click on the .pro file.
-
-
 ## Content
 
 ### Apps folder
@@ -54,7 +36,22 @@ The folder `0_electronics_basis` contains hardwares librairies used by Luos to i
  - **wiring_and_power**: a set of projects for Luos wires and power input boards.
  - **00_Common_Libraries**: a set of Kicad libraries commonly used.
 
+## How to start
 
+1. install KiCad: https://www.kicad-pcb.org/
+
+2. Once Kicad is installed, open it and setup libraries. There are 3 libs:
+
+	- **Schematic**: You must go on "Preferences" > "Manage Symbol Librairies". Click on the (+) button and type: Common_Lib in Nickname field  and type the path of the Common_Lib.lib file in Library Path field (Electronics/00_Common_Libraries/Common_Library/Common_Lib.lib).
+
+	- **PCB**: You must go on "Preferences" > "Manage Footprint Librairies". Click on the (+) button and type: Common_Footprint in Nickname field  and type the path of the Common_Footprint.pretty file in Library Path field(Electronics/00_Common_Libraries/Common_Footprint.pretty).
+
+	- **3D body**: You must go on "Preferences" > "Configure Paths". On the KISYS3DMOD line type the path of the Common_Mecanic Folder(Electronics\00_Common_Libraries\Common_Mecanic).
+
+
+3. Click on File > Open project
+
+4. Go to the KiCad project folder you want open and click on the .pro file.
 
 [![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)
 [![](https://img.shields.io/badge/Luos-Documentation-34A3B4)](https://docs.luos.io)
