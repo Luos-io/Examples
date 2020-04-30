@@ -1,0 +1,40 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+    - name: Run PlatformIO
+      run: |
+        platformio run -d examples/Projects/Button
+        platformio run -d examples/Projects/Controlled_motor
+        platformio run -d examples/Projects/Dc_motor
+        platformio run -d examples/Projects/Distance
+        platformio run -d examples/Projects/Dxl
+        platformio run -d examples/Projects/Gate
+        platformio run -d examples/Projects/Gpio  
+        platformio run -d examples/Projects/Handy 
+        platformio run -d examples/Projects/Imu
+        platformio run -d examples/Projects/Led
+        platformio run -d examples/Projects/Led_strip
+        platformio run -d examples/Projects/Light_sensor
+        platformio run -d examples/Projects/Load
+        platformio run -d examples/Projects/Potentiometer
+        platformio run -d examples/Projects/Power_switch
+        platformio run -d examples/Projects/Servo
+        platformio run -d examples/Projects/Stepper
+        
+    
