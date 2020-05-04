@@ -2,7 +2,8 @@
 
 ![Build](https://github.com/Luos-io/Mod_potentiometer/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Mod_potentiometer)](https://github.com/Luos-io/Mod_potentiometer/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Examples)](
+https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
 # Potentiometer project example :bulb:

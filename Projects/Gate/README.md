@@ -2,7 +2,8 @@
 
 ![](https://github.com/Luos-io/mod_Gate/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Mod_gate)](https://github.com/Luos-io/Mod_gate/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Examples)](
+https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
 # Gate project example :bulb:

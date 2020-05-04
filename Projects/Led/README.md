@@ -2,7 +2,8 @@
 
 ![](https://github.com/Luos-io/Mod_led/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Mod_led)](https://github.com/Luos-io/Mod_led/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Examples)](
+https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # LED project example :bulb:
 This project demonstrate how to make and use a simple LED through Luos. Feel free to use electronics and code example as you want.
