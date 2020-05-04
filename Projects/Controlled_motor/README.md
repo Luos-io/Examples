@@ -2,7 +2,7 @@
 
 ![](https://github.com/Luos-io/Mod_controlled_motor/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Mod_controlled_motor)](https://github.com/Luos-io/Mod_controlled_motor/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Electronics_examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
 # Controlled motor project example :bulb:

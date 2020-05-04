@@ -2,7 +2,7 @@
 
 ![](https://github.com/Luos-io/Mod_dxl/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Mod_dxl)](https://github.com/Luos-io/Mod_dxl/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Electronics_examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Dynamixel motor project example :bulb:
 This project demonstrate how to make and use a simple Dynamixel motor through Luos. Feel free to use electronics and code example as you want.

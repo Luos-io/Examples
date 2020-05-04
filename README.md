@@ -1,7 +1,7 @@
 <a href="https://luos.io"><img src="https://www.luos.io/wp-content/uploads/2020/03/Luos-color.png" alt="Luos logo" title="Luos" align="right" height="60" /></a>
 
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Electronics_examples)](https://github.com/Luos-io/Electronics_examples/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Electronics_examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Luos examples
 
