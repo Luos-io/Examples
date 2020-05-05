@@ -2,7 +2,9 @@
 
 ![](https://github.com/Luos-io/mod_led_strip/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Electronics_examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
+[![](https://img.shields.io/github/license/Luos-io/Examples)](
+https://github.com/Luos-io/Examples/blob/master/LICENSE)
+
 
 
 # LED strip project example :bulb:
