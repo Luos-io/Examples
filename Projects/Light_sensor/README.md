@@ -6,6 +6,7 @@
 https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
+
 # Light sensor project example :bulb:
 This project demonstrate how to make and use a simple Light_sensor through Luos. Feel free to use electronics and code example as you want.
 

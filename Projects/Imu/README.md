@@ -5,6 +5,7 @@
 [![](https://img.shields.io/github/license/Luos-io/Examples)](
 https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
+
 # IMU project example :bulb:
 This project demonstrate how to make and use a simple IMU through Luos. Feel free to use electronics and code example as you want.
 

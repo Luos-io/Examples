@@ -6,6 +6,7 @@
 https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
+
 # Controlled motor project example :bulb:
 This project demonstrate how to make and use a simple controlled motor through Luos. Feel free to use electronics and code example as you want.
 
