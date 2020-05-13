@@ -1,6 +1,12 @@
 #include "gpio.h"
 #include "button.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 void rx_btn_cb(module_t *module, msg_t *msg) {
     if (msg->header.cmd == ASK_PUB_CMD) {
         // fill the message infos
@@ -16,7 +22,7 @@ void rx_btn_cb(module_t *module, msg_t *msg) {
 }
 
 void button_init(void) {
-    luos_module_create(rx_btn_cb, STATE_MOD, "button_mod");
+    luos_module_create(rx_btn_cb, STATE_MOD, "button_mod",FIRM_VERSION);
 }
 
 void button_loop(void) {
