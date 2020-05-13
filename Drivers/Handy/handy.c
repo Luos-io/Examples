@@ -2,6 +2,12 @@
 #include "handy.h"
 #include "tim.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 void set_position(handy_t *position) {
     uint32_t min =(uint32_t)(0.001 * (float)(48000000 / htim2.Init.Prescaler));
     uint32_t max =(uint32_t)(0.002 * (float)(48000000 / htim2.Init.Prescaler));
@@ -66,7 +72,7 @@ void handy_init(void) {
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    luos_module_enable_rt(luos_module_create(rx_handy_cb, HANDY_MOD, "handy_mod"));
+    luos_module_enable_rt(luos_module_create(rx_handy_cb, HANDY_MOD, "handy_mod",FIRM_VERSION));
 }
 
 void handy_loop(void) {
