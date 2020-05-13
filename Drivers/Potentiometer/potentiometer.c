@@ -6,6 +6,12 @@
 #define POS_Pin GPIO_PIN_0
 #define POS_GPIO_Port GPIOA
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 volatile angular_position_t angle = 0.0;
 
 void rx_pot_cb(module_t *module, msg_t *msg) {
@@ -48,7 +54,7 @@ void potentiometer_init(void) {
     HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* module creation *******************
-    luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod");
+    luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod",FIRM_VERSION);
 }
 
 void potentiometer_loop(void) {
