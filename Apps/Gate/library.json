@@ -14,7 +14,8 @@
             "-D MAX_VM_NUMBER=2",
             "-D MSG_BUFFER_SIZE=25",
             "-Wl,-u,_printf_float",
-            "-D USE_SERIAL"
+            "-D USE_SERIAL",
+			"-DVERSION=0.6.0"
         ],
         "src_filter" : [
         	"+<cJSON>"
