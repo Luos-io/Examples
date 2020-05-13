@@ -12,10 +12,16 @@
         "flags": [
             "-I cJSON",
             "-Wl,-u,_printf_float",
-            "-D USE_SERIAL"
+            "-D USE_SERIAL",
+            "-DVERSION=0.6.0"
         ],
         "src_filter": [
             "+<cJSON>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }

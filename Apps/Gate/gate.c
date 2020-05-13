@@ -3,6 +3,9 @@
 #include "json_mnger.h"
 #include "luos_board.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 module_t *module;
 msg_t msg;
 uint8_t RxData;
@@ -59,7 +62,7 @@ void gate_init(void)
     LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
     LL_USART_EnableDMAReq_RX(USART3);
-    module = luos_module_create(0, GATE_MOD, "gate");
+    module = luos_module_create(0, GATE_MOD, "gate", STRINGIFY(VERSION));
     status_led(0);
 }
 
