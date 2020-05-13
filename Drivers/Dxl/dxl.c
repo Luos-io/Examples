@@ -4,6 +4,9 @@
 #include "math.h"
 #include "string.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 volatile dxl_t dxl[MAX_VM_NUMBER];
@@ -228,7 +231,7 @@ void discover_dxl(void)
         {
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
-            my_module[y] = luos_module_create(rx_dxl_cb, DYNAMIXEL_MOD, my_string);
+            my_module[y] = luos_module_create(rx_dxl_cb, DYNAMIXEL_MOD, my_string, STRINGIFY(VERSION));
             luos_module_enable_rt(my_module[y]);
             dxl_table[y] = i;
 
@@ -243,7 +246,7 @@ void discover_dxl(void)
     if (y == 0)
     {
         // there is no motor detected, create a Void module to only manage l0 things
-        my_module[y] = luos_module_create(rx_dxl_cb, VOID_MOD, "void_dxl");
+        my_module[y] = luos_module_create(rx_dxl_cb, VOID_MOD, "void_dxl", STRINGIFY(VERSION));
         luos_module_enable_rt(my_module[y]);
     }
     status_led(0);
@@ -274,12 +277,14 @@ void dxl_request_manager(void)
             {
                 if (dxl[last].reg == SERVO_REGISTER_BAUD_RATE)
                 {
-                    if (dxl[last].module_pointer->vm->type == VOID_MOD) {
+                    if (dxl[last].module_pointer->vm->type == VOID_MOD)
+                    {
                         servo_init(57600);
                         HAL_Delay(500);
                         servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, 1, DXL_TIMEOUT);
                     }
-                    else {
+                    else
+                    {
                         volatile char baud = 3; // Default value for 1000000 for MX/XL
 
                         if (dxl_model[i] == AX12 || dxl_model[i] == AX18)
@@ -333,7 +338,7 @@ void dxl_request_manager(void)
                                 break;
                             }
                         }
-            
+
                         servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, baud, DXL_TIMEOUT);
 
                         // Set actual baudrate into module
