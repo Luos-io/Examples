@@ -4,6 +4,12 @@
 #include "math.h"
 #include "string.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 volatile dxl_t dxl[MAX_VM_NUMBER];
@@ -209,7 +215,7 @@ void discover_dxl(void) {
     }
     if (y == 0) {
         // there is no motor detected, create a Void module to only manage l0 things
-        my_module[y] = luos_module_create(rx_dxl_cb, VOID_MOD, "void_dxl");
+        my_module[y] = luos_module_create(rx_dxl_cb, VOID_MOD, "void_dxl",FIRM_VERSION);
         luos_module_enable_rt(my_module[y]);
     }
     status_led(0);
