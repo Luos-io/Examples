@@ -18,7 +18,8 @@
             "-D MPU9250",
             "-D EMPL",
             "-D EMPL_TARGET_STM32F4",
-            "-D MPL_LOG_NDEBUG=1"
+            "-D MPL_LOG_NDEBUG=1",
+            "-DVERSION=0.6.0"
         ],
         "src_filter": [
             "+<motion_driver_6.12/core/mllite/*>",
@@ -26,5 +27,10 @@
             "+<motion_driver_6.12/core/driver/eMPL/*>",
             "+<../src/*>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }

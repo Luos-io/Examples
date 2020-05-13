@@ -2,6 +2,9 @@
 #include "imu.h"
 #include <mpu_configuration.h>
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile uint32_t hal_timestamp = 0;
 unsigned char *mpl_key = (unsigned char *)"eMPL 5.1";
 
@@ -56,7 +59,7 @@ void imu_init(void)
 {
     mpu_setup();
     hal.report.quat = 1;
-    luos_module_enable_rt(luos_module_create(rx_imu_cb, IMU_MOD, "Imu_mod"));
+    luos_module_enable_rt(luos_module_create(rx_imu_cb, IMU_MOD, "Imu_mod", STRINGIFY(VERSION)));
 }
 
 void imu_loop(void)
