@@ -10,10 +10,16 @@
     "licence": "MIT",
     "build": {
         "flags": [
-            "-I HX711"
+            "-I HX711",
+            "-DVERSION=0.6.0"
         ],
         "src_filter": [
             "+<HX711>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }
