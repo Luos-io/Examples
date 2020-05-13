@@ -7,6 +7,12 @@
 #define LIGHT_Pin GPIO_PIN_1
 #define LIGHT_GPIO_Port GPIOA
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 volatile illuminance_t lux = 0.0;
 
 void rx_lgt_cb(module_t *module, msg_t *msg) {
@@ -49,7 +55,7 @@ void light_sensor_init(void) {
     HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* module creation *******************
-    luos_module_create(rx_lgt_cb, LIGHT_MOD, "light_sensor_mod");
+    luos_module_create(rx_lgt_cb, LIGHT_MOD, "light_sensor_mod",FIRM_VERSION);
 }
 
 void light_sensor_loop(void) {
