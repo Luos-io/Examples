@@ -11,11 +11,17 @@
     "build": {
         "flags": [
             "-I VL53L0X_1.0.2/Api/platform/inc",
-            "-I VL53L0X_1.0.2/Api/core/inc"
+            "-I VL53L0X_1.0.2/Api/core/inc",
+            "-DVERSION=0.6.0"
         ],
         "src_filter": [
             "+<VL53L0X_1.0.2/Api/core/src/*>",
             "+<VL53L0X_1.0.2/Api/platform/src/*>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }

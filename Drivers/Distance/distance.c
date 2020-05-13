@@ -5,6 +5,9 @@
 
 #define ADDRESS_DEFAULT 0b0101001
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 VL53L0X_RangingMeasurementData_t ranging_data;
 uint8_t new_data_ready = 0;
 
@@ -56,7 +59,7 @@ void distance_init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
-    luos_module_create(rx_dist_cb, DISTANCE_MOD, "distance_mod");
+    luos_module_create(rx_dist_cb, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
 }
 
 void distance_loop(void)
