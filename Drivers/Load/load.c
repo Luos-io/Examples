@@ -3,6 +3,12 @@
 #include "HX711.h"
 #include "string.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 uint8_t new_data_ready = 0;
 volatile force_t load = 0.0;
 char have_to_tare = 0;
@@ -43,7 +49,7 @@ void rx_load_cb(module_t *module, msg_t *msg) {
 
 void load_init(void) {
     hx711_init(128);
-    luos_module_create(rx_load_cb, LOAD_MOD, "load_mod");
+    luos_module_create(rx_load_cb, LOAD_MOD, "load_mod",FIRM_VERSION);
 }
 
 void load_loop(void) {
