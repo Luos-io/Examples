@@ -3,6 +3,13 @@
 #include "tim.h"
 
 #define SERVONUMBER 4
+
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 typedef struct {
         angular_position_t angle;
         servo_parameters_t param;
@@ -87,10 +94,10 @@ void rx_servo_cb(module_t *module, msg_t *msg) {
 }
 
 void servo_init(void) {
-    module_serv[0] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo1_mod");
-    module_serv[1] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo2_mod");
-    module_serv[2] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo3_mod");
-    module_serv[3] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo4_mod");
+    module_serv[0] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo1_mod",FIRM_VERSION);
+    module_serv[1] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo2_mod",FIRM_VERSION);
+    module_serv[2] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo3_mod",FIRM_VERSION);
+    module_serv[3] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo4_mod",FIRM_VERSION);
     luos_module_enable_rt(module_serv[0]);
     luos_module_enable_rt(module_serv[1]);
     luos_module_enable_rt(module_serv[2]);
