@@ -14,6 +14,12 @@
 #define FB_Pin GPIO_PIN_0
 #define FB_GPIO_Port GPIOB
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
 volatile motor_config_t motor;
 
 asserv_pid_t position;
@@ -374,7 +380,7 @@ void controlled_motor_init(void)
     measurement = create_streaming_channel(measurement_buf, BUFFER_SIZE, sizeof(float));
 
     // ************** Module creation *****************
-    luos_module_create(rx_ctrl_mot_cb, CONTROLLED_MOTOR_MOD, "controlled_motor_mod");
+    luos_module_create(rx_ctrl_mot_cb, CONTROLLED_MOTOR_MOD, "controlled_motor_mod",FIRM_VERSION);
 }
 
 void controlled_motor_loop(void) {
