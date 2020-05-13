@@ -12,6 +12,13 @@
 #define P7_Pin GPIO_PIN_1
 #define P7_GPIO_Port GPIOB
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
+const char FIRM_VERSION[20] = STRINGIFY(VERSION);
+
+
 enum {
     P1,
     P2,
@@ -140,15 +147,15 @@ void gpio_dev_init(void) {
     // Restart DMA
     HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
     // ************* modules creation *******************
-    pin[P1] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1");
-    pin[P7] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7");
-    pin[P8] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8");
-    pin[P9] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9");
-    pin[P5] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P5");
-    pin[P6] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P6");
-    pin[P2] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P2");
-    pin[P3] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P3");
-    pin[P4] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P4");
+    pin[P1] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1",FIRM_VERSION);
+    pin[P7] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7",FIRM_VERSION);
+    pin[P8] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8",FIRM_VERSION);
+    pin[P9] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9",FIRM_VERSION);
+    pin[P5] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P5",FIRM_VERSION);
+    pin[P6] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P6",FIRM_VERSION);
+    pin[P2] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P2",FIRM_VERSION);
+    pin[P3] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P3",FIRM_VERSION);
+    pin[P4] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P4",FIRM_VERSION);
     luos_module_enable_rt(pin[P2]);
     luos_module_enable_rt(pin[P3]);
     luos_module_enable_rt(pin[P4]); 
