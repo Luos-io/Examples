@@ -5,8 +5,11 @@
 #include "math.h"
 #include <float.h>
 #include "luos.h"
+#include "tim.h"
 
-#define SPEED_PERIOD 20.0
+#define ASSERV_PERIOD 1
+#define SPEED_PERIOD 50
+#define SPEED_NB_INTEGRATION SPEED_PERIOD / ASSERV_PERIOD
 #define SAMPLING_PERIOD_MS 10.0
 #define BUFFER_SIZE 1000
 
@@ -383,14 +386,13 @@ void controlled_motor_loop(void) {
     node_analog.voltage_sensor = analog_input.voltage_sensor;
 
     // Time management
-    static uint32_t last_speed_systick = 0;
-
-    unsigned long timestamp = HAL_GetTick();
-    unsigned long deltatime = timestamp - last_speed_systick;
+    static uint32_t last_asserv_systick = 0;
+    uint32_t timestamp = HAL_GetTick();
+    uint32_t deltatime = timestamp - last_asserv_systick;
 
     // Speed measurement
-    static float last_angular_position = 0.0;
-    static linear_position_t last_linear_distance = 0.0;
+    static char settings = 0;
+    static angular_position_t last_angular_positions[SPEED_NB_INTEGRATION];
 
     // ************* Values computation *************
     // angular_posistion => degree
@@ -402,14 +404,27 @@ void controlled_motor_loop(void) {
     // current => A
     motor.current = ((((float)analog_input.current) * 3.3f) / 4096.0f) / 0.525f;
 
-    if (deltatime >= SPEED_PERIOD) {
+    if (deltatime >= ASSERV_PERIOD)
+    {
+        last_asserv_systick = timestamp;
         // angular_speed => degree/seconds
-        motor.angular_speed = (motor.angular_position - last_angular_position) * 1000.0/SPEED_PERIOD;
+        // add the position value into unfiltered speed measurement
+        for (int nbr = 0; nbr < (SPEED_NB_INTEGRATION - 1); nbr++)
+        {
+            if (!settings)
+            {
+                last_angular_positions[nbr] = motor.angular_position;
+            }
+            else
+            {
+                last_angular_positions[nbr] = last_angular_positions[nbr + 1];
+            }
+        }
+        settings = 1;
+        last_angular_positions[SPEED_NB_INTEGRATION - 1] = motor.angular_position;
+        motor.angular_speed = (last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD;
         // linear_speed => m/seconds
-        motor.linear_speed = (motor.linear_position - last_linear_distance) * 1000.0/SPEED_PERIOD;
-        last_speed_systick = timestamp;
-        last_angular_position = motor.angular_position;
-        last_linear_distance = motor.linear_position;
+        motor.linear_speed = (motor.angular_speed / 360.0) * M_PI * motor.wheel_diameter;
         // ************* Limit clamping *************
         if (motion_target_position < motor.limit_angular_position[MIN]) {
             motion_target_position = motor.limit_angular_position[MIN];
@@ -445,7 +460,8 @@ void controlled_motor_loop(void) {
         else if (motor.mode.mode_ratio) {
             set_ratio(motor.target_ratio * currentfactor);
         }
-        else if (!motor.mode.mode_ratio) {
+        else
+        {
             // ************* position asserv *************
             // Target Position is managed by the motion planning interrupt (systick interrupt)
             float errAngle = 0.0;
@@ -454,15 +470,13 @@ void controlled_motor_loop(void) {
             if (motor.mode.mode_angular_position || motor.mode.mode_linear_position) {
                 errAngle = motion_target_position - motor.angular_position;
                 dErrAngle = (errAngle - lastErrAngle) / deltatime;
-                if (fabs(errAngle) > 5.0) { // do not integrate if error is too big.
-                    errAngleSum = 0.0;
-                    anglePower = (errAngle * position.p) + (dErrAngle * position.d); // raw PD command
-                } else {
-                    errAngleSum += (errAngle  * (float)deltatime);
-                    if (errAngleSum < -100.0) errAngleSum = -100.0;
-                    if (errAngleSum > 100.0) errAngleSum = 100;
-                    anglePower = (errAngle * position.p) + (errAngleSum * position.i) + (dErrAngle * position.d); // raw PID command
-                }
+                errAngleSum += (errAngle * (float)deltatime);
+                // Integral clamping
+                if (errAngleSum < -100.0)
+                    errAngleSum = -100.0;
+                if (errAngleSum > 100.0)
+                    errAngleSum = 100;
+                anglePower = (errAngle * position.p) + (errAngleSum * position.i) + (dErrAngle * position.d); // raw PID command
                 lastErrAngle = errAngle;
             }
             // ************* speed asserv *************
@@ -472,7 +486,11 @@ void controlled_motor_loop(void) {
             if (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed) {
                 errSpeed = motor.target_angular_speed - motor.angular_speed;
                 dErrSpeed = (errSpeed - lastErrSpeed) / deltatime;
-                errSpeedSum += errSpeed; // Integral
+                errSpeedSum += (errSpeed * (float)deltatime);
+                if (errSpeedSum < -100.0)
+                    errSpeedSum = -100.0;
+                if (errSpeedSum > 100.0)
+                    errSpeedSum = 100;
                 speedPower = ((errSpeed * speed.p) + (errSpeedSum * speed.i) + (dErrSpeed * speed.d)); // raw PID command
                 lastErrSpeed = errSpeed;
             }
