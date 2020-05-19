@@ -353,14 +353,6 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
             luos_send(module, msg);
         break;
         case IMU_MOD:
-            if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters"))) {
-                uint16_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;
-                memcpy(msg->data, &val, sizeof(uint16_t));
-                msg->header.cmd = PARAMETERS;
-                msg->header.size = sizeof(imu_report_t);
-                luos_send(module, msg);
-            }
-        break;
         case STEPPER_MOD:
         case CONTROLLED_MOTOR_MOD:
             if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters"))) {

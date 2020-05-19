@@ -34,11 +34,36 @@
 #define PEDO_READ_MS    (1000)
 #define TEMP_READ_MS    (500)
 #define COMPASS_READ_MS (100)
-struct rx_s {
+
+// Imu report struct
+typedef struct __attribute__((__packed__))
+{
+    union {
+        struct __attribute__((__packed__))
+        {
+            unsigned short accell : 1;
+            unsigned short gyro : 1;
+            unsigned short quat : 1;
+            unsigned short compass : 1;
+            unsigned short euler : 1;
+            unsigned short rot_mat : 1;
+            unsigned short pedo : 1;
+            unsigned short linear_accel : 1;
+            unsigned short gravity_vector : 1;
+            unsigned short heading : 1;
+        };
+        unsigned char unmap[2];
+    };
+} imu_report_t;
+
+struct rx_s
+{
     unsigned char header[3];
     unsigned char cmd;
 };
-struct hal_s {
+
+struct hal_s
+{
     unsigned char lp_accel_mode;
     unsigned char sensors;
     unsigned char dmp_on;
