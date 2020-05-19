@@ -367,7 +367,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
                 uint16_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;
                 memcpy(msg->data, &val, sizeof(uint16_t));
                 msg->header.cmd = PARAMETERS;
-                msg->header.size = sizeof(motor_mode_t);
+                msg->header.size = 2;
                 luos_send(module, msg);
             }
         break;
