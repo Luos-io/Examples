@@ -8,8 +8,10 @@
 
 volatile angular_position_t angle = 0.0;
 
-void rx_pot_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_pot_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         msg_t pub_msg;
         // fill the message infos
         pub_msg.header.target_mode = ID;
@@ -20,7 +22,8 @@ void rx_pot_cb(module_t *module, msg_t *msg) {
     }
 }
 
-void potentiometer_init(void) {
+void potentiometer_init(void)
+{
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -51,7 +54,8 @@ void potentiometer_init(void) {
     luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod");
 }
 
-void potentiometer_loop(void) {
+void potentiometer_loop(void)
+{
     node_analog.temperature_sensor = analog_input.temperature_sensor;
     node_analog.voltage_sensor = analog_input.voltage_sensor;
     angle = ((float)analog_input.pos / 4096.0) * 300.0;

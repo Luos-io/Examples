@@ -10,12 +10,15 @@ uint8_t new_data_ready = 0;
 
 VL53L0X_Dev_t dev;
 
-void rx_dist_cb(module_t *module, msg_t *msg) {
-    if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready)) {
+void rx_dist_cb(module_t *module, msg_t *msg)
+{
+    if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready))
+    {
         msg_t pub_msg;
 
         linear_position_t dist = -0.001;
-        if (ranging_data.RangeStatus == 0){
+        if (ranging_data.RangeStatus == 0)
+        {
             // dist measurement ok
             dist = linear_position_from_mm((float)ranging_data.RangeMilliMeter);
         }
@@ -23,12 +26,13 @@ void rx_dist_cb(module_t *module, msg_t *msg) {
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
         linear_position_to_msg(&dist, &pub_msg);
-        new_data_ready =  0;
+        new_data_ready = 0;
         luos_send(module, &pub_msg);
     }
 }
 
-void distance_init(void) {
+void distance_init(void)
+{
     //reset sensor
     HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
     HAL_Delay(10);
@@ -55,10 +59,12 @@ void distance_init(void) {
     luos_module_create(rx_dist_cb, DISTANCE_MOD, "distance_mod");
 }
 
-void distance_loop(void) {
+void distance_loop(void)
+{
     uint8_t data_ready = 0;
     VL53L0X_GetMeasurementDataReady(&dev, &data_ready);
-    if (data_ready) {
+    if (data_ready)
+    {
         VL53L0X_GetRangingMeasurementData(&dev, &ranging_data);
         VL53L0X_ClearInterruptMask(&dev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
         new_data_ready++;

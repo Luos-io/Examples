@@ -8,7 +8,7 @@
         "url": "https://www.luos.io/us/"
     },
     "licence": "MIT",
-    "build" : {
+    "build": {
         "flags": [
             "-I cJSON",
             "-D MAX_VM_NUMBER=2",
@@ -16,8 +16,8 @@
             "-Wl,-u,_printf_float",
             "-D USE_SERIAL"
         ],
-        "src_filter" : [
-        	"+<cJSON>"
+        "src_filter": [
+            "+<cJSON>"
         ]
     }
 }

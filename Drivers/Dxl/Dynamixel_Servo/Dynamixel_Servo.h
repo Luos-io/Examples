@@ -79,187 +79,188 @@
 #define DYNAMIXEL_SERVO
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdint.h>
 #include "math.h"
 
 /*--------------------------------------------------------------------------------------------*/
-#define SERVO_BROADCAST_ID               0xFE
-#define SERVO_DEFAULT_ID                 1
-#define SERVO_DEFAULT_BAUD               57600
+#define SERVO_BROADCAST_ID 0xFE
+#define SERVO_DEFAULT_ID 1
+#define SERVO_DEFAULT_BAUD 57600
 
-#define SERVO_MAXIMUM_MOVING_SPEED       6.60   // rad / sec
+#define SERVO_MAXIMUM_MOVING_SPEED 6.60 // rad / sec
 
-/*--------------------------------------------------------------------------------------------*/
-typedef enum servo_error_bit_mask_enum
-{
-  /* defined by dynamixel */
-  SERVO_ERROR_VOLTAGE                  = 0x0001,
-  SERVO_ERROR_ANGLE                    = 0x0002,
-  SERVO_ERROR_OVERHEAT                 = 0x0004,
-  SERVO_ERROR_RANGE                    = 0x0008,
-  SERVO_ERROR_CHECKSUM                 = 0x0010,
-  SERVO_ERROR_OVERLOAD                 = 0x0020,
-  SERVO_ERROR_INSTRUCTION              = 0x0040,
-  SERVO_ERROR_UNKNOWN                  = 0x0080,
+    /*--------------------------------------------------------------------------------------------*/
+    typedef enum servo_error_bit_mask_enum
+    {
+        /* defined by dynamixel */
+        SERVO_ERROR_VOLTAGE = 0x0001,
+        SERVO_ERROR_ANGLE = 0x0002,
+        SERVO_ERROR_OVERHEAT = 0x0004,
+        SERVO_ERROR_RANGE = 0x0008,
+        SERVO_ERROR_CHECKSUM = 0x0010,
+        SERVO_ERROR_OVERLOAD = 0x0020,
+        SERVO_ERROR_INSTRUCTION = 0x0040,
+        SERVO_ERROR_UNKNOWN = 0x0080,
 
-  /* defined by this module */
-  SERVO_ERROR_TIMEOUT                  = 0x0100,
-  SERVO_ERROR_INVALID_RESPONSE         = 0x0200,
+        /* defined by this module */
+        SERVO_ERROR_TIMEOUT = 0x0100,
+        SERVO_ERROR_INVALID_RESPONSE = 0x0200,
 
-  /* raw value, not bit mask */
-  SERVO_NO_ERROR                       = 0x0000,
-}servo_error_t;
+        /* raw value, not bit mask */
+        SERVO_NO_ERROR = 0x0000,
+    } servo_error_t;
 
 /*--------------------------------------------------------------------------------------------*/
 #ifdef V2
-typedef enum servo_register_enum
-{
-  /* EEPROM */
-  SERVO_REGISTER_MODEL_NUMBER            = 0x00,
-  //SERVO_REGISTER_MODEL_NUMBER_L        = 0x00,
-  //SERVO_REGISTER_MODEL_NUMBER_H        = 0x01,
-  SERVO_REGISTER_FIRMWARE_VERSION        = 0x02,
-  SERVO_REGISTER_ID                      = 0x03,
-  SERVO_REGISTER_BAUD_RATE               = 0x04,
-  SERVO_REGISTER_RETURN_DELAY_TIME       = 0x05,
-  SERVO_REGISTER_MIN_ANGLE               = 0x06,
-  //SERVO_REGISTER_MIN_ANGLE_L           = 0x06,
-  //SERVO_REGISTER_MIN_ANGLE_H           = 0x07,
-  SERVO_REGISTER_MAX_ANGLE               = 0x08,
-  //SERVO_REGISTER_MAX_ANGLE_L           = 0x08,
-  //SERVO_REGISTER_MAX_ANGLE_H           = 0x09,
-  SERVO_REGISTER_CONTROL_MODE            = 0x0B,
-  SERVO_REGISTER_MAX_TEMPERATURE         = 0x0C,
-  SERVO_REGISTER_MIN_VOLTAGE             = 0x0D,
-  SERVO_REGISTER_MAX_VOLTAGE             = 0x0E,
-  SERVO_REGISTER_MAX_TORQUE              = 0x0F,
-  //SERVO_REGISTER_MAX_TORQUE_L          = 0x0F,
-  //SERVO_REGISTER_MAX_TORQUE_H          = 0x10,
-  SERVO_REGISTER_RETURN_LEVEL            = 0x11,
-  SERVO_REGISTER_SHUTDOWN_ERROR          = 0x12,
+    typedef enum servo_register_enum
+    {
+        /* EEPROM */
+        SERVO_REGISTER_MODEL_NUMBER = 0x00,
+        //SERVO_REGISTER_MODEL_NUMBER_L        = 0x00,
+        //SERVO_REGISTER_MODEL_NUMBER_H        = 0x01,
+        SERVO_REGISTER_FIRMWARE_VERSION = 0x02,
+        SERVO_REGISTER_ID = 0x03,
+        SERVO_REGISTER_BAUD_RATE = 0x04,
+        SERVO_REGISTER_RETURN_DELAY_TIME = 0x05,
+        SERVO_REGISTER_MIN_ANGLE = 0x06,
+        //SERVO_REGISTER_MIN_ANGLE_L           = 0x06,
+        //SERVO_REGISTER_MIN_ANGLE_H           = 0x07,
+        SERVO_REGISTER_MAX_ANGLE = 0x08,
+        //SERVO_REGISTER_MAX_ANGLE_L           = 0x08,
+        //SERVO_REGISTER_MAX_ANGLE_H           = 0x09,
+        SERVO_REGISTER_CONTROL_MODE = 0x0B,
+        SERVO_REGISTER_MAX_TEMPERATURE = 0x0C,
+        SERVO_REGISTER_MIN_VOLTAGE = 0x0D,
+        SERVO_REGISTER_MAX_VOLTAGE = 0x0E,
+        SERVO_REGISTER_MAX_TORQUE = 0x0F,
+        //SERVO_REGISTER_MAX_TORQUE_L          = 0x0F,
+        //SERVO_REGISTER_MAX_TORQUE_H          = 0x10,
+        SERVO_REGISTER_RETURN_LEVEL = 0x11,
+        SERVO_REGISTER_SHUTDOWN_ERROR = 0x12,
 
-  /* RAM */
-  SERVO_REGISTER_TORQUE_ENABLE           = 0x18,
-  SERVO_REGISTER_LED_IS_ON               = 0x19,
-  SERVO_REGISTER_D_GAIN                  = 0x1B,
-  SERVO_REGISTER_I_GAIN                  = 0x1C,
-  SERVO_REGISTER_P_GAIN                  = 0x1D,
-  SERVO_REGISTER_GOAL_ANGLE              = 0x1E,
-  //SERVO_REGISTER_GOAL_ANGLE_L          = 0x1E,
-  //SERVO_REGISTER_GOAL_ANGLE_H          = 0x1F,
-  SERVO_REGISTER_MOVING_SPEED            = 0x20,
-  //SERVO_REGISTER_MOVING_SPEED_L        = 0x20,
-  //SERVO_REGISTER_MOVING_SPEED_H        = 0x21,
-  SERVO_REGISTER_TORQUE_LIMIT            = 0x23,
-  //SERVO_REGISTER_TORQUE_LIMIT_L        = 0x23,
-  //SERVO_REGISTER_TORQUE_LIMIT_H        = 0x24,
-  SERVO_REGISTER_PRESENT_ANGLE           = 0x25,
-  //SERVO_REGISTER_PRESENT_ANGLE_L       = 0x25,
-  //SERVO_REGISTER_PRESENT_ANGLE_H       = 0x26,
-  SERVO_REGISTER_PRESENT_SPEED           = 0x27,
-  //SERVO_REGISTER_PRESENT_SPEED_L       = 0x27,
-  //SERVO_REGISTER_PRESENT_SPEED_H       = 0x28,
-  SERVO_REGISTER_PRESENT_TORQUE          = 0x29,
-  //SERVO_REGISTER_PRESENT_TORQUE_L      = 0x29,
-  //SERVO_REGISTER_PRESENT_TORQUE_H      = 0x2A,
-  SERVO_REGISTER_PRESENT_VOLTAGE         = 0x2D,
-  SERVO_REGISTER_PRESENT_TEMPERATURE     = 0x2E,
-  SERVO_REGISTER_PENDING_INSTRUCTION     = 0x2F,
-  SERVO_REGISTER_IS_MOVING               = 0x31,
-  SERVO_REGISTER_ERROR_STATUS            = 0x32,
-  SERVO_REGISTER_PUNCH                   = 0x33,
-  //SERVO_REGISTER_PUNCH_L               = 0x33,
-  //SERVO_REGISTER_PUNCH_H               = 0x34,
+        /* RAM */
+        SERVO_REGISTER_TORQUE_ENABLE = 0x18,
+        SERVO_REGISTER_LED_IS_ON = 0x19,
+        SERVO_REGISTER_D_GAIN = 0x1B,
+        SERVO_REGISTER_I_GAIN = 0x1C,
+        SERVO_REGISTER_P_GAIN = 0x1D,
+        SERVO_REGISTER_GOAL_ANGLE = 0x1E,
+        //SERVO_REGISTER_GOAL_ANGLE_L          = 0x1E,
+        //SERVO_REGISTER_GOAL_ANGLE_H          = 0x1F,
+        SERVO_REGISTER_MOVING_SPEED = 0x20,
+        //SERVO_REGISTER_MOVING_SPEED_L        = 0x20,
+        //SERVO_REGISTER_MOVING_SPEED_H        = 0x21,
+        SERVO_REGISTER_TORQUE_LIMIT = 0x23,
+        //SERVO_REGISTER_TORQUE_LIMIT_L        = 0x23,
+        //SERVO_REGISTER_TORQUE_LIMIT_H        = 0x24,
+        SERVO_REGISTER_PRESENT_ANGLE = 0x25,
+        //SERVO_REGISTER_PRESENT_ANGLE_L       = 0x25,
+        //SERVO_REGISTER_PRESENT_ANGLE_H       = 0x26,
+        SERVO_REGISTER_PRESENT_SPEED = 0x27,
+        //SERVO_REGISTER_PRESENT_SPEED_L       = 0x27,
+        //SERVO_REGISTER_PRESENT_SPEED_H       = 0x28,
+        SERVO_REGISTER_PRESENT_TORQUE = 0x29,
+        //SERVO_REGISTER_PRESENT_TORQUE_L      = 0x29,
+        //SERVO_REGISTER_PRESENT_TORQUE_H      = 0x2A,
+        SERVO_REGISTER_PRESENT_VOLTAGE = 0x2D,
+        SERVO_REGISTER_PRESENT_TEMPERATURE = 0x2E,
+        SERVO_REGISTER_PENDING_INSTRUCTION = 0x2F,
+        SERVO_REGISTER_IS_MOVING = 0x31,
+        SERVO_REGISTER_ERROR_STATUS = 0x32,
+        SERVO_REGISTER_PUNCH = 0x33,
+        //SERVO_REGISTER_PUNCH_L               = 0x33,
+        //SERVO_REGISTER_PUNCH_H               = 0x34,
 
-  SERVO_REGISTER_CURRENT_CONSUMPTION     = 0x44,
-  //SERVO_REGISTER_CURRENT_CONSUMPTION_L = 0x44,
-  //SERVO_REGISTER_CURRENT_CONSUMPTION_H = 0x45,
-  SERVO_REGISTER_TORQUE_CTRL_ENABLE      = 0x46,
-  SERVO_REGISTER_GOAL_TORQUE             = 0x47,
-  //SERVO_REGISTER_GOAL_TORQUE_L         = 0x47,
-  //SERVO_REGISTER_GOAL_TORQUE_H         = 0x48,
-  SERVO_REGISTER_GOAL_ACCELERATION       = 0x49,
-}servo_register_t;
+        SERVO_REGISTER_CURRENT_CONSUMPTION = 0x44,
+        //SERVO_REGISTER_CURRENT_CONSUMPTION_L = 0x44,
+        //SERVO_REGISTER_CURRENT_CONSUMPTION_H = 0x45,
+        SERVO_REGISTER_TORQUE_CTRL_ENABLE = 0x46,
+        SERVO_REGISTER_GOAL_TORQUE = 0x47,
+        //SERVO_REGISTER_GOAL_TORQUE_L         = 0x47,
+        //SERVO_REGISTER_GOAL_TORQUE_H         = 0x48,
+        SERVO_REGISTER_GOAL_ACCELERATION = 0x49,
+    } servo_register_t;
 #else
 typedef enum servo_register_enum
 {
-  /* EEPROM */
-  SERVO_REGISTER_MODEL_NUMBER            = 0x00,
-  //SERVO_REGISTER_MODEL_NUMBER_L        = 0x00,
-  //SERVO_REGISTER_MODEL_NUMBER_H        = 0x01,
-  SERVO_REGISTER_FIRMWARE_VERSION        = 0x02,
-  SERVO_REGISTER_ID                      = 0x03,
-  SERVO_REGISTER_BAUD_RATE               = 0x04,
-  SERVO_REGISTER_RETURN_DELAY_TIME       = 0x05,
-  SERVO_REGISTER_MIN_ANGLE               = 0x06,
-  //SERVO_REGISTER_MIN_ANGLE_L           = 0x06,
-  //SERVO_REGISTER_MIN_ANGLE_H           = 0x07,
-  SERVO_REGISTER_MAX_ANGLE               = 0x08,
-  //SERVO_REGISTER_MAX_ANGLE_L           = 0x08,
-  //SERVO_REGISTER_MAX_ANGLE_H           = 0x09,
-  SERVO_REGISTER_MAX_TEMPERATURE         = 0x0B,
-  SERVO_REGISTER_MIN_VOLTAGE             = 0x0C,
-  SERVO_REGISTER_MAX_VOLTAGE             = 0x0D,
-  SERVO_REGISTER_MAX_TORQUE              = 0x0E,
-  //SERVO_REGISTER_MAX_TORQUE_L          = 0x0E,
-  //SERVO_REGISTER_MAX_TORQUE_H          = 0x0F,
-  SERVO_REGISTER_RETURN_LEVEL            = 0x10,
-  SERVO_REGISTER_LED_ERROR               = 0x11,
-  SERVO_REGISTER_SHUTDOWN_ERROR          = 0x12,
+    /* EEPROM */
+    SERVO_REGISTER_MODEL_NUMBER = 0x00,
+    //SERVO_REGISTER_MODEL_NUMBER_L        = 0x00,
+    //SERVO_REGISTER_MODEL_NUMBER_H        = 0x01,
+    SERVO_REGISTER_FIRMWARE_VERSION = 0x02,
+    SERVO_REGISTER_ID = 0x03,
+    SERVO_REGISTER_BAUD_RATE = 0x04,
+    SERVO_REGISTER_RETURN_DELAY_TIME = 0x05,
+    SERVO_REGISTER_MIN_ANGLE = 0x06,
+    //SERVO_REGISTER_MIN_ANGLE_L           = 0x06,
+    //SERVO_REGISTER_MIN_ANGLE_H           = 0x07,
+    SERVO_REGISTER_MAX_ANGLE = 0x08,
+    //SERVO_REGISTER_MAX_ANGLE_L           = 0x08,
+    //SERVO_REGISTER_MAX_ANGLE_H           = 0x09,
+    SERVO_REGISTER_MAX_TEMPERATURE = 0x0B,
+    SERVO_REGISTER_MIN_VOLTAGE = 0x0C,
+    SERVO_REGISTER_MAX_VOLTAGE = 0x0D,
+    SERVO_REGISTER_MAX_TORQUE = 0x0E,
+    //SERVO_REGISTER_MAX_TORQUE_L          = 0x0E,
+    //SERVO_REGISTER_MAX_TORQUE_H          = 0x0F,
+    SERVO_REGISTER_RETURN_LEVEL = 0x10,
+    SERVO_REGISTER_LED_ERROR = 0x11,
+    SERVO_REGISTER_SHUTDOWN_ERROR = 0x12,
 
-  /* RAM */
-  SERVO_REGISTER_TORQUE_ENABLE           = 0x18,
-  SERVO_REGISTER_LED_IS_ON               = 0x19,
-  SERVO_REGISTER_D_GAIN                  = 0x1A,
-  SERVO_REGISTER_I_GAIN                  = 0x1B,
-  SERVO_REGISTER_P_GAIN                  = 0x1C,
-  SERVO_REGISTER_GOAL_ANGLE              = 0x1E,
-  //SERVO_REGISTER_GOAL_ANGLE_L          = 0x1E,
-  //SERVO_REGISTER_GOAL_ANGLE_H          = 0x1F,
-  SERVO_REGISTER_MOVING_SPEED            = 0x20,
-  //SERVO_REGISTER_MOVING_SPEED_L        = 0x20,
-  //SERVO_REGISTER_MOVING_SPEED_H        = 0x21,
-  SERVO_REGISTER_TORQUE_LIMIT            = 0x22,
-  //SERVO_REGISTER_TORQUE_LIMIT_L        = 0x22,
-  //SERVO_REGISTER_TORQUE_LIMIT_H        = 0x23,
-  SERVO_REGISTER_PRESENT_ANGLE           = 0x24,
-  //SERVO_REGISTER_PRESENT_ANGLE_L       = 0x24,
-  //SERVO_REGISTER_PRESENT_ANGLE_H       = 0x25,
-  SERVO_REGISTER_PRESENT_SPEED           = 0x26,
-  //SERVO_REGISTER_PRESENT_SPEED_L       = 0x26,
-  //SERVO_REGISTER_PRESENT_SPEED_H       = 0x27,
-  SERVO_REGISTER_PRESENT_TORQUE          = 0x28,
-  //SERVO_REGISTER_PRESENT_TORQUE_L      = 0x28,
-  //SERVO_REGISTER_PRESENT_TORQUE_H      = 0x29,
-  SERVO_REGISTER_PRESENT_VOLTAGE         = 0x2A,
-  SERVO_REGISTER_PRESENT_TEMPERATURE     = 0x2B,
+    /* RAM */
+    SERVO_REGISTER_TORQUE_ENABLE = 0x18,
+    SERVO_REGISTER_LED_IS_ON = 0x19,
+    SERVO_REGISTER_D_GAIN = 0x1A,
+    SERVO_REGISTER_I_GAIN = 0x1B,
+    SERVO_REGISTER_P_GAIN = 0x1C,
+    SERVO_REGISTER_GOAL_ANGLE = 0x1E,
+    //SERVO_REGISTER_GOAL_ANGLE_L          = 0x1E,
+    //SERVO_REGISTER_GOAL_ANGLE_H          = 0x1F,
+    SERVO_REGISTER_MOVING_SPEED = 0x20,
+    //SERVO_REGISTER_MOVING_SPEED_L        = 0x20,
+    //SERVO_REGISTER_MOVING_SPEED_H        = 0x21,
+    SERVO_REGISTER_TORQUE_LIMIT = 0x22,
+    //SERVO_REGISTER_TORQUE_LIMIT_L        = 0x22,
+    //SERVO_REGISTER_TORQUE_LIMIT_H        = 0x23,
+    SERVO_REGISTER_PRESENT_ANGLE = 0x24,
+    //SERVO_REGISTER_PRESENT_ANGLE_L       = 0x24,
+    //SERVO_REGISTER_PRESENT_ANGLE_H       = 0x25,
+    SERVO_REGISTER_PRESENT_SPEED = 0x26,
+    //SERVO_REGISTER_PRESENT_SPEED_L       = 0x26,
+    //SERVO_REGISTER_PRESENT_SPEED_H       = 0x27,
+    SERVO_REGISTER_PRESENT_TORQUE = 0x28,
+    //SERVO_REGISTER_PRESENT_TORQUE_L      = 0x28,
+    //SERVO_REGISTER_PRESENT_TORQUE_H      = 0x29,
+    SERVO_REGISTER_PRESENT_VOLTAGE = 0x2A,
+    SERVO_REGISTER_PRESENT_TEMPERATURE = 0x2B,
 
-  SERVO_REGISTER_PENDING_INSTRUCTION     = 0x2C,
-  SERVO_REGISTER_IS_MOVING               = 0x2E,
-  SERVO_REGISTER_LOCK_EEPROM             = 0x2F,
-  SERVO_REGISTER_PUNCH                   = 0x30,
-  //SERVO_REGISTER_PUNCH_L               = 0x30,
-  //SERVO_REGISTER_PUNCH_H               = 0x31,
-  SERVO_REGISTER_CURRENT_CONSUMPTION     = 0x44,
-  //SERVO_REGISTER_CURRENT_CONSUMPTION_L = 0x44,
-  //SERVO_REGISTER_CURRENT_CONSUMPTION_H = 0x45,
-  SERVO_REGISTER_TORQUE_CTRL_ENABLE      = 0x46,
-  SERVO_REGISTER_GOAL_TORQUE             = 0x47,
-  //SERVO_REGISTER_GOAL_TORQUE_L         = 0x47,
-  //SERVO_REGISTER_GOAL_TORQUE_H         = 0x48,
-  SERVO_REGISTER_GOAL_ACCELERATION       = 0x49,
-}servo_register_t;
+    SERVO_REGISTER_PENDING_INSTRUCTION = 0x2C,
+    SERVO_REGISTER_IS_MOVING = 0x2E,
+    SERVO_REGISTER_LOCK_EEPROM = 0x2F,
+    SERVO_REGISTER_PUNCH = 0x30,
+    //SERVO_REGISTER_PUNCH_L               = 0x30,
+    //SERVO_REGISTER_PUNCH_H               = 0x31,
+    SERVO_REGISTER_CURRENT_CONSUMPTION = 0x44,
+    //SERVO_REGISTER_CURRENT_CONSUMPTION_L = 0x44,
+    //SERVO_REGISTER_CURRENT_CONSUMPTION_H = 0x45,
+    SERVO_REGISTER_TORQUE_CTRL_ENABLE = 0x46,
+    SERVO_REGISTER_GOAL_TORQUE = 0x47,
+    //SERVO_REGISTER_GOAL_TORQUE_L         = 0x47,
+    //SERVO_REGISTER_GOAL_TORQUE_H         = 0x48,
+    SERVO_REGISTER_GOAL_ACCELERATION = 0x49,
+} servo_register_t;
 #endif
 
-/*!
+    /*!
  * @functiongroup High-Level Interface
 */
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_init
  * @abstract      Initialize this module.
  * @param       baud
@@ -267,10 +268,10 @@ typedef enum servo_register_enum
  *                servo's SERVO_REGISTER_BAUD_RATE. If you have not changed it, it should be
  *                SERVO_DEFAULT_BAUD.
  */
-void          servo_init             (uint32_t baud);
+    void servo_init(uint32_t baud);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_factory_reset
  * @abstract      Sets all of the servo's values to their factory default values.
  * @param       id
@@ -291,10 +292,10 @@ void          servo_init             (uint32_t baud);
  *                In order to obtain a string that contains a human-readable description
  *                of all errors, pass the result to servo_errors_to_string();
  */
-servo_error_t servo_factory_reset    (uint8_t id, int timeout_ms);
+    servo_error_t servo_factory_reset(uint8_t id, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_ping
  * @abstract      Ping the servo to see if it is alive without accessing any of its registers.
  * @param       id
@@ -313,10 +314,10 @@ servo_error_t servo_factory_reset    (uint8_t id, int timeout_ms);
  *                In order to obtain a string that contains a human-readable description
  *                of all errors, pass the result to servo_errors_to_string();
  */
-servo_error_t servo_ping             (uint8_t id, int timeout_ms);
+    servo_error_t servo_ping(uint8_t id, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_get
  * @abstract      Read the servo's registers using physical units.
  * @param       id
@@ -352,10 +353,10 @@ servo_error_t servo_ping             (uint8_t id, int timeout_ms);
  *                In order to obtain a string that contains a human-readable description
  *                of all errors, pass the result to servo_errors_to_string();
  */
-servo_error_t servo_get              (uint8_t id, servo_register_t reg, float* result, int timeout_ms);
+    servo_error_t servo_get(uint8_t id, servo_register_t reg, float *result, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_set
  * @abstract      Write to the servo's registers using physical units.
  * @param       id
@@ -391,10 +392,10 @@ servo_error_t servo_get              (uint8_t id, servo_register_t reg, float* r
  *                In order to obtain a string that contains a human-readable description
  *                of all errors, pass the result to servo_errors_to_string();
  */
-servo_error_t servo_set              (uint8_t id, servo_register_t reg, float  val,    int timeout_ms);
+    servo_error_t servo_set(uint8_t id, servo_register_t reg, float val, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_set_multiple
  * @abstract      Set the value of one or more registers in several servos at once. This is supported
  *                by the hardware (SYNC_WRITE in the documentation) and is faster than setting
@@ -429,10 +430,10 @@ servo_error_t servo_set              (uint8_t id, servo_register_t reg, float  v
  * @result        The servos do not send a response packet, for this instruction
  *                and this function returns SERVO_NO_ERROR, regardless of success;
  */
-servo_error_t servo_set_multiple     (uint8_t ids[], servo_register_t start_reg, float values[], int num_ids, int num_values_per_servo);
+    servo_error_t servo_set_multiple(uint8_t ids[], servo_register_t start_reg, float values[], int num_ids, int num_values_per_servo);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_prepare
  * @abstract      Prepare to write the servo's registers. The value will be sent to the servo,
  *                where it will be held in memory, but it will not be written to the appropriate
@@ -442,10 +443,10 @@ servo_error_t servo_set_multiple     (uint8_t ids[], servo_register_t start_reg,
  *                be pending at a time, so a call to this function overwrites any currently
  *                pending value. The use of this function is identical to servo_set();
  */
-servo_error_t servo_prepare          (uint8_t id, servo_register_t reg, float  val,    int timeout_ms);
+    servo_error_t servo_prepare(uint8_t id, servo_register_t reg, float val, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_do_prepared
  * @abstract      If there is a value waiting to be written to the servo's registers (ie
  *                you called servo_prepare), this function causes it to be written, and thus
@@ -471,10 +472,10 @@ servo_error_t servo_prepare          (uint8_t id, servo_register_t reg, float  v
  *                In order to obtain a string that contains a human-readable description
  *                of all errors, pass the result to servo_errors_to_string();
  */
-servo_error_t servo_do_prepared      (uint8_t id, int timeout_ms);
+    servo_error_t servo_do_prepared(uint8_t id, int timeout_ms);
 
-/*--------------------------------------------------------------------------------------------*/
-/*!
+    /*--------------------------------------------------------------------------------------------*/
+    /*!
  * @function    servo_errors_to_string
  * @abstract      Convert an error code to a human-readable string.
  * @param       error
@@ -482,88 +483,88 @@ servo_error_t servo_do_prepared      (uint8_t id, int timeout_ms);
  * @result        The human readable string. The memory for this is owned by this module and
  *                should not be freed.
  */
-char*         servo_errors_to_string (servo_error_t error);
+    char *servo_errors_to_string(servo_error_t error);
 
-/*!
+    /*!
  * @functiongroup Low-Level Interface
 */
 
-/*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get_raw_byte     (uint8_t id, servo_register_t reg, uint8_t*  result,   int timeout_ms);
-servo_error_t servo_get_raw_word     (uint8_t id, servo_register_t reg, uint16_t* result,   int timeout_ms);
-servo_error_t servo_get_raw_page     (uint8_t id, servo_register_t reg, uint8_t   result[], int num_bytes, int timeout_ms);
+    /*--------------------------------------------------------------------------------------------*/
+    servo_error_t servo_get_raw_byte(uint8_t id, servo_register_t reg, uint8_t *result, int timeout_ms);
+    servo_error_t servo_get_raw_word(uint8_t id, servo_register_t reg, uint16_t *result, int timeout_ms);
+    servo_error_t servo_get_raw_page(uint8_t id, servo_register_t reg, uint8_t result[], int num_bytes, int timeout_ms);
 
-servo_error_t servo_set_raw_byte     (uint8_t id, servo_register_t reg, uint8_t   value,    int timeout_ms);
-servo_error_t servo_set_raw_word     (uint8_t id, servo_register_t reg, uint16_t  value,    int timeout_ms);
-servo_error_t servo_set_raw_page     (uint8_t id, servo_register_t reg, uint8_t   values[], int num_bytes, int timeout_ms);
+    servo_error_t servo_set_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms);
+    servo_error_t servo_set_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms);
+    servo_error_t servo_set_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms);
 
-servo_error_t servo_prepare_raw_byte (uint8_t id, servo_register_t reg, uint8_t   value,    int timeout_ms);
-servo_error_t servo_prepare_raw_word (uint8_t id, servo_register_t reg, uint16_t  value,    int timeout_ms);
-servo_error_t servo_prepare_raw_page (uint8_t id, servo_register_t reg, uint8_t   values[], int num_bytes, int timeout_ms);
+    servo_error_t servo_prepare_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms);
+    servo_error_t servo_prepare_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms);
+    servo_error_t servo_prepare_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms);
 
-servo_error_t servo_set_multiple_raw(uint8_t ids[], servo_register_t start_reg, uint8_t values[], int num_ids, int num_bytes_per_servo);
-servo_error_t servo_set_positions_and_speeds_raw(uint8_t ids[], servo_register_t start_reg, uint8_t values[], int num_ids, int num_bytes_per_servo);
+    servo_error_t servo_set_multiple_raw(uint8_t ids[], servo_register_t start_reg, uint8_t values[], int num_ids, int num_bytes_per_servo);
+    servo_error_t servo_set_positions_and_speeds_raw(uint8_t ids[], servo_register_t start_reg, uint8_t values[], int num_ids, int num_bytes_per_servo);
 
-/*!
+    /*!
  * @functiongroup Raw to Physical Conversions
  * @discussion done automatically by the high level interface
 */
 
-/*--------------------------------------------------------------------------------------------*/
-/*  return size of a given register */
-char get_register_size(servo_register_t reg);
+    /*--------------------------------------------------------------------------------------------*/
+    /*  return size of a given register */
+    char get_register_size(servo_register_t reg);
 
-/*  call one of the following conversion functions appropriate to the type of value in reg  */
-int   servo_anything_to_raw          (servo_register_t reg, float anything);
-float servo_raw_to_anything          (servo_register_t reg, int raw);
+    /*  call one of the following conversion functions appropriate to the type of value in reg  */
+    int servo_anything_to_raw(servo_register_t reg, float anything);
+    float servo_raw_to_anything(servo_register_t reg, int raw);
 
-/*    0 ~ 2M, 2.25M, 2.5M or 3M. unususal resolution... */
-int   servo_baud_bps_to_raw          (float baud);
-float servo_raw_to_baud_bps          (int  raw);
+    /*    0 ~ 2M, 2.25M, 2.5M or 3M. unususal resolution... */
+    int servo_baud_bps_to_raw(float baud);
+    float servo_raw_to_baud_bps(int raw);
 
-/*    0 ~ 508 usec. resolution 2 usec */
-int   servo_return_delay_usec_to_raw (float usec);
-float servo_raw_to_return_delay_usec (int raw);
+    /*    0 ~ 508 usec. resolution 2 usec */
+    int servo_return_delay_usec_to_raw(float usec);
+    float servo_raw_to_return_delay_usec(int raw);
 
-/*    0 ~ 2PI. resolution 0.0015 radians*/
-int   servo_radians_to_raw           (float rad);
-float servo_raw_to_radians           (int raw);
+    /*    0 ~ 2PI. resolution 0.0015 radians*/
+    int servo_radians_to_raw(float rad);
+    float servo_raw_to_radians(int raw);
 
-/*    10 ~ 99 deg, do not change default */
-int   servo_celcius_to_raw           (float celcius);
-float servo_raw_to_celcius           (int raw);
+    /*    10 ~ 99 deg, do not change default */
+    int servo_celcius_to_raw(float celcius);
+    float servo_raw_to_celcius(int raw);
 
-/*    0 ~ 100 percent of motor maximum. */
-int   servo_torque_percentage_to_raw (float percent);
-float servo_raw_to_torque_percentage (int raw);
+    /*    0 ~ 100 percent of motor maximum. */
+    int servo_torque_percentage_to_raw(float percent);
+    float servo_raw_to_torque_percentage(int raw);
 
-/*    0 ~ 31.75. resolution 0.125 */
-int   servo_p_gain_to_raw            (float gain);
-float servo_raw_to_p_gain            (int raw);
+    /*    0 ~ 31.75. resolution 0.125 */
+    int servo_p_gain_to_raw(float gain);
+    float servo_raw_to_p_gain(int raw);
 
-/*    0 ~ 124. resolution 0.488 */
-int   servo_i_gain_to_raw            (float gain);
-float servo_raw_to_i_gain            (int raw);
+    /*    0 ~ 124. resolution 0.488 */
+    int servo_i_gain_to_raw(float gain);
+    float servo_raw_to_i_gain(int raw);
 
-/*    0 ~ 1.016. resolution 0.004 */
-int   servo_d_gain_to_raw            (float gain);
-float servo_raw_to_d_gain            (int raw);
+    /*    0 ~ 1.016. resolution 0.004 */
+    int servo_d_gain_to_raw(float gain);
+    float servo_raw_to_d_gain(int raw);
 
-/*    5 ~ 25 V, resolution 0.1 V */
-int   servo_volts_to_raw             (float volts);
-float servo_raw_to_volts             (int raw);
+    /*    5 ~ 25 V, resolution 0.1 V */
+    int servo_volts_to_raw(float volts);
+    float servo_raw_to_volts(int raw);
 
-/* -15 ~ 15 amps */
-int   servo_amperes_to_raw           (float amps);
-float servo_raw_to_amperes           (int raw);
+    /* -15 ~ 15 amps */
+    int servo_amperes_to_raw(float amps);
+    float servo_raw_to_amperes(int raw);
 
-/*  */
-int   servo_radians_per_sec_to_raw   (float rad);
-float servo_raw_to_radians_per_sec   (int raw);
+    /*  */
+    int servo_radians_per_sec_to_raw(float rad);
+    float servo_raw_to_radians_per_sec(int raw);
 
-/*  */
-int   servo_radians_per_sec_2_to_raw (float rad);
-float servo_raw_to_radians_per_sec_2 (int raw);
+    /*  */
+    int servo_radians_per_sec_2_to_raw(float rad);
+    float servo_raw_to_radians_per_sec_2(int raw);
 
 #ifdef __cplusplus
 }

@@ -4,7 +4,7 @@
     "description": "Luos turn your embedded system as modules like microservice do it in software.",
     "version": "0.6.0",
     "licence": "MIT",
-    "build" : {
+    "build": {
         "flags": [
             "-I ../Inc",
             "-I motion_driver_6.12/core/driver/eMPL",
@@ -20,7 +20,7 @@
             "-D EMPL_TARGET_STM32F4",
             "-D MPL_LOG_NDEBUG=1"
         ],
-        "src_filter" : [
+        "src_filter": [
             "+<motion_driver_6.12/core/mllite/*>",
             "+<motion_driver_6.12/core/eMPL-hal/*>",
             "+<motion_driver_6.12/core/driver/eMPL/*>",

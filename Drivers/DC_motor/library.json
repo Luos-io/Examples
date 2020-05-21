@@ -8,10 +8,9 @@
         "url": "https://luos.io"
     },
     "licence": "MIT",
-    "dependencies":
-    [
+    "dependencies": [
         {
-        "name": "Luos"
+            "name": "Luos"
         }
     ]
-} 
+}
