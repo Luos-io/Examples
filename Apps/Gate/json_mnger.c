@@ -10,25 +10,22 @@ static unsigned int delayms = 0;
 void collect_data(module_t *module)
 {
     msg_t json_msg;
+    json_msg.header.target_mode = ID;
+    json_msg.header.cmd = ASK_PUB_CMD;
+    json_msg.header.size = 0;
     // ask modules to publish datas
     for (uint8_t i = 1; i <= get_last_module(); i++)
     {
         // Check if this module is a sensor
         if (is_sensor(type_from_id(i)))
         {
-            // This module is a sensor so create a msg
-            json_msg.header.target_mode = ID;
+            // This module is a sensor so create a msg and send it
             json_msg.header.target = i;
-            json_msg.header.cmd = ASK_PUB_CMD;
-            json_msg.header.size = 0;
             luos_send(module, &json_msg);
         }
-        // Wait to allow each module to manage previous request.
-        volatile uint8_t tempo = 0;
-        for (tempo = 0; tempo < 100; tempo++)
-            ;
     }
 }
+
 // This function will create a json string for modules datas
 void format_data(module_t *module, char *json)
 {
