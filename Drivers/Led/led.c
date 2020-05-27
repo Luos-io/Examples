@@ -5,6 +5,9 @@
 #include "string.h"
 #include "luos.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile time_luos_t time;
 volatile color_t target_rgb;
 volatile color_t last_rgb;
@@ -75,7 +78,7 @@ void led_init(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    luos_module_enable_rt(luos_module_create(rx_led_cb, COLOR_MOD, "rgb_led_mod"));
+    luos_module_enable_rt(luos_module_create(rx_led_cb, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION)));
 }
 
 void led_loop(void)
