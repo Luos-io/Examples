@@ -4,6 +4,9 @@
 
 #define MOTORNUMBER 2
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 module_t *module[MOTORNUMBER];
 
 int find_id(module_t *my_module)
@@ -83,8 +86,8 @@ void dc_motor_init(void)
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    module[0] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor1_mod");
-    module[1] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor2_mod");
+    module[0] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor1_mod", STRINGIFY(VERSION));
+    module[1] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor2_mod", STRINGIFY(VERSION));
     luos_module_enable_rt(module[0]);
     luos_module_enable_rt(module[1]);
 }
