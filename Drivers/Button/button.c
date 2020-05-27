@@ -1,6 +1,9 @@
 #include "gpio.h"
 #include "button.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 void rx_btn_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
@@ -19,7 +22,7 @@ void rx_btn_cb(module_t *module, msg_t *msg)
 
 void button_init(void)
 {
-    luos_module_create(rx_btn_cb, STATE_MOD, "button_mod");
+    luos_module_create(rx_btn_cb, STATE_MOD, "button_mod", STRINGIFY(VERSION));
 }
 
 void button_loop(void)
