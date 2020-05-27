@@ -547,13 +547,13 @@ void dxl_loop(void)
         {
             position[id] = tmp_val;
         }
-        if (HAL_GetTick() - last_temp[MAX_VM_NUMBER] > TEMP_REFRESH_MS)
+        if (HAL_GetTick() - last_temp[id] > TEMP_REFRESH_MS)
         {
             errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_TEMPERATURE, &tmp_val, DXL_TIMEOUT);
             if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
             {
                 temperature[id] = tmp_val;
-                last_temp[MAX_VM_NUMBER] = HAL_GetTick();
+                last_temp[id] = HAL_GetTick();
             }
         }
     }
