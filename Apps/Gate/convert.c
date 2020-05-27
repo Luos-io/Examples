@@ -326,6 +326,20 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->header.size = 0;
         luos_send(module, msg);
     }
+    // Luos REVISION
+    if (cJSON_GetObjectItem(jobj, "luos_revision"))
+    {
+        msg->header.cmd = LUOS_REVISION;
+        msg->header.size = 0;
+        luos_send(module, msg);
+    }
+    // Robus REVISION
+    if (cJSON_GetObjectItem(jobj, "robus_revision"))
+    {
+        msg->header.cmd = ROBUS_REVISION;
+        msg->header.size = 0;
+        luos_send(module, msg);
+    }
     handy_t position;
     switch (type)
     {
@@ -549,6 +563,24 @@ void msg_to_json(msg_t *msg, char *json)
             msg->data[msg->header.size] = '\0';
             //create the Json content
             sprintf(json, "\"revision\":\"%s\",", msg->data);
+        }
+        break;
+    case LUOS_REVISION:
+        // clean data to be used as string
+        if (msg->header.size < MAX_DATA_MSG_SIZE)
+        {
+            msg->data[msg->header.size] = '\0';
+            //create the Json content
+            sprintf(json, "\"luos_revision\":\"%s\",", msg->data);
+        }
+        break;
+    case ROBUS_REVISION:
+        // clean data to be used as string
+        if (msg->header.size < MAX_DATA_MSG_SIZE)
+        {
+            msg->data[msg->header.size] = '\0';
+            //create the Json content
+            sprintf(json, "\"robus_revision\":\"%s\",", msg->data);
         }
         break;
     case IO_STATE:
