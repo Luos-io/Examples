@@ -274,61 +274,71 @@ void dxl_request_manager(void)
             {
                 if (dxl[last].reg == SERVO_REGISTER_BAUD_RATE)
                 {
-                    volatile char baud = 3; // Default value for 1000000
-                    if (dxl_model[i] == AX12 || dxl_model[i] == AX18)
-                    {
-                        baud = 1; // Default value for 1000000
-                        switch ((uint32_t)dxl[last].val)
-                        {
-                        case 9600:
-                            baud = 207;
-                            break;
-                        case 19200:
-                            baud = 103;
-                            break;
-                        case 57600:
-                            baud = 34;
-                            break;
-                        case 115200:
-                            baud = 16;
-                            break;
-                        case 200000:
-                            baud = 9;
-                            break;
-                        case 250000:
-                            baud = 7;
-                            break;
-                        case 400000:
-                            baud = 4;
-                            break;
-                        case 500000:
-                            baud = 3;
-                            break;
-                        default:
-                            break;
-                        }
+                    if (dxl[last].module_pointer->vm->type == VOID_MOD) {
+                        servo_init(57600);
+                        HAL_Delay(500);
+                        servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, 1, DXL_TIMEOUT);
                     }
-                    else
-                    {
-                        // void module will use this mode
-                        switch ((uint32_t)dxl[last].val)
+                    else {
+                        volatile char baud = 3; // Default value for 1000000 for MX/XL
+
+                        if (dxl_model[i] == AX12 || dxl_model[i] == AX18)
                         {
-                        case 9600:
-                            baud = 0;
-                            break;
-                        case 57600:
-                            baud = 1;
-                            break;
-                        case 115200:
-                            baud = 2;
-                            break;
-                        default:
-                            break;
+                            baud = 1; // Default value for 1000000
+                            switch ((uint32_t)dxl[last].val)
+                            {
+                            case 9600:
+                                baud = 207;
+                                break;
+                            case 19200:
+                                baud = 103;
+                                break;
+                            case 57600:
+                                baud = 34;
+                                break;
+                            case 115200:
+                                baud = 16;
+                                break;
+                            case 200000:
+                                baud = 9;
+                                break;
+                            case 250000:
+                                baud = 7;
+                                break;
+                            case 400000:
+                                baud = 4;
+                                break;
+                            case 500000:
+                                baud = 3;
+                                break;
+                            default:
+                                break;
+                            }
                         }
+                        else
+                        {
+                            // void module will use this mode
+                            switch ((uint32_t)dxl[last].val)
+                            {
+                            case 9600:
+                                baud = 0;
+                                break;
+                            case 57600:
+                                baud = 1;
+                                break;
+                            case 115200:
+                                baud = 2;
+                                break;
+                            default:
+                                break;
+                            }
+                        }
+            
+                        servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, baud, DXL_TIMEOUT);
+
+                        // Set actual baudrate into module
+                        servo_init((uint32_t)dxl[last].val);
                     }
-                    servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, baud, DXL_TIMEOUT);
-                    //Set actual baudrate into module
-                    servo_init((uint32_t)dxl[last].val);
                 }
                 if (dxl[last].reg == FACTORY_RESET_REG)
                 {
