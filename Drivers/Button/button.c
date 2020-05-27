@@ -1,8 +1,10 @@
 #include "gpio.h"
 #include "button.h"
 
-void rx_btn_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_btn_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         // fill the message infos
         msg_t pub_msg;
         pub_msg.header.cmd = IO_STATE;
@@ -15,10 +17,11 @@ void rx_btn_cb(module_t *module, msg_t *msg) {
     }
 }
 
-void button_init(void) {
+void button_init(void)
+{
     luos_module_create(rx_btn_cb, STATE_MOD, "button_mod");
 }
 
-void button_loop(void) {
-
+void button_loop(void)
+{
 }

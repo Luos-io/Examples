@@ -12,7 +12,8 @@
 #define P7_Pin GPIO_PIN_1
 #define P7_GPIO_Port GPIOB
 
-enum {
+enum
+{
     P1,
     P2,
     P3,
@@ -24,10 +25,12 @@ enum {
     P9
 };
 
-module_t* pin[9];
+module_t *pin[9];
 
-void rx_digit_read_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_digit_read_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         msg_t pub_msg;
         // fill the message infos
         pub_msg.header.cmd = IO_STATE;
@@ -35,12 +38,16 @@ void rx_digit_read_cb(module_t *module, msg_t *msg) {
         pub_msg.header.target = msg->header.source;
         pub_msg.header.size = sizeof(char);
 
-        if (module == pin[P5]) {
+        if (module == pin[P5])
+        {
             pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P5_GPIO_Port, P5_Pin) > 0);
         }
-        else if (module == pin[P6]) {
+        else if (module == pin[P6])
+        {
             pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
-        } else {
+        }
+        else
+        {
             return;
         }
         luos_send(module, &pub_msg);
@@ -48,34 +55,50 @@ void rx_digit_read_cb(module_t *module, msg_t *msg) {
     }
 }
 
-void rx_digit_write_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == IO_STATE) {
+void rx_digit_write_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == IO_STATE)
+    {
         // we have to update pin state
-        if (module == pin[P2]) {
-            HAL_GPIO_WritePin(P2_GPIO_Port,P2_Pin,msg->data[0]);
+        if (module == pin[P2])
+        {
+            HAL_GPIO_WritePin(P2_GPIO_Port, P2_Pin, msg->data[0]);
         }
-        if (module == pin[P3]) {
-            HAL_GPIO_WritePin(P3_GPIO_Port,P3_Pin,msg->data[0]);
+        if (module == pin[P3])
+        {
+            HAL_GPIO_WritePin(P3_GPIO_Port, P3_Pin, msg->data[0]);
         }
-        if (module == pin[P4]) {
-            HAL_GPIO_WritePin(P4_GPIO_Port,P4_Pin,msg->data[0]);
+        if (module == pin[P4])
+        {
+            HAL_GPIO_WritePin(P4_GPIO_Port, P4_Pin, msg->data[0]);
         }
     }
 }
 
-void rx_analog_read_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_analog_read_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         msg_t pub_msg;
         voltage_t volt;
-        if (module == pin[P1]) {
-            volt = ((float)analog_input.p1/4096.0f)*3.3f;
-        } else if (module == pin[P7]) {
-            volt = ((float)analog_input.p7/4096.0f)*3.3f;
-        } else if (module == pin[P8]) {
-            volt = ((float)analog_input.p8/4096.0f)*3.3f;
-        } else if (module == pin[P9]) {
-            volt = ((float)analog_input.p9/4096.0f)*3.3f;
-        } else {
+        if (module == pin[P1])
+        {
+            volt = ((float)analog_input.p1 / 4096.0f) * 3.3f;
+        }
+        else if (module == pin[P7])
+        {
+            volt = ((float)analog_input.p7 / 4096.0f) * 3.3f;
+        }
+        else if (module == pin[P8])
+        {
+            volt = ((float)analog_input.p8 / 4096.0f) * 3.3f;
+        }
+        else if (module == pin[P9])
+        {
+            volt = ((float)analog_input.p9 / 4096.0f) * 3.3f;
+        }
+        else
+        {
             return;
         }
         // fill the message infos
@@ -87,7 +110,8 @@ void rx_analog_read_cb(module_t *module, msg_t *msg) {
     }
 }
 
-void gpio_dev_init(void) {
+void gpio_dev_init(void)
+{
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -151,10 +175,11 @@ void gpio_dev_init(void) {
     pin[P4] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P4");
     luos_module_enable_rt(pin[P2]);
     luos_module_enable_rt(pin[P3]);
-    luos_module_enable_rt(pin[P4]); 
+    luos_module_enable_rt(pin[P4]);
 }
 
-void gpio_dev_loop(void) {
+void gpio_dev_loop(void)
+{
     // Copy analog value to the board struct
     node_analog.temperature_sensor = analog_input.temperature_sensor;
     node_analog.voltage_sensor = analog_input.voltage_sensor;

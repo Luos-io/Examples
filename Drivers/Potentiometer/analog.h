@@ -6,16 +6,18 @@
 
 // This structure need to list all ADC configured in the good order determined by the
 // ADC_CHANEL number in increasing order
-typedef struct __attribute__((__packed__)){
-     union {
-         struct __attribute__((__packed__)){
-             uint32_t pos;
-             uint32_t voltage_sensor;
-             uint32_t temperature_sensor;
-         };
-         uint32_t unmap[6];                /*!< Unmaped form. */
-     };
- }analog_input_t;
+typedef struct __attribute__((__packed__))
+{
+    union {
+        struct __attribute__((__packed__))
+        {
+            uint32_t pos;
+            uint32_t voltage_sensor;
+            uint32_t temperature_sensor;
+        };
+        uint32_t unmap[6]; /*!< Unmaped form. */
+    };
+} analog_input_t;
 
 volatile analog_input_t analog_input;
 

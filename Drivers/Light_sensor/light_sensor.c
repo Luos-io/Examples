@@ -9,8 +9,10 @@
 
 volatile illuminance_t lux = 0.0;
 
-void rx_lgt_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_lgt_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         msg_t pub_msg;
         // fill the message infos
         pub_msg.header.target_mode = ID;
@@ -21,7 +23,8 @@ void rx_lgt_cb(module_t *module, msg_t *msg) {
     }
 }
 
-void light_sensor_init(void) {
+void light_sensor_init(void)
+{
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -52,8 +55,9 @@ void light_sensor_init(void) {
     luos_module_create(rx_lgt_cb, LIGHT_MOD, "light_sensor_mod");
 }
 
-void light_sensor_loop(void) {
+void light_sensor_loop(void)
+{
     node_analog.temperature_sensor = analog_input.temperature_sensor;
     node_analog.voltage_sensor = analog_input.voltage_sensor;
-    lux = (((float)analog_input.light/4096.0f)*3.3f) * 1000.0f;
+    lux = (((float)analog_input.light / 4096.0f) * 3.3f) * 1000.0f;
 }
