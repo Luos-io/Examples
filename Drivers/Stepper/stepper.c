@@ -3,6 +3,9 @@
 #include "math.h"
 #include "tim.h"
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile motor_config_t motor;
 volatile uint8_t microstepping = 16;
 volatile int target_step_nb = 0;
@@ -157,7 +160,7 @@ void rx_stp_cb(module_t *module, msg_t *msg)
 
 void stepper_init(void)
 {
-    luos_module_enable_rt(luos_module_create(rx_stp_cb, STEPPER_MOD, "stepper_mod"));
+    luos_module_enable_rt(luos_module_create(rx_stp_cb, STEPPER_MOD, "stepper_mod", STRINGIFY(VERSION)));
     motor.resolution = 200.0;
     motor.wheel_diameter = 0.0;
     motor.target_angular_speed = 100.0;
