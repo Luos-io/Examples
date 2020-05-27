@@ -7,6 +7,9 @@
 #define OVERHEAD (9 * 24) // Number of data to add to create a reset between frames
 #define DECOMP_BUFF_SIZE (MAX_LED_NUMBER * 24 + OVERHEAD)
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile color_t matrix[MAX_LED_NUMBER];
 volatile char buf[DECOMP_BUFF_SIZE] = {0};
 volatile int imgsize = MAX_LED_NUMBER;
@@ -69,7 +72,7 @@ void convert_color(color_t color, int led_nb)
 
 void led_strip_init(void)
 {
-    luos_module_create(rx_led_strip_cb, COLOR_MOD, "led_strip_mod");
+    luos_module_create(rx_led_strip_cb, COLOR_MOD, "led_strip_mod", STRINGIFY(VERSION));
     TIM2->CCR1 = 0;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);
