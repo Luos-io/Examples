@@ -16,22 +16,21 @@ volatile int imgsize = MAX_LED_NUMBER;
 
 void image_size(int size)
 {
-    memset(&matrix[size], 0, (MAX_LED_NUMBER - size) * 3);
+    memset((void *)matrix + size, 0, (MAX_LED_NUMBER - size) * 3);
     imgsize = size;
 }
 
 void rx_led_strip_cb(module_t *module, msg_t *msg)
 {
-    static unsigned int next_data_id = 0;
     if (msg->header.cmd == COLOR)
     {
         // change led target color
         if (msg->header.size == 3)
         {
             // there is only one color copy it in the entire matrix
-            for (int i; i < imgsize; i++)
+            for (int i = 0; i < imgsize; i++)
             {
-                memcpy(&matrix[i], msg->data, sizeof(color_t));
+                memcpy((void *)matrix + i, msg->data, sizeof(color_t));
             }
         }
         else
@@ -76,9 +75,9 @@ void led_strip_init(void)
     TIM2->CCR1 = 0;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);
-    memset(buf, 0, DECOMP_BUFF_SIZE);
-    memset(matrix, 0, MAX_LED_NUMBER * 3);
-    HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, buf, DECOMP_BUFF_SIZE);
+    memset((void *)buf, 0, DECOMP_BUFF_SIZE);
+    memset((void *)matrix, 0, MAX_LED_NUMBER * 3);
+    HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)buf, DECOMP_BUFF_SIZE);
 }
 
 void led_strip_loop(void)

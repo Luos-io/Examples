@@ -85,7 +85,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     }
     if (msg->header.cmd == ANGULAR_POSITION)
     {
-        angular_position_from_msg(&dxl[last].val, msg);
+        angular_position_from_msg((angular_position_t *)&dxl[last].val, msg);
         dxl[last].module_pointer = module;
         dxl[last].mode = MODE_ANGLE;
         last++;
@@ -124,7 +124,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
                 fpid[i] = 0.0;
             pid[i] = (int)fpid[i];
         }
-        memcpy(&dxl[last].val, pid, 3 * sizeof(char));
+        memcpy((void *)&dxl[last].val, pid, 3 * sizeof(char));
         dxl[last].module_pointer = module;
         dxl[last].mode = MODE_PID;
         last++;
@@ -153,7 +153,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     }
     if (msg->header.cmd == ANGULAR_SPEED)
     {
-        angular_speed_from_msg(&dxl[last].val, msg);
+        angular_speed_from_msg((angular_speed_t *)&dxl[last].val, msg);
         dxl[last].module_pointer = module;
         dxl[last].mode = MODE_SPEED;
         last++;
@@ -223,7 +223,7 @@ void discover_dxl(void)
     memset(my_module, 0, sizeof(module_t *) * MAX_VM_NUMBER);
     memset(dxl_table, 0, sizeof(uint16_t) * MAX_VM_NUMBER);
     memset(dxl_model, 0, sizeof(dxl_models_t) * MAX_VM_NUMBER);
-    memset(dxl, 0, sizeof(dxl_t) * MAX_VM_NUMBER);
+    memset((void *)dxl, 0, sizeof(dxl_t) * MAX_VM_NUMBER);
 
     for (int i = 0; i < MAX_ID; i++)
     {
@@ -422,7 +422,7 @@ void dxl_request_manager(void)
                 if (dxl_model[i] >= MX12)
                 {
                     unsigned char pid[3];
-                    memcpy(pid, &dxl[last].val, 3 * sizeof(char));
+                    memcpy(pid, (void *)&dxl[last].val, 3 * sizeof(char));
                     servo_set_raw_byte(dxl_table[i], SERVO_REGISTER_P_GAIN, pid[0], DXL_TIMEOUT);
                     servo_set_raw_byte(dxl_table[i], SERVO_REGISTER_I_GAIN, pid[1], DXL_TIMEOUT);
                     servo_set_raw_byte(dxl_table[i], SERVO_REGISTER_D_GAIN, pid[2], DXL_TIMEOUT);

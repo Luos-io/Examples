@@ -25,7 +25,7 @@ void HAL_SYSTICK_Callback(void)
 {
     if (pub != LUOS_PROTOCOL_NB)
     {
-        luos_send(module_pointer, &pub_msg);
+        luos_send(module_pointer, (msg_t *)&pub_msg);
         pub = LUOS_PROTOCOL_NB;
     }
 }

@@ -19,7 +19,7 @@ void rx_pot_cb(module_t *module, msg_t *msg)
         // fill the message infos
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
-        angular_position_to_msg(&angle, &pub_msg);
+        angular_position_to_msg((angular_position_t *)&angle, &pub_msg);
         luos_send(module, &pub_msg);
         return;
     }
@@ -51,7 +51,7 @@ void potentiometer_init(void)
     __HAL_LINKDMA(&luos_adc, DMA_Handle, luos_dma_adc);
 
     // Restart DMA
-    HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
+    HAL_ADC_Start_DMA(&luos_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* module creation *******************
     luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod", STRINGIFY(VERSION));

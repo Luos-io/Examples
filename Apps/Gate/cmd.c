@@ -1,5 +1,8 @@
 #include "cmd.h"
 #include "convert.h"
+#include <stdio.h>
+#include "main.h"
+#include "gate.h"
 
 // There is no stack here we use the latest command
 volatile char buf[JSON_BUF_NUM][JSON_BUFF_SIZE] = {0};
@@ -7,9 +10,9 @@ volatile int current_table = 0;
 volatile char cmd_ready = 0;
 volatile char detection_ask = 0;
 
-volatile char *get_json_buf(void)
+char *get_json_buf(void)
 {
-    return buf[current_table];
+    return (char *)buf[current_table];
 }
 static void next_json(void)
 {
@@ -83,7 +86,7 @@ void send_cmds(module_t *module)
             if (cJSON_IsObject(cJSON_GetObjectItem(root, "benchmark")))
             {
                 // Get all parameters
-                volatile cJSON *parameters = cJSON_GetObjectItem(root, "benchmark");
+                cJSON *parameters = cJSON_GetObjectItem(root, "benchmark");
                 uint32_t repetition = 0;
                 if (cJSON_IsNumber(cJSON_GetObjectItem(parameters, "repetitions")))
                 {

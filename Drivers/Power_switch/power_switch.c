@@ -4,7 +4,7 @@
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
-void rx_pow_cb(vm_t *vm, msg_t *msg)
+void rx_pow_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {

@@ -93,7 +93,7 @@ void rx_stp_cb(module_t *module, msg_t *msg)
         if (msg->header.size == sizeof(motor_mode_t))
         {
             // fill the message infos
-            memcpy(&motor.mode, msg->data, msg->header.size);
+            memcpy((void *)&motor.mode, msg->data, msg->header.size);
             HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, motor.mode.mode_compliant);
         }
         return;
@@ -101,7 +101,7 @@ void rx_stp_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == RESOLUTION)
     {
         // set the encoder resolution
-        memcpy(&motor.resolution, msg->data, sizeof(float));
+        memcpy((void *)&motor.resolution, msg->data, sizeof(float));
         return;
     }
     if (msg->header.cmd == REINIT)
@@ -115,7 +115,7 @@ void rx_stp_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == DIMENSION)
     {
         // set the wheel diameter m
-        linear_position_from_msg(&motor.wheel_diameter, msg);
+        linear_position_from_msg((linear_position_t *)&motor.wheel_diameter, msg);
         return;
     }
     if (msg->header.cmd == ANGULAR_POSITION)
@@ -123,14 +123,14 @@ void rx_stp_cb(module_t *module, msg_t *msg)
         // set the motor target rotation position
         if (motor.mode.mode_angular_position)
         {
-            angular_position_from_msg(&motor.target_angular_position, msg);
+            angular_position_from_msg((angular_position_t *)&motor.target_angular_position, msg);
         }
         return;
     }
     if (msg->header.cmd == ANGULAR_SPEED)
     {
         // set the motor target rotation position
-        angular_speed_from_msg(&motor.target_angular_speed, msg);
+        angular_speed_from_msg((angular_speed_t *)&motor.target_angular_speed, msg);
         return;
     }
 

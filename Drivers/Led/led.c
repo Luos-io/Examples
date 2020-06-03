@@ -26,8 +26,8 @@ void rx_led_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == COLOR)
     {
         // change led target color
-        memcpy(&last_rgb, &target_rgb, sizeof(color_t));
-        color_from_msg(&target_rgb, msg);
+        memcpy((color_t *)&last_rgb, (color_t *)&target_rgb, sizeof(color_t));
+        color_from_msg((color_t *)&target_rgb, msg);
         if (time_to_ms(time) > 0.0)
         {
             elapsed_ms = 0;
@@ -40,7 +40,7 @@ void rx_led_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == TIME)
     {
         // save transition time
-        time_from_msg(&time, msg);
+        time_from_msg((time_luos_t *)&time, msg);
         return;
     }
 }
@@ -54,8 +54,8 @@ void HAL_SYSTICK_Led_Callback(void)
         if ((float)elapsed_ms > time_to_ms(time))
         {
             // we finished our transition
-            pwm_setvalue(&target_rgb);
-            memcpy(&last_rgb, &target_rgb, sizeof(color_t));
+            pwm_setvalue((color_t *)&target_rgb);
+            memcpy((color_t *)&last_rgb, (color_t *)&target_rgb, sizeof(color_t));
         }
         else
         {
@@ -68,7 +68,7 @@ void HAL_SYSTICK_Led_Callback(void)
     }
     else
     {
-        pwm_setvalue(&target_rgb);
+        pwm_setvalue((color_t *)&target_rgb);
     }
 }
 

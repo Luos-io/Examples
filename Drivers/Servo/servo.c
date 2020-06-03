@@ -90,7 +90,7 @@ void rx_servo_cb(module_t *module, msg_t *msg)
     {
         // set the motor position
         uint8_t motor_id = find_id(module);
-        angular_position_from_msg(&servo[motor_id].angle, msg);
+        angular_position_from_msg((angular_position_t *)&servo[motor_id].angle, msg);
         set_position(motor_id);
         return;
     }
@@ -98,7 +98,7 @@ void rx_servo_cb(module_t *module, msg_t *msg)
     {
         // set the servo parameters
         uint8_t motor_id = find_id(module);
-        memcpy(servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
+        memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
         set_position(motor_id);
         return;
     }

@@ -165,7 +165,7 @@ void gpio_dev_init(void)
     __HAL_LINKDMA(&luos_adc, DMA_Handle, luos_dma_adc);
 
     // Restart DMA
-    HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
+    HAL_ADC_Start_DMA(&luos_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
     // ************* modules creation *******************
     pin[P1] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", STRINGIFY(VERSION));
     pin[P7] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", STRINGIFY(VERSION));

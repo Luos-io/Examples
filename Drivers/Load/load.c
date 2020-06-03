@@ -20,7 +20,7 @@ void rx_load_cb(module_t *module, msg_t *msg)
             // fill the message infos
             pub_msg.header.target_mode = ID;
             pub_msg.header.target = msg->header.source;
-            force_to_msg(&load, &pub_msg);
+            force_to_msg((force_t *)&load, &pub_msg);
             luos_send(module, &pub_msg);
             new_data_ready = 0;
         }

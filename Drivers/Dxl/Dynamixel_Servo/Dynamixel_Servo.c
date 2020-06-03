@@ -769,7 +769,6 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
     uint8_t data[data_size];
     uint8_t *d = data;
     servo_error_t error = SERVO_NO_ERROR;
-    uint16_t checksum;
 
     if (HAL_UART_Receive(&huart3, data, data_size, timeout_ms) == HAL_TIMEOUT)
     {
