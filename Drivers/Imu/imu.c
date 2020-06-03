@@ -2,13 +2,15 @@
 #include "imu.h"
 #include <mpu_configuration.h>
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile uint32_t hal_timestamp = 0;
-unsigned char *mpl_key = (unsigned char*)"eMPL 5.1";
+unsigned char *mpl_key = (unsigned char *)"eMPL 5.1";
 
 module_t *module_pointer;
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
-
 
 /* Every time new gyro data is available, this function is called in an
  * ISR context. In this example, it sets a flag protecting the FIFO read
@@ -19,15 +21,19 @@ void gyro_data_ready_cb(void)
     hal.new_gyro = 1;
 }
 
-void HAL_SYSTICK_Callback(void) {
-    if (pub != LUOS_PROTOCOL_NB) {
-        luos_send(module_pointer, &pub_msg);
+void HAL_SYSTICK_Callback(void)
+{
+    if (pub != LUOS_PROTOCOL_NB)
+    {
+        luos_send(module_pointer, (msg_t *)&pub_msg);
         pub = LUOS_PROTOCOL_NB;
     }
 }
 
-void rx_imu_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_imu_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         // fill the message infos
         hal.update_request = 1;
         module_pointer = module;
@@ -35,9 +41,11 @@ void rx_imu_cb(module_t *module, msg_t *msg) {
         pub = LUOS_PROTOCOL_NB;
         return;
     }
-    if (msg->header.cmd == PARAMETERS) {
+    if (msg->header.cmd == PARAMETERS)
+    {
         // check the message size
-        if (msg->header.size == sizeof(short)) {
+        if (msg->header.size == sizeof(short))
+        {
             module_pointer = module;
             // fill the message infos
             memcpy(&hal.report, msg->data, msg->header.size);
@@ -47,15 +55,15 @@ void rx_imu_cb(module_t *module, msg_t *msg) {
     }
 }
 
-
-void imu_init(void) {
+void imu_init(void)
+{
     mpu_setup();
     hal.report.quat = 1;
-    luos_module_enable_rt(luos_module_create(rx_imu_cb, IMU_MOD, "Imu_mod"));
+    luos_module_enable_rt(luos_module_create(rx_imu_cb, IMU_MOD, "Imu_mod", STRINGIFY(VERSION)));
 }
 
-
-void imu_loop(void) {
+void imu_loop(void)
+{
     // *********************IMU management*******************************
     unsigned long sensor_timestamp;
     unsigned long timestamp;
@@ -68,7 +76,8 @@ void imu_loop(void) {
      * make our compass reads timer-based instead.
      */
     if ((timestamp > hal.next_compass_ms) && !hal.lp_accel_mode &&
-        hal.new_gyro && (hal.sensors & COMPASS_ON)) {
+        hal.new_gyro && (hal.sensors & COMPASS_ON))
+    {
         hal.next_compass_ms = timestamp + COMPASS_READ_MS;
         new_compass = 1;
     }
@@ -76,11 +85,13 @@ void imu_loop(void) {
     /* Temperature data doesn't need to be read with every gyro sample.
      * Let's make them timer-based like the compass reads.
      */
-    if (timestamp > hal.next_temp_ms) {
+    if (timestamp > hal.next_temp_ms)
+    {
         hal.next_temp_ms = timestamp + TEMP_READ_MS;
         new_temp = 1;
     }
-    if (hal.motion_int_mode) {
+    if (hal.motion_int_mode)
+    {
         /* Enable motion interrupt. */
         mpu_lp_motion_interrupt(500, 1, 5);
         /* Notify the MPL that contiguity was broken. */
@@ -89,16 +100,20 @@ void imu_loop(void) {
         inv_compass_was_turned_off();
         inv_quaternion_sensor_was_turned_off();
         /* Wait for the MPU interrupt. */
-        while (!hal.new_gyro) {}
+        while (!hal.new_gyro)
+        {
+        }
         /* Restore the previous sensor configuration. */
         mpu_lp_motion_interrupt(0, 0, 0);
         hal.motion_int_mode = 0;
     }
-    if (!hal.sensors || !hal.new_gyro) {
+    if (!hal.sensors || !hal.new_gyro)
+    {
         // we don't need to continue this loop
         return;
     }
-    if (hal.new_gyro && hal.lp_accel_mode) {
+    if (hal.new_gyro && hal.lp_accel_mode)
+    {
         short accel_short[3];
         long accel[3];
         mpu_get_accel_reg(accel_short, &sensor_timestamp);
@@ -108,7 +123,9 @@ void imu_loop(void) {
         inv_build_accel(accel, 0, sensor_timestamp);
         new_data = 1;
         hal.new_gyro = 0;
-    } else if (hal.new_gyro && hal.dmp_on) {
+    }
+    else if (hal.new_gyro && hal.dmp_on)
+    {
         short gyro[3], accel_short[3], sensors;
         unsigned char more;
         long accel[3], quat[4], temperature;
@@ -127,29 +144,35 @@ void imu_loop(void) {
         dmp_read_fifo(gyro, accel_short, quat, &sensor_timestamp, &sensors, &more);
         if (!more)
             hal.new_gyro = 0;
-        if (sensors & INV_XYZ_GYRO) {
+        if (sensors & INV_XYZ_GYRO)
+        {
             /* Push the new data to the MPL. */
             inv_build_gyro(gyro, sensor_timestamp);
             new_data = 1;
-            if (new_temp) {
+            if (new_temp)
+            {
                 new_temp = 0;
                 /* Temperature only used for gyro temp comp. */
                 mpu_get_temperature(&temperature, &sensor_timestamp);
                 inv_build_temp(temperature, sensor_timestamp);
             }
         }
-        if (sensors & INV_XYZ_ACCEL) {
+        if (sensors & INV_XYZ_ACCEL)
+        {
             accel[0] = (long)accel_short[0];
             accel[1] = (long)accel_short[1];
             accel[2] = (long)accel_short[2];
             inv_build_accel(accel, 0, sensor_timestamp);
             new_data = 1;
         }
-        if (sensors & INV_WXYZ_QUAT) {
+        if (sensors & INV_WXYZ_QUAT)
+        {
             inv_build_quat(quat, 0, sensor_timestamp);
             new_data = 1;
         }
-    } else if (hal.new_gyro) {
+    }
+    else if (hal.new_gyro)
+    {
         short gyro[3], accel_short[3];
         unsigned char sensors, more;
         long accel[3], temperature;
@@ -164,21 +187,24 @@ void imu_loop(void) {
          */
         hal.new_gyro = 0;
         mpu_read_fifo(gyro, accel_short, &sensor_timestamp,
-            &sensors, &more);
+                      &sensors, &more);
         if (more)
             hal.new_gyro = 1;
-        if (sensors & INV_XYZ_GYRO) {
+        if (sensors & INV_XYZ_GYRO)
+        {
             /* Push the new data to the MPL. */
             inv_build_gyro(gyro, sensor_timestamp);
             new_data = 1;
-            if (new_temp) {
+            if (new_temp)
+            {
                 new_temp = 0;
                 /* Temperature only used for gyro temp comp. */
                 mpu_get_temperature(&temperature, &sensor_timestamp);
                 inv_build_temp(temperature, sensor_timestamp);
             }
         }
-        if (sensors & INV_XYZ_ACCEL) {
+        if (sensors & INV_XYZ_ACCEL)
+        {
             accel[0] = (long)accel_short[0];
             accel[1] = (long)accel_short[1];
             accel[2] = (long)accel_short[2];
@@ -187,14 +213,16 @@ void imu_loop(void) {
         }
     }
 #ifdef COMPASS_ENABLED
-    if (new_compass) {
+    if (new_compass)
+    {
         short compass_short[3];
         long compass[3];
         new_compass = 0;
         /* For any MPU device with an AKM on the auxiliary I2C bus, the raw
          * magnetometer registers are copied to special gyro registers.
          */
-        if (!mpu_get_compass_reg(compass_short, &sensor_timestamp)) {
+        if (!mpu_get_compass_reg(compass_short, &sensor_timestamp))
+        {
             compass[0] = (long)compass_short[0];
             compass[1] = (long)compass_short[1];
             compass[2] = (long)compass_short[2];
@@ -208,7 +236,8 @@ void imu_loop(void) {
         new_data = 1;
     }
 #endif
-    if (new_data) {
+    if (new_data)
+    {
         inv_execute_on_data();
         /* This function reads bias-compensated sensor data and sensor
          * fusion outputs from the MPL. The outputs are formatted as seen
@@ -216,7 +245,8 @@ void imu_loop(void) {
          * rate requested by the host.
          */
     }
-    if (hal.update_request == 1) {
+    if (hal.update_request == 1)
+    {
         read_from_mpl(module_pointer);
         hal.update_request = 0;
     }

@@ -8,10 +8,15 @@
         "url": "https://luos.io"
     },
     "licence": "MIT",
-    "dependencies":
-    [
+    "licence": "MIT",
+    "build": {
+        "flags": [
+            "-DVERSION=0.6.0"
+        ]
+    },
+    "dependencies": [
         {
-        "name": "Luos"
+            "name": "Luos"
         }
     ]
-} 
+}

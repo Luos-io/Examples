@@ -6,21 +6,27 @@
 #define POS_Pin GPIO_PIN_0
 #define POS_GPIO_Port GPIOA
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 volatile angular_position_t angle = 0.0;
 
-void rx_pot_cb(module_t *module, msg_t *msg) {
-    if (msg->header.cmd == ASK_PUB_CMD) {
+void rx_pot_cb(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
         msg_t pub_msg;
         // fill the message infos
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
-        angular_position_to_msg(&angle, &pub_msg);
+        angular_position_to_msg((angular_position_t *)&angle, &pub_msg);
         luos_send(module, &pub_msg);
         return;
     }
 }
 
-void potentiometer_init(void) {
+void potentiometer_init(void)
+{
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -45,13 +51,14 @@ void potentiometer_init(void) {
     __HAL_LINKDMA(&luos_adc, DMA_Handle, luos_dma_adc);
 
     // Restart DMA
-    HAL_ADC_Start_DMA(&luos_adc, analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
+    HAL_ADC_Start_DMA(&luos_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* module creation *******************
-    luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod");
+    luos_module_create(rx_pot_cb, ANGLE_MOD, "potentiometer_mod", STRINGIFY(VERSION));
 }
 
-void potentiometer_loop(void) {
+void potentiometer_loop(void)
+{
     node_analog.temperature_sensor = analog_input.temperature_sensor;
     node_analog.voltage_sensor = analog_input.voltage_sensor;
     angle = ((float)analog_input.pos / 4096.0) * 300.0;

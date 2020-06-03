@@ -8,12 +8,18 @@
         "url": "https://luos-io.github.io/doc/board/dxl"
     },
     "licence": "MIT",
-    "build" : {
+    "build": {
         "flags": [
-            "-I Dynamixel_Servo"
+            "-I Dynamixel_Servo",
+            "-DVERSION=0.6.0"
         ],
-        "src_filter" : [
-        	"+<Dynamixel_Servo>"
+        "src_filter": [
+            "+<Dynamixel_Servo>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }

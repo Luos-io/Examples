@@ -8,14 +8,20 @@
         "url": "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=2ahUKEwjestXmvY3oAhUTD2MBHQoJDooQFjABegQIBxAB&url=https%3A%2F%2Fwww.st.com%2Fresource%2Fen%2Fdatasheet%2Fvl53l0x.pdf&usg=AOvVaw2D772P0Ms66VJ7lbKKynB-"
     },
     "licence": "MIT",
-    "build" : {
+    "build": {
         "flags": [
             "-I VL53L0X_1.0.2/Api/platform/inc",
-            "-I VL53L0X_1.0.2/Api/core/inc"
+            "-I VL53L0X_1.0.2/Api/core/inc",
+            "-DVERSION=0.6.0"
         ],
-        "src_filter" : [
-        	"+<VL53L0X_1.0.2/Api/core/src/*>",
-        	"+<VL53L0X_1.0.2/Api/platform/src/*>"
+        "src_filter": [
+            "+<VL53L0X_1.0.2/Api/core/src/*>",
+            "+<VL53L0X_1.0.2/Api/platform/src/*>"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "Luos"
+        }
+    ]
 }

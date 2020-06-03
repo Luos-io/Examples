@@ -3,489 +3,475 @@
 
 /*--------------------------------------------------------------------------------------------*/
 #define HALF_DUPLEX_DIRECTION_OUTPUT GPIO_PIN_SET
-#define HALF_DUPLEX_DIRECTION_INPUT  GPIO_PIN_RESET
+#define HALF_DUPLEX_DIRECTION_INPUT GPIO_PIN_RESET
 
 /*--------------------------------------------------------------------------------------------*/
 typedef enum servo_instruction_enum
 {
-  SERVO_INSTRUCTION_PING         = 0x01,
-  SERVO_INSTRUCTION_READ_DATA    = 0x02,
-  SERVO_INSTRUCTION_WRITE_DATA   = 0x03,
-  SERVO_INSTRUCTION_REG_WRITE    = 0x04,
-  SERVO_INSTRUCTION_ACTION       = 0x05,
-  SERVO_INSTRUCTION_RESET        = 0x06,
-  SERVO_INSTRUCTION_REBOOT       = 0x08,
-  SERVO_INSTRUCTION_CLEAR        = 0x10,
-  SERVO_INSTRUCTION_STATUS       = 0x55,
-  SERVO_INSTRUCTION_SYNC_READ    = 0x82,
-  SERVO_INSTRUCTION_SYNC_WRITE   = 0x83,
-  SERVO_INSTRUCTION_BULK_READ    = 0x92,
-  SERVO_INSTRUCTION_BULK_WRITE   = 0x93,
-}servo_instruction_t;
+    SERVO_INSTRUCTION_PING = 0x01,
+    SERVO_INSTRUCTION_READ_DATA = 0x02,
+    SERVO_INSTRUCTION_WRITE_DATA = 0x03,
+    SERVO_INSTRUCTION_REG_WRITE = 0x04,
+    SERVO_INSTRUCTION_ACTION = 0x05,
+    SERVO_INSTRUCTION_RESET = 0x06,
+    SERVO_INSTRUCTION_REBOOT = 0x08,
+    SERVO_INSTRUCTION_CLEAR = 0x10,
+    SERVO_INSTRUCTION_STATUS = 0x55,
+    SERVO_INSTRUCTION_SYNC_READ = 0x82,
+    SERVO_INSTRUCTION_SYNC_WRITE = 0x83,
+    SERVO_INSTRUCTION_BULK_READ = 0x92,
+    SERVO_INSTRUCTION_BULK_WRITE = 0x93,
+} servo_instruction_t;
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t _servo_set            (uint8_t id, servo_register_t reg, float  val, int timeout_ms, uint8_t do_now);
-servo_error_t _servo_set_raw_byte   (uint8_t id, servo_register_t reg, uint8_t  value, int timeout_ms, uint8_t do_now);
-servo_error_t _servo_set_raw_word   (uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms,   uint8_t do_now);
-servo_error_t _servo_set_raw_page   (uint8_t id, servo_register_t reg, uint8_t  values[], int num_bytes, int timeout_ms, uint8_t do_now);
-servo_error_t servo_get_response    (uint8_t id, uint8_t result[], int result_size, int timeout_ms);
+servo_error_t _servo_set(uint8_t id, servo_register_t reg, float val, int timeout_ms, uint8_t do_now);
+servo_error_t _servo_set_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms, uint8_t do_now);
+servo_error_t _servo_set_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms, uint8_t do_now);
+servo_error_t _servo_set_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms, uint8_t do_now);
+servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, int timeout_ms);
 servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction,
                                      uint8_t parameters[], uint8_t num_parameters,
                                      uint8_t result[], int num_results, int timeout_ms);
 #ifdef V2
-uint16_t update_crc					(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
+uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
 #endif
 
 /*--------------------------------------------------------------------------------------------*/
 void servo_init(uint32_t baud)
 {
-	huart3.Init.BaudRate = baud;
+    huart3.Init.BaudRate = baud;
     UART_SetConfig(&huart3);
 
-	HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
+    HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
 }
 
 /*--------------------------------------------------------------------------------------------*/
 uint8_t servo_register_is_word(servo_register_t reg)
 {
-	uint8_t result = 0;
+    uint8_t result = 0;
 
-  switch(reg)
+    switch (reg)
     {
-      case SERVO_REGISTER_MODEL_NUMBER        :
-      case SERVO_REGISTER_MAX_ANGLE           :
-      case SERVO_REGISTER_MIN_ANGLE           :
-      case SERVO_REGISTER_MAX_TORQUE          :
-      case SERVO_REGISTER_GOAL_ANGLE          :
-      case SERVO_REGISTER_MOVING_SPEED        :
-      case SERVO_REGISTER_TORQUE_LIMIT        :
-      case SERVO_REGISTER_PRESENT_ANGLE       :
-      case SERVO_REGISTER_PRESENT_SPEED       :
-      case SERVO_REGISTER_PRESENT_TORQUE      :
-      case SERVO_REGISTER_PUNCH               :
-      case SERVO_REGISTER_CURRENT_CONSUMPTION :
-      case SERVO_REGISTER_GOAL_TORQUE         :
+    case SERVO_REGISTER_MODEL_NUMBER:
+    case SERVO_REGISTER_MAX_ANGLE:
+    case SERVO_REGISTER_MIN_ANGLE:
+    case SERVO_REGISTER_MAX_TORQUE:
+    case SERVO_REGISTER_GOAL_ANGLE:
+    case SERVO_REGISTER_MOVING_SPEED:
+    case SERVO_REGISTER_TORQUE_LIMIT:
+    case SERVO_REGISTER_PRESENT_ANGLE:
+    case SERVO_REGISTER_PRESENT_SPEED:
+    case SERVO_REGISTER_PRESENT_TORQUE:
+    case SERVO_REGISTER_PUNCH:
+    case SERVO_REGISTER_CURRENT_CONSUMPTION:
+    case SERVO_REGISTER_GOAL_TORQUE:
         result = 1;
         break;
-      default: break;
+    default:
+        break;
     }
 
-  return result;
+    return result;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_factory_reset    (uint8_t id, int timeout_ms)
+servo_error_t servo_factory_reset(uint8_t id, int timeout_ms)
 {
 #ifdef V2
     uint8_t parameters[1];
-    if (id == SERVO_BROADCAST_ID) {
+    if (id == SERVO_BROADCAST_ID)
+    {
         parameters[0] = 0x01;
-    } else {
+    }
+    else
+    {
         parameters[0] = 0xFF;
     }
-    return servo_send_instruction(id, SERVO_INSTRUCTION_RESET, parameters, 1,  NULL, 0, timeout_ms);
+    return servo_send_instruction(id, SERVO_INSTRUCTION_RESET, parameters, 1, NULL, 0, timeout_ms);
 #else
     return servo_send_instruction(id, SERVO_INSTRUCTION_RESET, NULL, 0, NULL, 0, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_ping             (uint8_t id, int timeout_ms)
+servo_error_t servo_ping(uint8_t id, int timeout_ms)
 {
 #ifdef V2
-  uint8_t result[3];
-  return servo_send_instruction(id, SERVO_INSTRUCTION_PING, NULL, 0, result, 3, timeout_ms);
+    uint8_t result[3];
+    return servo_send_instruction(id, SERVO_INSTRUCTION_PING, NULL, 0, result, 3, timeout_ms);
 #else
-  return servo_send_instruction(id, SERVO_INSTRUCTION_PING, NULL, 0, NULL, 0, timeout_ms);
+    return servo_send_instruction(id, SERVO_INSTRUCTION_PING, NULL, 0, NULL, 0, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get              (uint8_t id, servo_register_t reg, float* result, int timeout_ms)
+servo_error_t servo_get(uint8_t id, servo_register_t reg, float *result, int timeout_ms)
 {
-  servo_error_t error;
-  uint8_t is_word = servo_register_is_word(reg);
+    servo_error_t error;
+    uint8_t is_word = servo_register_is_word(reg);
 
-  if(is_word)
+    if (is_word)
     {
-      uint16_t raw = 0;
-      error = servo_get_raw_word(id, reg, &raw, timeout_ms);
-      *result = servo_raw_to_anything(reg, (int)raw);
+        uint16_t raw = 0;
+        error = servo_get_raw_word(id, reg, &raw, timeout_ms);
+        *result = servo_raw_to_anything(reg, (int)raw);
     }
-  else
+    else
     {
-      uint8_t raw = 0;
-      error = servo_get_raw_byte(id, reg, &raw, timeout_ms);
-      *result = servo_raw_to_anything(reg, (int)raw);
+        uint8_t raw = 0;
+        error = servo_get_raw_byte(id, reg, &raw, timeout_ms);
+        *result = servo_raw_to_anything(reg, (int)raw);
     }
 
-  return error;
+    return error;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t _servo_set              (uint8_t id, servo_register_t reg, float  val, int timeout_ms, uint8_t do_now)
+servo_error_t _servo_set(uint8_t id, servo_register_t reg, float val, int timeout_ms, uint8_t do_now)
 {
-  servo_error_t error = SERVO_ERROR_RANGE;
-  uint8_t is_word = servo_register_is_word(reg);
-  int  raw = servo_anything_to_raw(reg, val);
+    servo_error_t error = SERVO_ERROR_RANGE;
+    uint8_t is_word = servo_register_is_word(reg);
+    int raw = servo_anything_to_raw(reg, val);
 
-  if(is_word)
+    if (is_word)
     {
-      if((raw >= 0) && (raw <= 0xFFFF))
-        error = _servo_set_raw_word(id, reg, (uint16_t)raw, timeout_ms, do_now);
+        if ((raw >= 0) && (raw <= 0xFFFF))
+            error = _servo_set_raw_word(id, reg, (uint16_t)raw, timeout_ms, do_now);
     }
-  else
+    else
     {
-      if((raw >= 0) && (raw <= 0xFF))
-        error = _servo_set_raw_byte(id, reg, (uint8_t)raw, timeout_ms, do_now);
+        if ((raw >= 0) && (raw <= 0xFF))
+            error = _servo_set_raw_byte(id, reg, (uint8_t)raw, timeout_ms, do_now);
     }
 
-  return error;
+    return error;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_set              (uint8_t id, servo_register_t reg, float  val, int timeout_ms)
+servo_error_t servo_set(uint8_t id, servo_register_t reg, float val, int timeout_ms)
 {
-  return _servo_set(id, reg, val, timeout_ms, 1);
+    return _servo_set(id, reg, val, timeout_ms, 1);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_set_multiple     (uint8_t ids[], servo_register_t start_reg, float values[], int num_ids, int num_values_per_servo)
+servo_error_t servo_set_multiple(uint8_t ids[], servo_register_t start_reg, float values[], int num_ids, int num_values_per_servo)
 {
-  int bytes_per_value[num_values_per_servo];
-  int* b = bytes_per_value;
-  int bytes_per_servo = 0;
-  int i, j, k;
-  int addr = (int)start_reg;
+    int bytes_per_value[num_values_per_servo];
+    int *b = bytes_per_value;
+    int bytes_per_servo = 0;
+    int i, j, k;
+    int addr = (int)start_reg;
 
-  uint8_t  raw_bytes[num_ids * 2]; //worst case scenario
-  uint8_t* r = raw_bytes;
-  int      raw_anything;
+    uint8_t raw_bytes[num_ids * 2]; //worst case scenario
+    uint8_t *r = raw_bytes;
+    int raw_anything;
 
-  for(i=0; i<num_values_per_servo; i++)
+    for (i = 0; i < num_values_per_servo; i++)
     {
-      *b = (servo_register_is_word((servo_register_t)addr)) ? 2 : 1;
-      bytes_per_servo += *b;
-      addr += *b++;
+        *b = (servo_register_is_word((servo_register_t)addr)) ? 2 : 1;
+        bytes_per_servo += *b;
+        addr += *b++;
     }
 
-  for(i=0; i<num_ids; i++)
+    for (i = 0; i < num_ids; i++)
     {
-      addr = start_reg;
-      b = bytes_per_value;
-      for(j=0; j<num_values_per_servo; j++)
+        addr = start_reg;
+        b = bytes_per_value;
+        for (j = 0; j < num_values_per_servo; j++)
         {
-          raw_anything = servo_anything_to_raw((servo_register_t)addr,  *values++);
+            raw_anything = servo_anything_to_raw((servo_register_t)addr, *values++);
 
-          for(k=0; k<*b; k++)
+            for (k = 0; k < *b; k++)
             {
-              *r++ = (raw_anything & 0xFF);
-              raw_anything >>= 8;
+                *r++ = (raw_anything & 0xFF);
+                raw_anything >>= 8;
             }
-          addr += *b++;
+            addr += *b++;
         }
     }
 
-  return servo_set_multiple_raw(ids, start_reg, raw_bytes, num_ids, bytes_per_servo);
+    return servo_set_multiple_raw(ids, start_reg, raw_bytes, num_ids, bytes_per_servo);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_prepare          (uint8_t id, servo_register_t reg, float  val, int timeout_ms)
+servo_error_t servo_prepare(uint8_t id, servo_register_t reg, float val, int timeout_ms)
 {
-  return _servo_set(id, reg, val, timeout_ms, 0);
+    return _servo_set(id, reg, val, timeout_ms, 0);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_do_prepared      (uint8_t id, int timeout_ms)
+servo_error_t servo_do_prepared(uint8_t id, int timeout_ms)
 {
-  return servo_send_instruction(id, SERVO_INSTRUCTION_ACTION, NULL, 0, NULL, 0, timeout_ms);
+    return servo_send_instruction(id, SERVO_INSTRUCTION_ACTION, NULL, 0, NULL, 0, timeout_ms);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-char* servo_errors_to_string  (servo_error_t error)
+char *servo_errors_to_string(servo_error_t error)
 {
-  static const char* const_error_strings[] /*PROGMEM*/ =
+    static const char *const_error_strings[] /*PROGMEM*/ =
+        {
+            "voltage",
+            "angle",
+            "overheat",
+            "range",
+            "checksum",
+            "overload",
+            "instruction",
+            "unknown",
+            "timeout",
+            "invalid_response",
+        };
+
+    static char result[100];
+    char *r = result;
+
+    if (error != SERVO_NO_ERROR)
     {
-      "voltage",
-      "angle",
-      "overheat",
-      "range",
-      "checksum",
-      "overload",
-      "instruction",
-      "unknown",
-      "timeout",
-      "invalid_response",
-    };
-
-  static char result[100];
-  char* r = result;
-
-  if(error != SERVO_NO_ERROR)
-    {
-      int i;
-      for(i=0; i<10; i++)
-        if ((1 << i) & error)
-          {
-            //this saves over 1K of code space
-            //r += sprintf(r, "%s ", const_error_strings[i]);
-            const char* s = const_error_strings[i];
-            while(*s != '\0')
-              *r++ = *s++;
-            *r++ = ' ';
-          }
+        int i;
+        for (i = 0; i < 10; i++)
+            if ((1 << i) & error)
+            {
+                //this saves over 1K of code space
+                //r += sprintf(r, "%s ", const_error_strings[i]);
+                const char *s = const_error_strings[i];
+                while (*s != '\0')
+                    *r++ = *s++;
+                *r++ = ' ';
+            }
     }
 
-  *r = '\0';
-  return result;
+    *r = '\0';
+    return result;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get_raw_byte     (uint8_t id, servo_register_t reg, uint8_t*  result, int timeout_ms)
+servo_error_t servo_get_raw_byte(uint8_t id, servo_register_t reg, uint8_t *result, int timeout_ms)
 {
 #ifdef V2
-  uint8_t params [4] = {(reg & 0xFF), 0, 1, 0};
-  return  servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, result, 1, timeout_ms);
+    uint8_t params[4] = {(reg & 0xFF), 0, 1, 0};
+    return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, result, 1, timeout_ms);
 #else
-  uint8_t params[2] = {reg, 1};
-  return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, result, 1, timeout_ms);
+    uint8_t params[2] = {reg, 1};
+    return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, result, 1, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get_raw_word     (uint8_t id, servo_register_t reg, uint16_t* result, int timeout_ms)
+servo_error_t servo_get_raw_word(uint8_t id, servo_register_t reg, uint16_t *result, int timeout_ms)
 {
-  uint8_t results[2] = {0, 0};
-  servo_error_t error;
+    uint8_t results[2] = {0, 0};
+    servo_error_t error;
 #ifdef V2
-  uint8_t params [4] = {reg, 0, 2, 0};
-  error = servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, results, 2, timeout_ms);
+    uint8_t params[4] = {reg, 0, 2, 0};
+    error = servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, results, 2, timeout_ms);
 #else
-  uint8_t params [2] = {reg, 2};
-  error = servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, results, 2, timeout_ms);
+    uint8_t params[2] = {reg, 2};
+    error = servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, results, 2, timeout_ms);
 #endif
-  *result = ((uint16_t)results[1] << 8) | ((uint16_t)results[0]);
+    *result = ((uint16_t)results[1] << 8) | ((uint16_t)results[0]);
 
-  return error;
+    return error;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get_raw_page     (uint8_t id, servo_register_t reg, uint8_t   result[], int num_bytes, int timeout_ms)
+servo_error_t servo_get_raw_page(uint8_t id, servo_register_t reg, uint8_t result[], int num_bytes, int timeout_ms)
 {
 #ifdef V2
-  uint8_t params [4] = {(reg & 0xFF), 0, (num_bytes & 0xFF), (num_bytes >> 8)};
-  return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, result, num_bytes, timeout_ms);
+    uint8_t params[4] = {(reg & 0xFF), 0, (num_bytes & 0xFF), (num_bytes >> 8)};
+    return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 4, result, num_bytes, timeout_ms);
 #else
-  uint8_t params [2] = {reg, num_bytes};
-  return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, result, num_bytes, timeout_ms);
+    uint8_t params[2] = {reg, num_bytes};
+    return servo_send_instruction(id, SERVO_INSTRUCTION_READ_DATA, params, 2, result, num_bytes, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t _servo_set_raw_byte     (uint8_t id, servo_register_t reg, uint8_t  value, int timeout_ms,  uint8_t do_now)
+servo_error_t _servo_set_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms, uint8_t do_now)
 {
-  servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
+    servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
 #ifdef V2
-  uint8_t params[3] = {reg, 0, value};
-  return servo_send_instruction(id, instruction, params, 3, NULL, 0, timeout_ms);
+    uint8_t params[3] = {reg, 0, value};
+    return servo_send_instruction(id, instruction, params, 3, NULL, 0, timeout_ms);
 #else
-  uint8_t params[2] = {reg, value};
-  return servo_send_instruction(id, instruction, params, 2, NULL, 0, timeout_ms);
+    uint8_t params[2] = {reg, value};
+    return servo_send_instruction(id, instruction, params, 2, NULL, 0, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t _servo_set_raw_word     (uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms,  uint8_t do_now)
+servo_error_t _servo_set_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms, uint8_t do_now)
 {
-  servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
+    servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
 #ifdef V2
-  uint8_t params[4] = {reg, 0, (value & 0xFF), (value >> 8)};
-  return servo_send_instruction(id, instruction, params, 4, NULL, 0, timeout_ms);
+    uint8_t params[4] = {reg, 0, (value & 0xFF), (value >> 8)};
+    return servo_send_instruction(id, instruction, params, 4, NULL, 0, timeout_ms);
 #else
-  uint8_t params[3] = {reg, (value & 0xFF), (value >> 8)};
-  return servo_send_instruction(id, instruction, params, 3, NULL, 0, timeout_ms);
+    uint8_t params[3] = {reg, (value & 0xFF), (value >> 8)};
+    return servo_send_instruction(id, instruction, params, 3, NULL, 0, timeout_ms);
 #endif
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t _servo_set_raw_page     (uint8_t id, servo_register_t reg, uint8_t  values[], int num_bytes, int timeout_ms, uint8_t do_now)
+servo_error_t _servo_set_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms, uint8_t do_now)
 {
-  servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
+    servo_instruction_t instruction = (do_now) ? SERVO_INSTRUCTION_WRITE_DATA : SERVO_INSTRUCTION_REG_WRITE;
 #ifdef V2
-  uint8_t params[num_bytes + 2];
+    uint8_t params[num_bytes + 2];
 #else
-  uint8_t params[num_bytes + 1];
+    uint8_t params[num_bytes + 1];
 #endif
-  uint8_t *p = params;
-  int n = num_bytes;
-  *p++ = reg;
+    uint8_t *p = params;
+    int n = num_bytes;
+    *p++ = reg;
 #ifdef V2
-  *p++ = 0;
+    *p++ = 0;
 #endif
-  while(n-- < 0) {
-    *p++ = *values++;
-  }
+    while (n-- < 0)
+    {
+        *p++ = *values++;
+    }
 
-  return servo_send_instruction(id, instruction, params, num_bytes, NULL, 0, timeout_ms);
+    return servo_send_instruction(id, instruction, params, num_bytes, NULL, 0, timeout_ms);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_set_raw_byte     (uint8_t id, servo_register_t reg, uint8_t   value,    int timeout_ms)
+servo_error_t servo_set_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms)
 {
     const int retry = 2;
     int retry_nb = 0;
     servo_error_t mot_err = SERVO_ERROR_TIMEOUT;
-    for (volatile int y = 0; y < 500; y++);
-    while((retry_nb < retry) & (mot_err == SERVO_ERROR_TIMEOUT)) {
+    for (volatile int y = 0; y < 500; y++)
+        ;
+    while ((retry_nb < retry) & (mot_err == SERVO_ERROR_TIMEOUT))
+    {
         mot_err = _servo_set_raw_byte(id, reg, value, timeout_ms, 1);
         retry_nb++;
     }
-  return mot_err;
+    return mot_err;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_set_raw_word     (uint8_t id, servo_register_t reg, uint16_t  value,    int timeout_ms)
+servo_error_t servo_set_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms)
 {
-  return _servo_set_raw_word(id, reg, value, timeout_ms, 1);
+    return _servo_set_raw_word(id, reg, value, timeout_ms, 1);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_set_raw_page     (uint8_t id, servo_register_t reg, uint8_t   values[], int num_bytes, int timeout_ms)
+servo_error_t servo_set_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms)
 {
-  return _servo_set_raw_page(id, reg, values, num_bytes, timeout_ms, 1);
+    return _servo_set_raw_page(id, reg, values, num_bytes, timeout_ms, 1);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_prepare_raw_byte (uint8_t id, servo_register_t reg, uint8_t   value,    int timeout_ms)
+servo_error_t servo_prepare_raw_byte(uint8_t id, servo_register_t reg, uint8_t value, int timeout_ms)
 {
-  return _servo_set_raw_byte(id, reg, value, timeout_ms, 0);
+    return _servo_set_raw_byte(id, reg, value, timeout_ms, 0);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_prepare_raw_word (uint8_t id, servo_register_t reg, uint16_t  value,    int timeout_ms)
+servo_error_t servo_prepare_raw_word(uint8_t id, servo_register_t reg, uint16_t value, int timeout_ms)
 {
-  return _servo_set_raw_word(id, reg, value, timeout_ms, 0);
+    return _servo_set_raw_word(id, reg, value, timeout_ms, 0);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_prepare_raw_page (uint8_t id, servo_register_t reg, uint8_t   values[], int num_bytes, int timeout_ms)
+servo_error_t servo_prepare_raw_page(uint8_t id, servo_register_t reg, uint8_t values[], int num_bytes, int timeout_ms)
 {
-  return _servo_set_raw_page(id, reg, values, num_bytes, timeout_ms, 0);
+    return _servo_set_raw_page(id, reg, values, num_bytes, timeout_ms, 0);
 }
 
 /*--------------------------------------------------------------------------------------------*/
 servo_error_t servo_set_multiple_raw(uint8_t ids[], servo_register_t start_reg, uint8_t bytes[], int num_ids, int bytes_per_servo)
 {
-  int i, j;
-  uint8_t num_params = num_ids * (bytes_per_servo + 1) + 2;
-  uint8_t params[num_params];
-  uint8_t *p = params;
+    int i, j;
+    uint8_t num_params = num_ids * (bytes_per_servo + 1) + 2;
+    uint8_t params[num_params];
+    uint8_t *p = params;
 
-  *p++ = start_reg;
-  *p++ = bytes_per_servo;
+    *p++ = start_reg;
+    *p++ = bytes_per_servo;
 
-  for(i=0; i<num_ids; i++)
+    for (i = 0; i < num_ids; i++)
     {
-      *p++ = *ids++;
-      for(j=0; j<bytes_per_servo; j++)
-        *p++ = *bytes++;
+        *p++ = *ids++;
+        for (j = 0; j < bytes_per_servo; j++)
+            *p++ = *bytes++;
     }
 
-  return servo_send_instruction(SERVO_BROADCAST_ID, SERVO_INSTRUCTION_SYNC_WRITE, params, num_params, NULL, 0, 0);
+    return servo_send_instruction(SERVO_BROADCAST_ID, SERVO_INSTRUCTION_SYNC_WRITE, params, num_params, NULL, 0, 0);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-void* servo_get_conversion_function_for_register(servo_register_t reg, uint8_t to_raw)
+void *servo_get_conversion_function_for_register(servo_register_t reg, uint8_t to_raw)
 {
-  int (*result)() = NULL;
+    int (*result)() = NULL;
 
-  switch(reg)
+    switch (reg)
     {
-      case SERVO_REGISTER_BAUD_RATE          :
-        result = (to_raw) ?
-          (int (*)()) servo_baud_bps_to_raw:
-          (int (*)()) servo_raw_to_baud_bps;
+    case SERVO_REGISTER_BAUD_RATE:
+        result = (to_raw) ? (int (*)())servo_baud_bps_to_raw : (int (*)())servo_raw_to_baud_bps;
         break;
 
-      case SERVO_REGISTER_RETURN_DELAY_TIME  :
-        result = (to_raw) ?
-          (int (*)()) servo_return_delay_usec_to_raw:
-          (int (*)()) servo_raw_to_return_delay_usec;
+    case SERVO_REGISTER_RETURN_DELAY_TIME:
+        result = (to_raw) ? (int (*)())servo_return_delay_usec_to_raw : (int (*)())servo_raw_to_return_delay_usec;
         break;
 
-      case SERVO_REGISTER_MAX_ANGLE          :
-      case SERVO_REGISTER_MIN_ANGLE          :
-      case SERVO_REGISTER_GOAL_ANGLE         :
-      case SERVO_REGISTER_PRESENT_ANGLE      :
-        result = (to_raw) ?
-          (int (*)()) servo_radians_to_raw:
-          (int (*)()) servo_raw_to_radians;
+    case SERVO_REGISTER_MAX_ANGLE:
+    case SERVO_REGISTER_MIN_ANGLE:
+    case SERVO_REGISTER_GOAL_ANGLE:
+    case SERVO_REGISTER_PRESENT_ANGLE:
+        result = (to_raw) ? (int (*)())servo_radians_to_raw : (int (*)())servo_raw_to_radians;
         break;
 
-      case SERVO_REGISTER_MIN_VOLTAGE        :
-      case SERVO_REGISTER_MAX_VOLTAGE        :
-      case SERVO_REGISTER_PRESENT_VOLTAGE    :
-        result = (to_raw) ?
-          (int (*)()) servo_volts_to_raw:
-          (int (*)()) servo_raw_to_volts;
+    case SERVO_REGISTER_MIN_VOLTAGE:
+    case SERVO_REGISTER_MAX_VOLTAGE:
+    case SERVO_REGISTER_PRESENT_VOLTAGE:
+        result = (to_raw) ? (int (*)())servo_volts_to_raw : (int (*)())servo_raw_to_volts;
         break;
 
-      case SERVO_REGISTER_MAX_TORQUE         :
-      case SERVO_REGISTER_PRESENT_TORQUE     :
-      case SERVO_REGISTER_TORQUE_LIMIT       :
-      case SERVO_REGISTER_GOAL_TORQUE        :
-        result = (to_raw) ?
-          (int (*)()) servo_torque_percentage_to_raw:
-          (int (*)()) servo_raw_to_torque_percentage;
+    case SERVO_REGISTER_MAX_TORQUE:
+    case SERVO_REGISTER_PRESENT_TORQUE:
+    case SERVO_REGISTER_TORQUE_LIMIT:
+    case SERVO_REGISTER_GOAL_TORQUE:
+        result = (to_raw) ? (int (*)())servo_torque_percentage_to_raw : (int (*)())servo_raw_to_torque_percentage;
         break;
 
-      case SERVO_REGISTER_D_GAIN             :
-        result = (to_raw) ?
-          (int (*)()) servo_d_gain_to_raw:
-          (int (*)()) servo_raw_to_d_gain;
+    case SERVO_REGISTER_D_GAIN:
+        result = (to_raw) ? (int (*)())servo_d_gain_to_raw : (int (*)())servo_raw_to_d_gain;
         break;
 
-      case SERVO_REGISTER_I_GAIN             :
-        result = (to_raw) ?
-          (int (*)()) servo_i_gain_to_raw:
-          (int (*)()) servo_raw_to_i_gain;
+    case SERVO_REGISTER_I_GAIN:
+        result = (to_raw) ? (int (*)())servo_i_gain_to_raw : (int (*)())servo_raw_to_i_gain;
         break;
 
-      case SERVO_REGISTER_P_GAIN             :
-        result = (to_raw) ?
-          (int (*)()) servo_p_gain_to_raw:
-          (int (*)()) servo_raw_to_p_gain;
+    case SERVO_REGISTER_P_GAIN:
+        result = (to_raw) ? (int (*)())servo_p_gain_to_raw : (int (*)())servo_raw_to_p_gain;
         break;
 
-      case SERVO_REGISTER_MOVING_SPEED       :
-      case SERVO_REGISTER_PRESENT_SPEED      :
-        result = (to_raw) ?
-          (int (*)()) servo_radians_per_sec_to_raw:
-          (int (*)()) servo_raw_to_radians_per_sec;
+    case SERVO_REGISTER_MOVING_SPEED:
+    case SERVO_REGISTER_PRESENT_SPEED:
+        result = (to_raw) ? (int (*)())servo_radians_per_sec_to_raw : (int (*)())servo_raw_to_radians_per_sec;
         break;
 
-      case SERVO_REGISTER_CURRENT_CONSUMPTION:
-        result = (to_raw) ?
-          (int (*)()) servo_amperes_to_raw:
-          (int (*)()) servo_raw_to_amperes;
+    case SERVO_REGISTER_CURRENT_CONSUMPTION:
+        result = (to_raw) ? (int (*)())servo_amperes_to_raw : (int (*)())servo_raw_to_amperes;
         break;
 
-      case SERVO_REGISTER_GOAL_ACCELERATION  :
-        result = (to_raw) ?
-          (int (*)()) servo_radians_per_sec_2_to_raw:
-          (int (*)()) servo_raw_to_radians_per_sec_2;
+    case SERVO_REGISTER_GOAL_ACCELERATION:
+        result = (to_raw) ? (int (*)())servo_radians_per_sec_2_to_raw : (int (*)())servo_raw_to_radians_per_sec_2;
         break;
 
-      default:
+    default:
         result = NULL;
-      break;
+        break;
     }
 
-  return (void*)result;
+    return (void *)result;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-char get_register_size(servo_register_t reg) {
+char get_register_size(servo_register_t reg)
+{
     if ((reg == SERVO_REGISTER_MODEL_NUMBER) ||
         (reg == SERVO_REGISTER_MIN_ANGLE) ||
         (reg == SERVO_REGISTER_MAX_ANGLE) ||
@@ -498,177 +484,204 @@ char get_register_size(servo_register_t reg) {
         (reg == SERVO_REGISTER_PRESENT_TORQUE) ||
         (reg == SERVO_REGISTER_PUNCH) ||
         (reg == SERVO_REGISTER_CURRENT_CONSUMPTION) ||
-        (reg == SERVO_REGISTER_GOAL_TORQUE)) {
+        (reg == SERVO_REGISTER_GOAL_TORQUE))
+    {
         return 2;
     }
     return 1;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-int      servo_anything_to_raw (servo_register_t reg, float anything)
+int servo_anything_to_raw(servo_register_t reg, float anything)
 {
-  int (*conversion)(float) = (int (*)(float))servo_get_conversion_function_for_register(reg, 1);
-  return (conversion == NULL) ? (int)(anything + 0.5) : conversion(anything);
+    int (*conversion)(float) = (int (*)(float))servo_get_conversion_function_for_register(reg, 1);
+    return (conversion == NULL) ? (int)(anything + 0.5) : conversion(anything);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-float    servo_raw_to_anything (servo_register_t reg, int raw)
+float servo_raw_to_anything(servo_register_t reg, int raw)
 {
-  float (*conversion)(int) = (float (*)(int))servo_get_conversion_function_for_register(reg, 0);
-  return (conversion == NULL) ? (float) raw : conversion(raw);
+    float (*conversion)(int) = (float (*)(int))servo_get_conversion_function_for_register(reg, 0);
+    return (conversion == NULL) ? (float)raw : conversion(raw);
 }
 
 /*--------------------------------------------------------------------------------------------*/
-int  servo_baud_bps_to_raw(float baud)
+int servo_baud_bps_to_raw(float baud)
 {
-  uint8_t result = 0xFF;
-  float actual_baud;
+    uint8_t result = 0xFF;
+    float actual_baud;
 
-  if((baud <= 2000000) && (baud >= 8000))
-    result = (int)(((2000000.0 / (float)baud) - 1) + 0.5);
+    if ((baud <= 2000000) && (baud >= 8000))
+        result = (int)(((2000000.0 / (float)baud) - 1) + 0.5);
 
-  else switch((unsigned) baud)
-    {
-      case 2250000: result = 250; break;
-      case 2500000: result = 251; break;
-      case 3000000: result = 252; break;
-      default: break;
-    }
+    else
+        switch ((unsigned)baud)
+        {
+        case 2250000:
+            result = 250;
+            break;
+        case 2500000:
+            result = 251;
+            break;
+        case 3000000:
+            result = 252;
+            break;
+        default:
+            break;
+        }
 
-  actual_baud = servo_raw_to_baud_bps(result);
-  if(result * 0.03 > fabs(result - actual_baud))
-    result = 0xFF; //invalid baud value, servo will return error and baud will not change;
+    actual_baud = servo_raw_to_baud_bps(result);
+    if (result * 0.03 > fabs(result - actual_baud))
+        result = 0xFF; //invalid baud value, servo will return error and baud will not change;
 
-  return result;
+    return result;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-float    servo_raw_to_baud_bps(int raw )
+float servo_raw_to_baud_bps(int raw)
 {
-  uint32_t result = 0;
+    uint32_t result = 0;
 
-  if(raw <= 249)
-    result = 2000000 / (raw + 1);
-  else switch(raw)
-    {
-      case 250: result = 2250000; break;
-      case 251: result = 2500000; break;
-      case 252: result = 3000000; break;
-      default: break;
-    }
+    if (raw <= 249)
+        result = 2000000 / (raw + 1);
+    else
+        switch (raw)
+        {
+        case 250:
+            result = 2250000;
+            break;
+        case 251:
+            result = 2500000;
+            break;
+        case 252:
+            result = 3000000;
+            break;
+        default:
+            break;
+        }
 
-  return result;
+    return result;
 }
 
 /*as functions and not macros so pointers can be used */
 /*--------------------------------------------------------------------------------------------*/
-int   servo_return_delay_usec_to_raw (float usec)   {return usec * 0.5;}
+int servo_return_delay_usec_to_raw(float usec) { return usec * 0.5; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_return_delay_usec (int raw)      {return raw * 2  ;}
+float servo_raw_to_return_delay_usec(int raw) { return raw * 2; }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_radians_to_raw           (float rad)
+int servo_radians_to_raw(float rad)
 {
-  float two_pi = 2 * M_PI;
-  while(rad >= two_pi) rad -= two_pi;
-  while(rad <  0     ) rad += two_pi;
+    float two_pi = 2 * M_PI;
+    while (rad >= two_pi)
+        rad -= two_pi;
+    while (rad < 0)
+        rad += two_pi;
 
-  return  (int) (rad * (4095.0 / two_pi) + 0.5);
+    return (int)(rad * (4095.0 / two_pi) + 0.5);
 }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_radians           (int raw)      {return raw * (6.28318531 / 4095.0);}
+float servo_raw_to_radians(int raw) { return raw * (6.28318531 / 4095.0); }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_torque_percentage_to_raw (float percent)
+int servo_torque_percentage_to_raw(float percent)
 {
-  int result;
-  int is_counter_clockwise = (percent < 0);
-  if(is_counter_clockwise) percent *= -1;
-  result = percent * 10.23 + 0.5;
-  if(is_counter_clockwise) result |= 1024;
+    int result;
+    int is_counter_clockwise = (percent < 0);
+    if (is_counter_clockwise)
+        percent *= -1;
+    result = percent * 10.23 + 0.5;
+    if (is_counter_clockwise)
+        result |= 1024;
 
-  return result;
+    return result;
 }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_torque_percentage (int raw)
+float servo_raw_to_torque_percentage(int raw)
 {
-  float result;
-  int is_negative = (raw >= 0x400); //B10000000000
-  raw &= 0x3FF;                     //B01111111111
-  result = raw * (100.0 / 1023.0);
-  if(is_negative) result *= -1;
+    float result;
+    int is_negative = (raw >= 0x400); //B10000000000
+    raw &= 0x3FF;                     //B01111111111
+    result = raw * (100.0 / 1023.0);
+    if (is_negative)
+        result *= -1;
 
-  return result;
+    return result;
 }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_p_gain_to_raw            (float gain)   {return gain * 0.8 + 0.5;}
+int servo_p_gain_to_raw(float gain) { return gain * 0.8 + 0.5; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_p_gain            (int raw)      {return raw * 1.25;}
+float servo_raw_to_p_gain(int raw) { return raw * 1.25; }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_i_gain_to_raw            (float gain)   {return gain * (2048.0 / 1000.0) + 0.5;}
+int servo_i_gain_to_raw(float gain) { return gain * (2048.0 / 1000.0) + 0.5; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_i_gain            (int raw)      {return raw * (1000.0 / 2048.0);}
+float servo_raw_to_i_gain(int raw) { return raw * (1000.0 / 2048.0); }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_d_gain_to_raw            (float gain)   {return gain * 250;}
+int servo_d_gain_to_raw(float gain) { return gain * 250; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_d_gain            (int raw)      {return raw * 0.004;}
+float servo_raw_to_d_gain(int raw) { return raw * 0.004; }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_volts_to_raw             (float volts)  {return volts * 10;}
+int servo_volts_to_raw(float volts) { return volts * 10; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_volts             (int raw)      {return raw * 0.1;}
+float servo_raw_to_volts(int raw) { return raw * 0.1; }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_amperes_to_raw           (float amps)   {return amps * 222.22222 + 2048.5;}
+int servo_amperes_to_raw(float amps) { return amps * 222.22222 + 2048.5; }
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_amperes           (int raw)      {return 0.0045 * (raw - 2048);}
+float servo_raw_to_amperes(int raw) { return 0.0045 * (raw - 2048); }
 /*--------------------------------------------------------------------------------------------*/
-int   servo_radians_per_sec_to_raw   (float rad)
+int servo_radians_per_sec_to_raw(float rad)
 {
-  int is_counter_clockwise = (rad < 0);
-  if(is_counter_clockwise) rad *= -1;
-  int result = (rad * (60 / (0.114 * 6.28318531))) + 0.5;
-  if(result > 1023) result = 1023;
+    int is_counter_clockwise = (rad < 0);
+    if (is_counter_clockwise)
+        rad *= -1;
+    int result = (rad * (60 / (0.114 * 6.28318531))) + 0.5;
+    if (result > 1023)
+        result = 1023;
 
-  //wheel mode needs this
-  //if(result == 0) result = 1024;
+    //wheel mode needs this
+    //if(result == 0) result = 1024;
 
-  //joint mode needs this
-  if(result == 0) result = 1;
+    //joint mode needs this
+    if (result == 0)
+        result = 1;
 
-  if(is_counter_clockwise) result |= 0x400;
+    if (is_counter_clockwise)
+        result |= 0x400;
 
-  return result;
+    return result;
 
-  //for joint mode 0 should indicate the motor's max speed,
-  //but this is not implemented because 1023 is twice as fast as
-  // the motor's max speed anyhow;
-  //return (result < 1024) ? result : 0;
-}
-
-/*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_radians_per_sec   (int raw)
-{
-  //return (raw > 0) ? (raw - 1024) * (SERVO_MAX_SPEED / 1024.0) : SERVO_MAX_SPEED;
-
-  float SERVO_MAX_SPEED = 13;
-  float result;
-  int is_negative = raw >= 0x400; //B10000000000
-  raw &= 0x3FF;                   //B01111111111
-  result = raw * (0.114 * 6.28318531 / 60.0); // rad / sec
-  if(is_negative) result *= -1;
-
-  return (raw > 0) ? result : SERVO_MAX_SPEED;
+    //for joint mode 0 should indicate the motor's max speed,
+    //but this is not implemented because 1023 is twice as fast as
+    // the motor's max speed anyhow;
+    //return (result < 1024) ? result : 0;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-int   servo_radians_per_sec_2_to_raw   (float rad)
+float servo_raw_to_radians_per_sec(int raw)
 {
-  int result = rad * (1.0 / 0.14979598) + 0.5;
-  return (result < 255) ? result : 0;
+    //return (raw > 0) ? (raw - 1024) * (SERVO_MAX_SPEED / 1024.0) : SERVO_MAX_SPEED;
+
+    float SERVO_MAX_SPEED = 13;
+    float result;
+    int is_negative = raw >= 0x400;             //B10000000000
+    raw &= 0x3FF;                               //B01111111111
+    result = raw * (0.114 * 6.28318531 / 60.0); // rad / sec
+    if (is_negative)
+        result *= -1;
+
+    return (raw > 0) ? result : SERVO_MAX_SPEED;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-float servo_raw_to_radians_per_sec_2   (int raw)
+int servo_radians_per_sec_2_to_raw(float rad)
 {
-  float SERVO_MAX_ACCEL = 39;
-  return (raw > 0) ? raw * 0.14979598 : SERVO_MAX_ACCEL;
+    int result = rad * (1.0 / 0.14979598) + 0.5;
+    return (result < 255) ? result : 0;
+}
+
+/*--------------------------------------------------------------------------------------------*/
+float servo_raw_to_radians_per_sec_2(int raw)
+{
+    float SERVO_MAX_ACCEL = 39;
+    return (raw > 0) ? raw * 0.14979598 : SERVO_MAX_ACCEL;
 }
 
 /*--------------------------------------------------------------------------------------------*/
@@ -676,145 +689,146 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
                                      uint8_t parameters[], uint8_t num_parameters,
                                      uint8_t result[], int num_results, int timeout_ms)
 {
-  int data_size;
+    int data_size;
 #ifdef V2
-  data_size = num_parameters + 10;
+    data_size = num_parameters + 10;
 #else
-  data_size = num_parameters + 6;
+    data_size = num_parameters + 6;
 #endif
-  uint8_t data[data_size];
-  uint8_t *d = data;
-  uint16_t checksum = 0;
-  servo_error_t error = SERVO_NO_ERROR;
+    uint8_t data[data_size];
+    uint8_t *d = data;
+    uint16_t checksum = 0;
+    servo_error_t error = SERVO_NO_ERROR;
 
-  //could check instruction and number of parameters here;
+    //could check instruction and number of parameters here;
 
-  *d++ = 0xFF;
-  *d++ = 0xFF;
+    *d++ = 0xFF;
+    *d++ = 0xFF;
 #ifdef V2
-  *d++ = 0xFD;
-  *d++ = 0x00;
+    *d++ = 0xFD;
+    *d++ = 0x00;
 #endif
-  *d++ = id;
+    *d++ = id;
 #ifdef V2
-  *d++ = num_parameters + 3;
-  *d++ = 0;
+    *d++ = num_parameters + 3;
+    *d++ = 0;
 #else
-  *d++ = num_parameters + 2;
+    *d++ = num_parameters + 2;
 #endif
-  *d++ = (uint8_t) instruction;
+    *d++ = (uint8_t)instruction;
 
 #ifdef V2
-  uint16_t num_parameters_cpy = num_parameters;
-  while(num_parameters_cpy-- > 0)
-  {
-	*d++ = *parameters++;
-  }
-  checksum = update_crc(0, data, (num_parameters + 3) + 5);
-  *d++ = (uint8_t)checksum;
-  *d++ = (uint8_t)(checksum >> 8);
+    uint16_t num_parameters_cpy = num_parameters;
+    while (num_parameters_cpy-- > 0)
+    {
+        *d++ = *parameters++;
+    }
+    checksum = update_crc(0, data, (num_parameters + 3) + 5);
+    *d++ = (uint8_t)checksum;
+    *d++ = (uint8_t)(checksum >> 8);
 #else
-  checksum = data[2] + data[3] + data[4];
+    checksum = data[2] + data[3] + data[4];
 
-  while(num_parameters-- > 0)
-	{
-	  checksum += *parameters;
-	  *d++ = *parameters++;
-	}
+    while (num_parameters-- > 0)
+    {
+        checksum += *parameters;
+        *d++ = *parameters++;
+    }
 
-  *d++ = ~(uint8_t)checksum;
+    *d++ = ~(uint8_t)checksum;
 #endif
-  huart3.Init.Mode = UART_MODE_TX;
-  HAL_UART_Init(&huart3);
-  HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_OUTPUT);
-  //Delay was necessary when on solderless breadboard, but not on custom PCB (probably stray capacitance)
-  //delayMicroseconds(10);
-  HAL_UART_Transmit(&huart3, data, data_size, timeout_ms);
+    huart3.Init.Mode = UART_MODE_TX;
+    HAL_UART_Init(&huart3);
+    HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_OUTPUT);
+    //Delay was necessary when on solderless breadboard, but not on custom PCB (probably stray capacitance)
+    //delayMicroseconds(10);
+    HAL_UART_Transmit(&huart3, data, data_size, timeout_ms);
 
-  //Datasheet says to disable and enable interrupts here but the given reason seems
-  //unnecessary, and without interrupts, flush won't know that the last byte has been transmitted
-  //servo_serial->write(data, data_size-1);
-  HAL_GPIO_WritePin(DXL_DIR_GPIO_Port,DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  HAL_UART_Init(&huart3);
+    //Datasheet says to disable and enable interrupts here but the given reason seems
+    //unnecessary, and without interrupts, flush won't know that the last byte has been transmitted
+    //servo_serial->write(data, data_size-1);
+    HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
+    huart3.Init.Mode = UART_MODE_TX_RX;
+    HAL_UART_Init(&huart3);
 
-  if(id != SERVO_BROADCAST_ID)
-    error = servo_get_response(id, result, num_results, timeout_ms);
+    if (id != SERVO_BROADCAST_ID)
+        error = servo_get_response(id, result, num_results, timeout_ms);
 
-  return error;
+    return error;
 }
 
 /*--------------------------------------------------------------------------------------------*/
-servo_error_t servo_get_response    (uint8_t id, uint8_t result[], int result_size, int timeout_ms)
+servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, int timeout_ms)
 {
-  int data_size;
+    int data_size;
 #ifdef V2
-	  data_size = result_size + 11;
+    data_size = result_size + 11;
 #else
-	  data_size = result_size + 6;
+    data_size = result_size + 6;
 #endif
-  uint8_t data[data_size];
-  uint8_t* d = data;
-  servo_error_t error = SERVO_NO_ERROR;
-  uint16_t checksum;
+    uint8_t data[data_size];
+    uint8_t *d = data;
+    servo_error_t error = SERVO_NO_ERROR;
 
-  if(HAL_UART_Receive(&huart3, data, data_size, timeout_ms) == HAL_TIMEOUT) {
-    return SERVO_ERROR_TIMEOUT;
-  }
+    if (HAL_UART_Receive(&huart3, data, data_size, timeout_ms) == HAL_TIMEOUT)
+    {
+        return SERVO_ERROR_TIMEOUT;
+    }
 #ifdef V2
-	  if((data[0] != 0xFF)          ||
-	     (data[1] != 0xFF)          ||
-	     (data[2] != 0xFD)          ||
-	     (data[4] != id  )          ||
-	     (data[5] != (uint8_t)(data_size - 7)) ||
-	     (data[6] != (uint8_t)((data_size - 7) >> 8)) ||
-	     (data[7] != 0x55  ) )
-	    return SERVO_ERROR_INVALID_RESPONSE;
+    if ((data[0] != 0xFF) ||
+        (data[1] != 0xFF) ||
+        (data[2] != 0xFD) ||
+        (data[4] != id) ||
+        (data[5] != (uint8_t)(data_size - 7)) ||
+        (data[6] != (uint8_t)((data_size - 7) >> 8)) ||
+        (data[7] != 0x55))
+        return SERVO_ERROR_INVALID_RESPONSE;
 #else
-	  if((data[0] != 0xFF)          ||
-	     (data[1] != 0xFF)          ||
-	     (data[2] != id  )          ||
-	     (data[3] != data_size - 4)  )
-	    return SERVO_ERROR_INVALID_RESPONSE;
+    if ((data[0] != 0xFF) ||
+        (data[1] != 0xFF) ||
+        (data[2] != id) ||
+        (data[3] != data_size - 4))
+        return SERVO_ERROR_INVALID_RESPONSE;
 #endif
 
 #ifdef V2
-	  error = (servo_error_t)data[8];
+    error = (servo_error_t)data[8];
 #else
-	  error = (servo_error_t)data[4];
+    error = (servo_error_t)data[4];
 #endif
 #ifdef V2
-	  d = data + 9;
-	  uint16_t result_size_cpy = result_size;
-	  while(result_size_cpy-- > 0)
-	  {
-		*result++ = *d++;
-	  }
-  	  checksum = update_crc(0, data, (result_size + 4) + 5);
-  	  uint16_t rx_checksum = (uint16_t)data[data_size-2] | ((uint16_t)data[data_size-1] << 8);
-	  if(rx_checksum != checksum) {
-		  error = (servo_error_t) (error | SERVO_ERROR_INVALID_RESPONSE);
-	  }
+    d = data + 9;
+    uint16_t result_size_cpy = result_size;
+    while (result_size_cpy-- > 0)
+    {
+        *result++ = *d++;
+    }
+    checksum = update_crc(0, data, (result_size + 4) + 5);
+    uint16_t rx_checksum = (uint16_t)data[data_size - 2] | ((uint16_t)data[data_size - 1] << 8);
+    if (rx_checksum != checksum)
+    {
+        error = (servo_error_t)(error | SERVO_ERROR_INVALID_RESPONSE);
+    }
 #else
-    	  uint8_t checksumlow = data[2] + data[3] + data[4];
-    	  d = data + 5;
-    	  while(result_size-- > 0)
-    	  {
-    	      checksumlow += *d;
-    	    *result++ = *d++;
-    	  }
-    	  checksumlow = ~checksumlow;
-    	  if(*d != checksumlow)
-    	    error = (servo_error_t) (error | SERVO_ERROR_INVALID_RESPONSE);
+    uint8_t checksumlow = data[2] + data[3] + data[4];
+    d = data + 5;
+    while (result_size-- > 0)
+    {
+        checksumlow += *d;
+        *result++ = *d++;
+    }
+    checksumlow = ~checksumlow;
+    if (*d != checksumlow)
+        error = (servo_error_t)(error | SERVO_ERROR_INVALID_RESPONSE);
 #endif
-  return error;
+    return error;
 }
 
 #ifdef V2
 uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
 {
-	uint16_t i, j;
-	uint16_t crc_table[256] = {
+    uint16_t i, j;
+    uint16_t crc_table[256] = {
         0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
         0x8033, 0x0036, 0x003C, 0x8039, 0x0028, 0x802D, 0x8027, 0x0022,
         0x8063, 0x0066, 0x006C, 0x8069, 0x0078, 0x807D, 0x8077, 0x0072,
@@ -846,10 +860,9 @@ uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk
         0x8243, 0x0246, 0x024C, 0x8249, 0x0258, 0x825D, 0x8257, 0x0252,
         0x0270, 0x8275, 0x827F, 0x027A, 0x826B, 0x026E, 0x0264, 0x8261,
         0x0220, 0x8225, 0x822F, 0x022A, 0x823B, 0x023E, 0x0234, 0x8231,
-        0x8213, 0x0216, 0x021C, 0x8219, 0x0208, 0x820D, 0x8207, 0x0202
-    };
+        0x8213, 0x0216, 0x021C, 0x8219, 0x0208, 0x820D, 0x8207, 0x0202};
 
-    for(j = 0; j < data_blk_size; j++)
+    for (j = 0; j < data_blk_size; j++)
     {
         i = ((uint16_t)(crc_accum >> 8) ^ data_blk_ptr[j]) & 0xFF;
         crc_accum = (crc_accum << 8) ^ crc_table[i];

@@ -8,16 +8,16 @@
         "url": "https://luos.io"
     },
     "licence": "MIT",
-    "dependencies":
-    [
+    "dependencies": [
         {
-        "name": "Luos"
+            "name": "Luos"
         }
     ],
     "build": {
         "flags": [
             "-D MAX_VM_NUMBER=2",
-            "-D MSG_BUFFER_SIZE=10"
+            "-D MSG_BUFFER_SIZE=10",
+            "-DVERSION=0.6.0"
         ]
     }
-} 
+}
