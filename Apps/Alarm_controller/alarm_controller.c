@@ -1,17 +1,18 @@
 #include "alarm_controller.h"
+#include "main.h"
 
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
 #define UPDATE_PERIOD_MS 10
-#define BLINK_NUMBER 6
+#define BLINK_NUMBER 3
+
+#define LIGHT_INTENSITY 255
+#define MOVEMENT_SENSIBILITY 20
 
 module_t *app;
-volatile uint8_t lock = 1;
+volatile control_mode_t control_mode;
 uint8_t blink_state = 0;
-volatile uint8_t setup = 0;
-volatile uint32_t last_systick = 0;
-uint8_t init = 0;
 
 // Imu report struct
 typedef struct __attribute__((__packed__))
@@ -36,26 +37,9 @@ typedef struct __attribute__((__packed__))
 
 typedef enum
 {
-    START_CONTROLLER_APP = LUOS_LAST_MOD,
-    ALARM_CONTROLLER_APP
-} alarm_t;
-
-//*************** Local functions****************
-
-void get_gps()
-{
-    int id = id_from_alias("gps");
-    if (id > 0)
-    {
-        // we get a lock, ask it state
-        msg_t msg;
-        msg.header.cmd = ASK_PUB_CMD;
-        msg.header.size = 0;
-        msg.header.target = id;
-        msg.header.target_mode = IDACK;
-        luos_send(app, &msg);
-    }
-}
+    ALARM_CONTROLLER_APP = LUOS_LAST_TYPE,
+    START_CONTROLLER_APP
+} alarm_apps_type_t;
 
 //*************** Standard functions****************
 
@@ -63,75 +47,84 @@ void rx_alarm_controller_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == GYRO_3D)
     {
-        // this is the gps reply
-        if (lock)
+        // this is imu informations
+        if (control_mode.mode_control == PLAY)
         {
             float value[3];
             memcpy(value, msg->data, msg->header.size);
-            if ((value[0] > 300) || (value[1] > 300) || (value[2] > 300))
+            if ((value[0] > MOVEMENT_SENSIBILITY) || (value[1] > MOVEMENT_SENSIBILITY) || (value[2] > MOVEMENT_SENSIBILITY))
             {
                 blink_state = 1;
             }
         }
         return;
     }
-    if (msg->header.cmd == QUATERNION)
+    if (msg->header.cmd == CONTROL)
     {
-        // setup gps
-        setup = 1;
-    }
-    if (msg->header.cmd == IO_STATE)
-    {
-        // this is the lock info
-        lock = msg->data[0];
+        control_mode.unmap = msg->data[0];
         return;
     }
 }
 
 void alarm_controller_init(void)
 {
+    // By default this app running
+    control_mode.mode_control = PLAY;
+    // Create App
     app = luos_module_create(rx_alarm_controller_cb, ALARM_CONTROLLER_APP, "alarm_control", STRINGIFY(VERSION));
-    last_systick = HAL_GetTick();
 }
 
 void alarm_controller_loop(void)
 {
+    static short previous_id = -1;
     static uint8_t blink = 0;
-    static uint8_t blink_nb = BLINK_NUMBER;
+    static uint8_t blink_nb = BLINK_NUMBER * 2;
     static uint32_t last_blink = 0;
 
-    if (!init)
+    // ********** hot plug management ************
+    // Check if we have done the first init or if module Id have changed
+    if (previous_id != id_from_module(app))
     {
-        if (id_from_alias("alarm_control") == -1)
+        if (id_from_module(app) == 0)
         {
-            if (HAL_GetTick() - last_systick > 1500)
+            // We don't have any ID, meaning no detection occure or detection is occuring.
+            if (previous_id == -1)
             {
-                // No detection occure, do it
-                detect_modules(app);
+                // This is the really first init, we have to make it.
+                // Be sure the network is powered up 1500 ms before starting a detection
+                if (HAL_GetTick() > 1500)
+                {
+                    // No detection occure, do it
+                    detect_modules(app);
+                }
+            }
+            else
+            {
+                // someone is making a detection, let it finish.
+                // reset the init state to be ready to setup module at the end of detection
+                previous_id = 0;
             }
         }
         else
         {
-            // try to find an alarm and set light transition time
-            int id = id_from_alias("alarm");
-            float time = 0.5f;
+            // Make modules configurations
+            // try to find a RGB led and set light transition time just to be fancy
+            int id = id_from_type(COLOR_MOD);
             if (id > 0)
             {
                 msg_t msg;
-                msg.header.cmd = TIME;
-                msg.header.size = sizeof(float);
                 msg.header.target = id;
                 msg.header.target_mode = IDACK;
-                memcpy(msg.data, &time, sizeof(float));
+                time_luos_t time = time_from_sec(0.5f);
+                time_to_msg(&time, &msg);
                 luos_send(app, &msg);
-                init = 1;
             }
-            // try to find a gps and set parameters to send back Gyro acceleration
-            id = id_from_alias("gps");
+            // try to find a gps and set parameters to disable quaternion and send back Gyro acceleration and euler.
             imu_report_t report;
             report.gyro = 1;
             report.euler = 1;
             report.quat = 0;
+            id = id_from_type(IMU_MOD);
             if (id > 0)
             {
                 msg_t msg;
@@ -141,87 +134,95 @@ void alarm_controller_loop(void)
                 msg.header.target_mode = IDACK;
                 memcpy(msg.data, &report, sizeof(imu_report_t));
                 luos_send(app, &msg);
+
+                // Setup auto update each UPDATE_PERIOD_MS on gps
+                // This value is resetted on all module at each detection
+                // It's important to setting it each time.
+                time_luos_t time = time_from_ms(UPDATE_PERIOD_MS);
+                time_to_msg(&time, &msg);
+                msg.header.cmd = UPDATE_PUB;
+                luos_send(app, &msg);
             }
-            init = 1;
+            previous_id = id_from_module(app);
         }
         return;
     }
-    if (setup)
+    // ********** non blocking blink ************
+    if (control_mode.mode_control == PLAY)
     {
-        // try to find a gps and set parameters to send back Gyro acceleration
-        int id = id_from_alias("gps");
-        imu_report_t report;
-        report.gyro = 1;
-        report.euler = 1;
-        report.quat = 0;
-        if (id > 0)
+        if (blink_state)
         {
-            msg_t msg;
-            msg.header.cmd = PARAMETERS;
-            msg.header.size = sizeof(imu_report_t);
-            msg.header.target = id;
-            msg.header.target_mode = IDACK;
-            memcpy(msg.data, &report, sizeof(imu_report_t));
-            luos_send(app, &msg);
-        }
-        setup = 0;
-    }
-    // update frequency
-    if ((HAL_GetTick() - last_systick) >= UPDATE_PERIOD_MS)
-    {
-        get_gps();
-        last_systick = HAL_GetTick();
-    }
-    if (blink_state)
-    {
-        blink_state = 0;
-        blink_nb = 0;
-        blink = 0;
-        // try to reach a buzzer and drive it if there is
-        int id = id_from_alias("buzzer_mod");
-        if (id > 0)
-        {
-            msg_t msg;
-            msg.header.target = id;
-            msg.header.target_mode = IDACK;
-            msg.header.cmd = IO_STATE;
-            msg.header.size = 1;
-            msg.data[0] = 0;
-            luos_send(app, &msg);
-        }
-    }
-    if (blink_nb < BLINK_NUMBER)
-    {
-        if ((HAL_GetTick() - last_blink) >= 500)
-        {
-            blink_nb++;
-            int id = id_from_alias("alarm");
+            blink_state = 0;
+            blink_nb = 0;
+            blink = 0;
+            // try to reach a buzzer and drive it if there is
+            int id = id_from_alias("buzzer_mod");
             if (id > 0)
             {
-                // we get an alarm, we can set its color
-                color_t color;
-                if (blink)
-                {
-                    // bike locked turn led off
-                    color.r = 0;
-                    color.g = 0;
-                    color.b = 0;
-                }
-                else
-                {
-                    // bike unlocked turn led green
-                    color.r = 30;
-                    color.g = 0;
-                    color.b = 0;
-                }
                 msg_t msg;
                 msg.header.target = id;
                 msg.header.target_mode = IDACK;
-                color_to_msg(&color, &msg);
+                msg.header.cmd = IO_STATE;
+                msg.header.size = 1;
+                msg.data[0] = 0;
                 luos_send(app, &msg);
+            }
+        }
+        if (blink_nb < (BLINK_NUMBER * 2))
+        {
+            if ((HAL_GetTick() - last_blink) >= 500)
+            {
+                blink_nb++;
+                int id = id_from_type(COLOR_MOD);
+                if (id > 0)
+                {
+                    // we get a led alarm, set color
+                    color_t color;
+                    color.r = 0;
+                    color.g = 0;
+                    color.b = 0;
+                    if (!blink)
+                    {
+                        // turn led red
+                        color.r = LIGHT_INTENSITY;
+                    }
+                    msg_t msg;
+                    msg.header.target = id;
+                    msg.header.target_mode = IDACK;
+                    color_to_msg(&color, &msg);
+                    luos_send(app, &msg);
+                }
+                id = id_from_alias("horn");
+                if (id > 0)
+                {
+                    // we get a horn
+                    uint8_t horn = 0;
+                    if (!blink)
+                    {
+                        // turn the horn on
+                        horn = 1;
+                    }
+                    msg_t msg;
+                    msg.header.target = id;
+                    msg.header.target_mode = IDACK;
+                    msg.header.size = sizeof(uint8_t);
+                    msg.header.cmd = IO_STATE;
+                    msg.data[0] = horn;
+                    luos_send(app, &msg);
+                }
                 blink = (!blink);
                 last_blink = HAL_GetTick();
             }
+        }
+    }
+    else
+    {
+        if (blink_nb != BLINK_NUMBER * 2)
+        {
+            // reset alarm state
+            blink_nb = BLINK_NUMBER * 2;
+            blink_state = 0;
+            blink = 0;
         }
     }
 }

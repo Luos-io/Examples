@@ -113,7 +113,7 @@ int main(void)
     {
         luos_loop();
         led_loop();
-        alarm_controller_init();
+        alarm_controller_loop();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
