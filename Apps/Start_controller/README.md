@@ -8,7 +8,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 [![](https://img.shields.io/badge/LinkedIn-Share-0077B5?style=social&logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fluos-io)
 
 # Alarm controller app
-This App enable or disable the alarm .
+This app enables or disables the alarm .
 
 # Link project
 This app is linked to the [bike_alarm/Start_controller project](../../Projects/bike_alarm/Alarm_controller).

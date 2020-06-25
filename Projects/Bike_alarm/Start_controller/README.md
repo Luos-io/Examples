@@ -8,7 +8,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
 # Button project example :bulb:
-This project demonstrate how to make and use a simple button through Luos. Feel free to use electronics and code example as you want.
+This project demonstrates how to make and use a simple button through Luos. Feel free to use electronics and code examples as you want.
 
 ## How to compile the code :computer:
 
@@ -17,7 +17,7 @@ This project demonstrate how to make and use a simple button through Luos. Feel 
  3. Build (Platformio will do the rest)
 
 ## How to open the electronic design :electric_plug:
-You can open [a working example electronic design](https://github.com/Luos-io/Electronics) with Kicad. This design use Luos_components library for more information to install and use it read [our doc](https://docs.luos.io).
+You can open [a working example electronic design](https://github.com/Luos-io/Electronics) with Kicad. This design uses Luos_components library. For more information to install and use it, read [our doc](https://docs.luos.io).
 
 ## Linked driver
 This project is linked to the [Button driver](../../Drivers/Button).
