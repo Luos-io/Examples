@@ -39,5 +39,7 @@ jobs:
         platformio run -d Projects/Power_switch
         platformio run -d Projects/Servo
         platformio run -d Projects/Stepper
+        platformio run -d Projects/bike_alarm/Alarm_controller
+        platformio run -d Projects/bike_alarm/Start_controller
         
     
