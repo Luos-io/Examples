@@ -157,7 +157,9 @@ void rx_ctrl_mot_cb(module_t *module, msg_t *msg)
             }
             else
             {
+                node_disable_irq();
                 angular_position_to_msg((angular_position_t *)&motor.angular_position, &pub_msg);
+                node_enable_irq();
                 luos_send(module, &pub_msg);
             }
         }
@@ -214,10 +216,12 @@ void rx_ctrl_mot_cb(module_t *module, msg_t *msg)
             enable_motor(motor.mode.mode_compliant == 0);
             if (motor.mode.mode_compliant == 0)
             {
+                node_disable_irq();
                 last_position = motor.angular_position;
                 errAngleSum = 0.0;
                 lastErrAngle = 0.0;
                 motor.target_angular_position = motor.angular_position;
+                node_enable_irq();
             }
         }
         return;
@@ -247,8 +251,10 @@ void rx_ctrl_mot_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == REINIT)
     {
         // set state to 0
+        node_disable_irq();
         motor.angular_position = 0.0;
         motor.target_angular_position = 0.0;
+        node_enable_irq();
         errAngleSum = 0.0;
         lastErrAngle = 0.0;
         last_position = 0.0;
@@ -274,8 +280,10 @@ void rx_ctrl_mot_cb(module_t *module, msg_t *msg)
             if (msg->header.size == sizeof(float))
             {
                 // set the motor target angular position
+                node_disable_irq();
                 last_position = motor.angular_position;
                 angular_position_from_msg((angular_position_t *)&motor.target_angular_position, msg);
+                node_enable_irq();
             }
             else
             {
