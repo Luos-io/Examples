@@ -405,7 +405,7 @@ void dxl_request_manager(void)
                 {
                     int pos = (int)((1024 - 1) * ((300 / 2 + dxl[last].val) / 300));
                     servo_set_raw_word(dxl_table[i], SERVO_REGISTER_MIN_ANGLE, pos, DXL_TIMEOUT);
-                    HAL_Delay(500);
+                    HAL_Delay(1);
                     pos = (int)((1024 - 1) * ((300 / 2 + dxl[last].val2) / 300));
                     servo_set_raw_word(dxl_table[i], SERVO_REGISTER_MAX_ANGLE, pos, DXL_TIMEOUT);
                 }
@@ -413,7 +413,7 @@ void dxl_request_manager(void)
                 {
                     int pos = (int)((4096 - 1) * ((360 / 2 + dxl[last].val) / 360));
                     servo_set_raw_word(dxl_table[i], SERVO_REGISTER_MIN_ANGLE, pos, DXL_TIMEOUT);
-                    HAL_Delay(500);
+                    HAL_Delay(1);
                     pos = (int)((4096 - 1) * ((360 / 2 + dxl[last].val2) / 360));
                     servo_set_raw_word(dxl_table[i], SERVO_REGISTER_MAX_ANGLE, pos, DXL_TIMEOUT);
                 }
