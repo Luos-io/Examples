@@ -2,7 +2,7 @@
     "name": "Dxl",
     "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,module,ST,Dynamixel_Servo,Dynamixel",
     "description": "Luos turn your embedded system as modules like microservice do it in software.",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "authors": {
         "name": "Dynamixel_Servo",
         "url": "https://luos-io.github.io/doc/board/dxl"
@@ -11,7 +11,7 @@
     "build": {
         "flags": [
             "-I Dynamixel_Servo",
-            "-DVERSION=0.6.0"
+            "-DVERSION=0.6.1"
         ],
         "src_filter": [
             "+<Dynamixel_Servo>"
