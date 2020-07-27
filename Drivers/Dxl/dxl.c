@@ -195,13 +195,13 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
             int i = find_id(module);
             if (dxl_model[i] == AX12 || dxl_model[i] == AX18 || dxl_model[i] == XL320)
             {
-                value = ((300.0 * (float)position[i]) / (1024.0 - 1.0)) - (300.0 / 2);
+                value = angular_position_from_deg(((300.0 * (float)position[i]) / (1024.0 - 1.0)) - (300.0 / 2));
             }
             else
             {
-                value = ((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2);
+                value = angular_position_from_deg(((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2));
             }
-            dxl[last].val = value;
+            dxl[last].val = angular_position_to_deg(value);
             dxl[last].module_pointer = module;
             dxl[last].mode = MODE_ANGLE;
             last++;
