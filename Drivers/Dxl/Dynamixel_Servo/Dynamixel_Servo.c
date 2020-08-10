@@ -803,7 +803,7 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
     {
         *result++ = *d++;
     }
-    checksum = update_crc(0, data, (result_size + 4) + 5);
+    uint16_t checksum = update_crc(0, data, (result_size + 4) + 5);
     uint16_t rx_checksum = (uint16_t)data[data_size - 2] | ((uint16_t)data[data_size - 1] << 8);
     if (rx_checksum != checksum)
     {
