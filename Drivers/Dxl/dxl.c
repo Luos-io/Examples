@@ -241,7 +241,7 @@ void discover_dxl(void)
 
     for (int i = 0; i < MAX_ID; i++)
     {
-        if (!(servo_ping(i, DXL_TIMEOUT) & SERVO_ERROR_TIMEOUT))
+        if (!servo_ping(i, DXL_TIMEOUT))
         {
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
