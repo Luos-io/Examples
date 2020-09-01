@@ -4,7 +4,7 @@
 #include "luos.h"
 
 #define MAX_ID 40
-#define DXL_TIMEOUT 1
+#define DXL_TIMEOUT 2
 #define TEMP_REFRESH_MS 1000
 #define FACTORY_RESET_REG 0xFF
 
