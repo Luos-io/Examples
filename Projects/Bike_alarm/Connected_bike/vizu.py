@@ -6,11 +6,11 @@ def vizu() :
     plane = Mesh(
         PlaneBufferGeometry(100, 100),
         MeshPhysicalMaterial(color='gray'),
-        position=[0, -1.5, 0], receiveShadow = True)
+        position=[0, -1.5, 0], receiveShadow = True, scale=[1,1,1])
     plane.rotation = (-3.14/2, 0, 0, 'XYZ')
 
     # Create a camera
-    camera = PerspectiveCamera(position=[4, 12, 10], up=[0, 1, 0], aspect=800/400)
+    camera = PerspectiveCamera(position=[4, 12, 10], up=[0, 1, 0], aspect=800/400, scale=[1,1,1])
 
     # Load the STL files and add the vectors to the plot
     geometry = BufferGeometry(attributes={'position': BufferAttribute(array=mesh.Mesh.from_file('bike.stl').vectors)})
@@ -23,11 +23,11 @@ def vizu() :
     bike_mesh.rotation = (-pi/2, 0, pi, 'XYZ')
 
     # Create a directional ligt folowing our floor
-    key_light = SpotLight(position=[0, 10, 10], angle = 0.8, penumbra = 0.1, target = plane, castShadow = True)
+    key_light = SpotLight(scale=[1,1,1], position=[0, 10, 10], angle = 0.8, penumbra = 0.1, target = plane, castShadow = True)
     key_light.shadow.mapSize = (2048, 2048)
 
     # Create a scene
-    scene = Scene(children=[bike_mesh, plane, camera, key_light, AmbientLight("white", 0.3)])
+    scene = Scene(scale=[1,1,1], children=[bike_mesh, plane, camera, key_light, AmbientLight("white", 0.3)])
 
 
     # Display the scene with shadow and everything.
