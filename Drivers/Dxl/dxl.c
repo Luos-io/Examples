@@ -239,9 +239,13 @@ void discover_dxl(void)
     memset(dxl_model, 0, sizeof(dxl_models_t) * MAX_VM_NUMBER);
     memset((void *)dxl, 0, sizeof(dxl_t) * MAX_VM_NUMBER);
 
+    HAL_NVIC_DisableIRQ(USART3_4_IRQn);
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
+
     for (int i = 0; i < MAX_ID; i++)
     {
-        if (!(servo_ping(i, DXL_TIMEOUT) & SERVO_ERROR_TIMEOUT))
+        if (!servo_ping(i, DXL_TIMEOUT))
         {
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
@@ -257,6 +261,9 @@ void discover_dxl(void)
             y++;
         }
     }
+    HAL_NVIC_DisableIRQ(USART3_4_IRQn);
+    HAL_NVIC_SetPriority(USART3_4_IRQn, 2, 0);
+    HAL_NVIC_EnableIRQ(USART3_4_IRQn);
     if (y == 0)
     {
         // there is no motor detected, create a Void module to only manage l0 things

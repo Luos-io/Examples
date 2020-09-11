@@ -90,6 +90,7 @@ extern "C"
 #define SERVO_BROADCAST_ID 0xFE
 #define SERVO_DEFAULT_ID 1
 #define SERVO_DEFAULT_BAUD 57600
+#define DXL_RX_BUFFER_SIZE 20
 
 #define SERVO_MAXIMUM_MOVING_SPEED 6.60 // rad / sec
 

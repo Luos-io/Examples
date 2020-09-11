@@ -758,6 +758,16 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
 }
 
 /*--------------------------------------------------------------------------------------------*/
+volatile char dxl_msg_complete = 0;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART3)
+    {
+        dxl_msg_complete = 1;
+    }
+}
+
 servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, int timeout_ms)
 {
     int data_size;
@@ -766,14 +776,30 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
 #else
     data_size = result_size + 6;
 #endif
-    uint8_t data[data_size];
+    static uint8_t data[DXL_RX_BUFFER_SIZE];
     uint8_t *d = data;
     servo_error_t error = SERVO_NO_ERROR;
 
-    if (HAL_UART_Receive(&huart3, data, data_size, timeout_ms) == HAL_TIMEOUT)
+    if (dxl_msg_complete > 0)
     {
-        return SERVO_ERROR_TIMEOUT;
+        //ERROR
+        dxl_msg_complete = 0;
+        HAL_UART_AbortReceive_IT(&huart3);
     }
+    HAL_UART_Receive_IT(&huart3, data, data_size);
+    unsigned long timeout_rx = HAL_GetTick();
+    while ((dxl_msg_complete == 0))
+    {
+        //wait for a complete msg
+        if ((HAL_GetTick() - timeout_rx) == timeout_ms)
+        {
+            // reset reception
+            HAL_UART_AbortReceive_IT(&huart3);
+            return SERVO_ERROR_TIMEOUT;
+        }
+    }
+    dxl_msg_complete = 0;
+
 #ifdef V2
     if ((data[0] != 0xFF) ||
         (data[1] != 0xFF) ||
