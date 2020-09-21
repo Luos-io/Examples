@@ -14,14 +14,14 @@ void collect_data(module_t *module)
     json_msg.header.cmd = ASK_PUB_CMD;
     json_msg.header.size = 0;
     // ask modules to publish datas
-    for (uint8_t i = 1; i <= get_last_module(); i++)
+    for (uint8_t i = 1; i <= RouteTB_GetLastModule(); i++)
     {
         // Check if this module is a sensor
-        if (is_sensor(type_from_id(i)))
+        if (RouteTB_ModuleIsSensor(RouteTB_TypeFromID(i)))
         {
             // This module is a sensor so create a msg and send it
             json_msg.header.target = i;
-            luos_send(module, &json_msg);
+            Luos_SendMsg(module, &json_msg);
         }
     }
 }
@@ -30,22 +30,22 @@ void collect_data(module_t *module)
 void format_data(module_t *module, char *json)
 {
     msg_t *json_msg;
-    if ((luos_message_available() > 0))
+    if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the json string
         sprintf(json, "{\"modules\":{");
         // loop into modules.
         uint16_t i = 1;
-        while (luos_message_available())
+        while (Luos_NbrAvailableMsg())
         {
             // get the oldest message of this module
-            json_msg = luos_read(module);
+            json_msg = Luos_ReadMsg(module);
             if (json_msg)
             {
                 i = json_msg->header.source;
                 // Create module description
                 char *alias;
-                alias = alias_from_id(i);
+                alias = RouteTB_AliasFromId(i);
                 if (alias != 0)
                 {
                     sprintf(json, "%s\"%s\":{", json, alias);
@@ -55,7 +55,7 @@ void format_data(module_t *module, char *json)
                     {
                         // we receive some, add it to the Json
                         msg_to_json(json_msg, &json[strlen(json)]);
-                        json_msg = luos_read_from(module, i);
+                        json_msg = Luos_ReadFromModule(module, i);
                     }
                     if (json[strlen(json) - 1] != '{')
                     {

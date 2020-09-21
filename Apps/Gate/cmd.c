@@ -77,7 +77,7 @@ void send_cmds(module_t *module)
             if (cJSON_IsNumber(cJSON_GetObjectItem(root, "baudrate")))
             {
                 uint32_t baudrate = (float)cJSON_GetObjectItem(root, "baudrate")->valueint;
-                luos_set_baudrate(module, baudrate);
+                Luos_SetBaudrate(module, baudrate);
             }
         }
         if (cJSON_GetObjectItem(root, "benchmark") != NULL)
@@ -121,7 +121,7 @@ void send_cmds(module_t *module)
                         int i = 0;
                         for (i = 0; i < repetition; i++)
                         {
-                            failed_msg_nb += luos_send_data(module, &msg, &bin_data[index], (unsigned int)size);
+                            failed_msg_nb += Luos_SendData(module, &msg, &bin_data[index], (unsigned int)size);
                         }
                         uint32_t end_systick = HAL_GetTick();
                         float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
@@ -147,7 +147,7 @@ void send_cmds(module_t *module)
             {
                 // Create msg
                 char *alias = module_jsn->string;
-                uint16_t id = id_from_alias(alias);
+                uint16_t id = RouteTB_IDFromAlias(alias);
                 if (id == 65535)
                 {
                     // If alias doesn't exist in our list id_from_alias send us back -1 = 65535
@@ -156,7 +156,7 @@ void send_cmds(module_t *module)
                     cmd_ready--;
                     return;
                 }
-                module_type_t type = type_from_id(id);
+                module_type_t type = RouteTB_TypeFromID(id);
                 json_to_msg(module, id, type, module_jsn, &msg, (char *)buf[concerned_table]);
                 // Get next module
                 module_jsn = module_jsn->next;
