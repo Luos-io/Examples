@@ -31,7 +31,6 @@
 /* USER CODE BEGIN Includes */
 #include "luos.h"
 #include "led.h"
-#include "luos_board.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,16 +100,16 @@ int main(void)
     MX_TIM2_Init();
     MX_CRC_Init();
     /* USER CODE BEGIN 2 */
-    luos_init();
-    led_init();
+    Luos_Init();
+    Led_Init();
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        luos_loop();
-        led_loop();
+        Luos_Loop();
+        Led_Loop();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */

@@ -1,3 +1,9 @@
+/******************************************************************************
+ * @file Led
+ * @brief driver example a simple Led
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "led.h"
 #include <math.h>
@@ -5,14 +11,76 @@
 #include "string.h"
 #include "luos.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 volatile time_luos_t time;
 volatile color_t target_rgb;
 volatile color_t last_rgb;
 volatile float coef[3] = {0.0};
 static int elapsed_ms = 0;
+
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Led_MsgHandler(module_t *module, msg_t *msg);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Led_Init(void)
+{
+    time = TimeOD_TimeFrom_ms(0.0);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    Luos_ModuleEnableRT(Luos_CreateModule(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION)));
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Led_Loop(void)
+{
+}
+/******************************************************************************
+ * @brief Msg manager callback when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Led_MsgHandler(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == COLOR)
+    {
+        // change led target color
+        memcpy((color_t *)&last_rgb, (color_t *)&target_rgb, sizeof(color_t));
+        IlluminanceOD_ColorFromMsg((color_t *)&target_rgb, msg);
+        if (TimeOD_TimeTo_ms(time) > 0.0)
+        {
+            elapsed_ms = 0;
+            coef[0] = (float)(target_rgb.r - last_rgb.r) / TimeOD_TimeTo_ms(time);
+            coef[1] = (float)(target_rgb.g - last_rgb.g) / TimeOD_TimeTo_ms(time);
+            coef[2] = (float)(target_rgb.b - last_rgb.b) / TimeOD_TimeTo_ms(time);
+        }
+        return;
+    }
+    if (msg->header.cmd == TIME)
+    {
+        // save transition time
+        TimeOD_TimeFromMsg((time_luos_t *)&time, msg);
+        return;
+    }
+}
 
 void pwm_setvalue(color_t *rgb)
 {
@@ -21,37 +89,13 @@ void pwm_setvalue(color_t *rgb)
     TIM2->CCR1 = (uint16_t)rgb->b * 10;
 }
 
-void rx_led_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == COLOR)
-    {
-        // change led target color
-        memcpy((color_t *)&last_rgb, (color_t *)&target_rgb, sizeof(color_t));
-        color_from_msg((color_t *)&target_rgb, msg);
-        if (time_to_ms(time) > 0.0)
-        {
-            elapsed_ms = 0;
-            coef[0] = (float)(target_rgb.r - last_rgb.r) / time_to_ms(time);
-            coef[1] = (float)(target_rgb.g - last_rgb.g) / time_to_ms(time);
-            coef[2] = (float)(target_rgb.b - last_rgb.b) / time_to_ms(time);
-        }
-        return;
-    }
-    if (msg->header.cmd == TIME)
-    {
-        // save transition time
-        time_from_msg((time_luos_t *)&time, msg);
-        return;
-    }
-}
-
 void HAL_SYSTICK_Led_Callback(void)
 {
     // ************* motion planning *************
     if (time != 0)
     {
         static color_t rgb;
-        if ((float)elapsed_ms > time_to_ms(time))
+        if ((float)elapsed_ms > TimeOD_TimeTo_ms(time))
         {
             // we finished our transition
             pwm_setvalue((color_t *)&target_rgb);
@@ -70,17 +114,4 @@ void HAL_SYSTICK_Led_Callback(void)
     {
         pwm_setvalue((color_t *)&target_rgb);
     }
-}
-
-void led_init(void)
-{
-    time = time_from_ms(0.0);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    luos_module_enable_rt(luos_module_create(rx_led_cb, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION)));
-}
-
-void led_loop(void)
-{
 }
