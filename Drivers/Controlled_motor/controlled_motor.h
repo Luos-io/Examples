@@ -1,8 +1,17 @@
+/******************************************************************************
+ * @file controlled_motor
+ * @brief driver example a simple controlled motor
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #ifndef CONTROLLED_MOTOR_H
 #define CONTROLLED_MOTOR_H
 
 #include "luos.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 // Motor
 typedef struct __attribute__((__packed__))
 {
@@ -57,7 +66,14 @@ typedef struct __attribute__((__packed__))
     linear_position_t wheel_diameter;
 } motor_config_t;
 
-void controlled_motor_init(void);
-void controlled_motor_loop(void);
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+void ControlledMotor_Init(void);
+void ControlledMotor_Loop(void);
 
 #endif /* CONTROLLED_MOTOR_H */
