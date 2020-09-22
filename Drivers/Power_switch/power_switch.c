@@ -1,23 +1,54 @@
+/******************************************************************************
+ * @file Power switch
+ * @brief driver example a simple Power switch
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "power_switch.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 
-void rx_pow_cb(module_t *module, msg_t *msg)
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void PowerSwitch_MsgHandler(module_t *module, msg_t *msg);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void PowerSwitch_Init(void)
+{
+    Luos_ModuleEnableRT(Luos_CreateModule(PowerSwitch_MsgHandler, STATE_MOD, "switch_mod", STRINGIFY(VERSION)));
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void PowerSwitch_Loop(void)
+{
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void PowerSwitch_MsgHandler(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
         HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, msg->data[0]);
         return;
     }
-}
-
-void power_switch_init(void)
-{
-    luos_module_enable_rt(luos_module_create(rx_pow_cb, STATE_MOD, "switch_mod", STRINGIFY(VERSION)));
-}
-
-void power_switch_loop(void)
-{
 }
