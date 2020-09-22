@@ -99,16 +99,16 @@ int main(void)
   MX_TIM2_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  luos_init();
-  led_strip_init();
+  Luos_Init();
+  LedStrip_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    luos_loop();
-    led_strip_loop();
+    Luos_Loop();
+    LedStrip_Loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
