@@ -97,16 +97,16 @@ int main(void)
   MX_ADC_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  luos_init();
-  power_switch_init();
+  Luos_Init();
+  PowerSwitch_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    luos_loop();
-    power_switch_loop();
+    Luos_Loop();
+    PowerSwitch_Loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
