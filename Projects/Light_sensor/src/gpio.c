@@ -31,6 +31,8 @@
 /* USER CODE END 1 */
 
 /** Configure pins
+     PA1   ------> ADC_IN1
+     PA2   ------> ADC_IN2
 */
 void MX_GPIO_Init(void)
 {
@@ -49,6 +51,12 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, ROBUS_RE_Pin|ROBUS_DE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = LIGHT_Pin|ROBUS_POWER_SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = LED_Pin;
