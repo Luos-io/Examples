@@ -31,6 +31,11 @@
 /* USER CODE END 1 */
 
 /** Configure pins
+     PA0   ------> ADC_IN0
+     PA1   ------> ADC_IN1
+     PA2   ------> ADC_IN2
+     PB0   ------> ADC_IN8
+     PB1   ------> ADC_IN9
 */
 void MX_GPIO_Init(void)
 {
@@ -48,8 +53,14 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(RS485_LVL_DOWN_GPIO_Port, RS485_LVL_DOWN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, ROBUS_RE_Pin|ROBUS_DE_Pin|P4_Pin|P3_Pin 
+  HAL_GPIO_WritePin(GPIOB, ROBUS_RE_Pin|ROBUS_DE_Pin|P4_Pin|P3_Pin
                           |P2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = P1_Pin|P9_Pin|ROBUS_POWER_SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -73,6 +84,12 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(RS485_LVL_UP_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = P8_Pin|P7_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PBPin PBPin */
   GPIO_InitStruct.Pin = P6_Pin|P5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
@@ -84,9 +101,9 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(ROBUS_PTPB_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
+  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin */
-  GPIO_InitStruct.Pin = ROBUS_RE_Pin|ROBUS_DE_Pin|P4_Pin|P3_Pin 
+  GPIO_InitStruct.Pin = ROBUS_RE_Pin|ROBUS_DE_Pin|P4_Pin|P3_Pin
                           |P2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

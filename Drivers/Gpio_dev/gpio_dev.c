@@ -1,6 +1,18 @@
+/******************************************************************************
+ * @file gpio_dev
+ * @brief driver example a simple gpio_dev
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include <gpio_dev.h>
 #include "main.h"
 #include "analog.h"
+
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
 
 // Pin configuration
 #define P1_Pin GPIO_PIN_0
@@ -11,9 +23,6 @@
 #define P8_GPIO_Port GPIOB
 #define P7_Pin GPIO_PIN_1
 #define P7_GPIO_Port GPIOB
-
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
 
 enum
 {
@@ -27,10 +36,139 @@ enum
     P8,
     P9
 };
-
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 module_t *pin[9];
 
-void rx_digit_read_cb(module_t *module, msg_t *msg)
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void rx_digit_write_cb(module_t *module, msg_t *msg);
+static void rx_digit_read_cb(module_t *module, msg_t *msg);
+static void rx_analog_read_cb(module_t *module, msg_t *msg);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void GpioDev_Init(void)
+{
+    // ******************* Analog measurement *******************
+    // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
+    ADC_ChannelConfTypeDef sConfig = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // Enable  ADC Gpio clocks
+    //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
+    /**ADC GPIO Configuration
+    */
+    // Configure analog input pin channel
+    GPIO_InitStruct.Pin = P1_Pin | P9_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = P8_Pin | P7_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    // Enable  ADC clocks
+    __HAL_RCC_ADC1_CLK_ENABLE();
+    // Setup Adc to loop on DMA continuously
+    GpioDev_adc.Instance = ADC1;
+    GpioDev_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    GpioDev_adc.Init.Resolution = ADC_RESOLUTION_12B;
+    GpioDev_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    GpioDev_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    GpioDev_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    GpioDev_adc.Init.LowPowerAutoWait = DISABLE;
+    GpioDev_adc.Init.LowPowerAutoPowerOff = DISABLE;
+    GpioDev_adc.Init.ContinuousConvMode = ENABLE;
+    GpioDev_adc.Init.DiscontinuousConvMode = DISABLE;
+    GpioDev_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    GpioDev_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    GpioDev_adc.Init.DMAContinuousRequests = ENABLE;
+    GpioDev_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    if (HAL_ADC_Init(&GpioDev_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    sConfig.Channel = ADC_CHANNEL_0;
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sConfig.Channel = ADC_CHANNEL_9;
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sConfig.Channel = ADC_CHANNEL_8;
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    // Enable DMA1 clock
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    /* ADC1 DMA Init */
+    /* ADC Init */
+    GpioDev_dma_adc.Instance = DMA1_Channel1;
+    GpioDev_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    GpioDev_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+    GpioDev_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    GpioDev_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    GpioDev_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    GpioDev_dma_adc.Init.Mode = DMA_CIRCULAR;
+    GpioDev_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&GpioDev_dma_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    __HAL_LINKDMA(&GpioDev_adc, DMA_Handle, GpioDev_dma_adc);
+    // disable DMA Irq
+    HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
+    // Start infinite ADC measurement
+    HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
+    // ************* modules creation *******************
+    pin[P1] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", STRINGIFY(VERSION));
+    pin[P7] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", STRINGIFY(VERSION));
+    pin[P8] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8", STRINGIFY(VERSION));
+    pin[P9] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9", STRINGIFY(VERSION));
+    pin[P5] = Luos_CreateModule(rx_digit_read_cb, STATE_MOD, "digit_read_P5", STRINGIFY(VERSION));
+    pin[P6] = Luos_CreateModule(rx_digit_read_cb, STATE_MOD, "digit_read_P6", STRINGIFY(VERSION));
+    pin[P2] = Luos_CreateModule(rx_digit_write_cb, STATE_MOD, "digit_write_P2", STRINGIFY(VERSION));
+    pin[P3] = Luos_CreateModule(rx_digit_write_cb, STATE_MOD, "digit_write_P3", STRINGIFY(VERSION));
+    pin[P4] = Luos_CreateModule(rx_digit_write_cb, STATE_MOD, "digit_write_P4", STRINGIFY(VERSION));
+    Luos_ModuleEnableRT(pin[P2]);
+    Luos_ModuleEnableRT(pin[P3]);
+    Luos_ModuleEnableRT(pin[P4]);
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void GpioDev_Loop(void)
+{
+}
+
+static void rx_digit_read_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -53,12 +191,12 @@ void rx_digit_read_cb(module_t *module, msg_t *msg)
         {
             return;
         }
-        luos_send(module, &pub_msg);
+        Luos_SendMsg(module, &pub_msg);
         return;
     }
 }
 
-void rx_digit_write_cb(module_t *module, msg_t *msg)
+static void rx_digit_write_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
@@ -78,7 +216,7 @@ void rx_digit_write_cb(module_t *module, msg_t *msg)
     }
 }
 
-void rx_analog_read_cb(module_t *module, msg_t *msg)
+static void rx_analog_read_cb(module_t *module, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -107,83 +245,8 @@ void rx_analog_read_cb(module_t *module, msg_t *msg)
         // fill the message infos
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
-        voltage_to_msg(&volt, &pub_msg);
-        luos_send(module, &pub_msg);
+        ElectricOD_VoltageToMsg(&volt, &pub_msg);
+        Luos_SendMsg(module, &pub_msg);
         return;
     }
-}
-
-void gpio_dev_init(void)
-{
-    // ******************* Analog measurement *******************
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    ADC_ChannelConfTypeDef sConfig = {0};
-    // Stop DMA
-    HAL_ADC_Stop_DMA(&luos_adc);
-
-    // Configure analog input pin channel
-    GPIO_InitStruct.Pin = P1_Pin | P9_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = P8_Pin | P7_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    // Add ADC channel to Luos adc configuration.
-    sConfig.Channel = ADC_CHANNEL_0;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&luos_adc, &sConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sConfig.Channel = ADC_CHANNEL_9;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&luos_adc, &sConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sConfig.Channel = ADC_CHANNEL_8;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&luos_adc, &sConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sConfig.Channel = ADC_CHANNEL_1;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&luos_adc, &sConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    // relinik DMA
-    __HAL_LINKDMA(&luos_adc, DMA_Handle, luos_dma_adc);
-
-    // Restart DMA
-    HAL_ADC_Start_DMA(&luos_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
-    // ************* modules creation *******************
-    pin[P1] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", STRINGIFY(VERSION));
-    pin[P7] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", STRINGIFY(VERSION));
-    pin[P8] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8", STRINGIFY(VERSION));
-    pin[P9] = luos_module_create(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9", STRINGIFY(VERSION));
-    pin[P5] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P5", STRINGIFY(VERSION));
-    pin[P6] = luos_module_create(rx_digit_read_cb, STATE_MOD, "digit_read_P6", STRINGIFY(VERSION));
-    pin[P2] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P2", STRINGIFY(VERSION));
-    pin[P3] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P3", STRINGIFY(VERSION));
-    pin[P4] = luos_module_create(rx_digit_write_cb, STATE_MOD, "digit_write_P4", STRINGIFY(VERSION));
-    luos_module_enable_rt(pin[P2]);
-    luos_module_enable_rt(pin[P3]);
-    luos_module_enable_rt(pin[P4]);
-}
-
-void gpio_dev_loop(void)
-{
-    // Copy analog value to the board struct
-    node_analog.temperature_sensor = analog_input.temperature_sensor;
-    node_analog.voltage_sensor = analog_input.voltage_sensor;
 }
