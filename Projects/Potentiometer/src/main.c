@@ -97,16 +97,16 @@ int main(void)
   MX_ADC_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  luos_init();
-  potentiometer_init();
+  Luos_Init();
+  Potentiometer_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    luos_loop();
-    potentiometer_loop();
+    Luos_Loop();
+    Potentiometer_Loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
