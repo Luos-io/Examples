@@ -31,6 +31,7 @@
 /* USER CODE END 1 */
 
 /** Configure pins
+     PA2   ------> ADC_IN2
 */
 void MX_GPIO_Init(void)
 {
@@ -62,6 +63,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = ROBUS_POWER_SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(ROBUS_POWER_SENSOR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = RS485_LVL_DOWN_Pin;
