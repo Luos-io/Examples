@@ -1,10 +1,66 @@
+/******************************************************************************
+ * @file Handy
+ * @brief driver example a simple handy
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "handy.h"
 #include "tim.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Handy_MsgHandler(module_t *module, msg_t *msg);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Handy_Init(void)
+{
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+    Luos_ModuleEnableRT(Luos_CreateModule(Handy_MsgHandler, HANDY_MOD, "handy_mod", STRINGIFY(VERSION)));
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Handy_Loop(void)
+{
+}
+/******************************************************************************
+ * @brief Msg handler call back when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Handy_MsgHandler(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == HANDY_SET_POSITION)
+    {
+        // set the motors position
+        handy_t position;
+        memcpy(position.unmap, msg->data, sizeof(handy_t));
+        set_position(&position);
+        return;
+    }
+}
 void set_position(handy_t *position)
 {
     uint32_t min = (uint32_t)(0.001 * (float)(48000000 / htim2.Init.Prescaler));
@@ -64,28 +120,6 @@ void set_position(handy_t *position)
     }
 }
 
-void rx_handy_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == HANDY_SET_POSITION)
-    {
-        // set the motors position
-        handy_t position;
-        memcpy(position.unmap, msg->data, sizeof(handy_t));
-        set_position(&position);
-        return;
-    }
-}
 
-void handy_init(void)
-{
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    luos_module_enable_rt(luos_module_create(rx_handy_cb, HANDY_MOD, "handy_mod", STRINGIFY(VERSION)));
-}
 
-void handy_loop(void)
-{
-}
+
