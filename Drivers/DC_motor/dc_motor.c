@@ -1,15 +1,74 @@
+/******************************************************************************
+ * @file dc_motor
+ * @brief driver example a simple dc_motor
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "dc_motor.h"
 #include "tim.h"
 
-#define MOTORNUMBER 2
-
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+#define MOTORNUMBER 2
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 module_t *module[MOTORNUMBER];
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void MotorDC_MsgHandler(module_t *module, msg_t *msg);
+static int find_id(module_t *my_module);
+static void set_power(module_t *module, ratio_t power);
 
-int find_id(module_t *my_module)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void MotorDC_Init(void)
+{
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+    module[0] = Luos_CreateModule(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor1_mod", STRINGIFY(VERSION));
+    module[1] = Luos_CreateModule(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor2_mod", STRINGIFY(VERSION));
+    Luos_ModuleEnableRT(module[0]);
+    Luos_ModuleEnableRT(module[1]);
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void MotorDC_Loop(void)
+{
+}
+/******************************************************************************
+ * @brief Msg manager call back when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void MotorDC_MsgHandler(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == RATIO)
+    {
+        // set the motor position
+        ratio_t power;
+        RatioOD_RatioFromMsg(&power, msg);
+        set_power(module, power);
+        return;
+    }
+}
+
+static int find_id(module_t *my_module)
 {
     int i = 0;
     for (i = 0; i <= MOTORNUMBER; i++)
@@ -20,7 +79,7 @@ int find_id(module_t *my_module)
     return i;
 }
 
-void set_power(module_t *module, ratio_t power)
+static void set_power(module_t *module, ratio_t power)
 {
     // limit power value
     if (power < -100.0)
@@ -66,32 +125,4 @@ void set_power(module_t *module, ratio_t power)
     default:
         break;
     }
-}
-
-void rx_dc_mot_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == RATIO)
-    {
-        // set the motor position
-        ratio_t power;
-        ratio_from_msg(&power, msg);
-        set_power(module, power);
-        return;
-    }
-}
-
-void dc_motor_init(void)
-{
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    module[0] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor1_mod", STRINGIFY(VERSION));
-    module[1] = luos_module_create(rx_dc_mot_cb, DCMOTOR_MOD, "DC_motor2_mod", STRINGIFY(VERSION));
-    luos_module_enable_rt(module[0]);
-    luos_module_enable_rt(module[1]);
-}
-
-void dc_motor_loop(void)
-{
 }
