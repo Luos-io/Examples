@@ -97,8 +97,8 @@ int main(void)
   MX_ADC_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  luos_init();
-  button_init();
+  Luos_Init();
+  Button_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,8 +106,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    luos_loop();
-    button_loop();
+    Luos_Loop();
+    Button_Loop();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
