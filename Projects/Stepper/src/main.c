@@ -99,16 +99,16 @@ int main(void)
   MX_TIM3_Init();
   MX_CRC_Init();
   /* USER CODE BEGIN 2 */
-  luos_init();
-  stepper_init();
+  Luos_Init();
+  Stepper_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    luos_loop();
-    stepper_loop();
+    Luos_Loop();
+    Stepper_Loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
