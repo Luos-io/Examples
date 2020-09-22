@@ -1,6 +1,15 @@
+/******************************************************************************
+ * @file start controller
+ * @brief application example a start controller
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "start_controller.h"
 #include "main.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define LIGHT_INTENSITY 255
 
 #define STRINGIFY(s) STRINGIFY1(s)
@@ -8,6 +17,15 @@
 
 #define UPDATE_PERIOD_MS 10
 
+typedef enum
+{
+    ALARM_CONTROLLER_APP = LUOS_LAST_TYPE,
+    START_CONTROLLER_APP
+} alarm_t;
+
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 module_t *app;
 volatile control_mode_t control_mode;
 uint8_t lock = 1;
@@ -15,56 +33,29 @@ uint8_t last_btn_state = 0;
 uint8_t state_switch = 0;
 uint8_t init = 0;
 
-typedef enum
-{
-    ALARM_CONTROLLER_APP = LUOS_LAST_TYPE,
-    START_CONTROLLER_APP
-} alarm_t;
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void StartController_MsgHandler(module_t *module, msg_t *msg);
 
-void rx_start_controller_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == IO_STATE)
-    {
-        if (control_mode.mode_control == PLAY)
-        {
-            if (type_from_id(msg->header.source) == STATE_MOD)
-            {
-                // this is the button reply we have filter it to manage monostability
-                if ((!last_btn_state) & (last_btn_state != msg->data[0]))
-                {
-                    lock = (!lock);
-                    state_switch++;
-                }
-            }
-            else
-            {
-                // this is an already filtered information
-                if ((lock != msg->data[0]))
-                {
-                    lock = msg->data[0];
-                    state_switch++;
-                }
-            }
-            last_btn_state = msg->data[0];
-        }
-        return;
-    }
-    if (msg->header.cmd == CONTROL)
-    {
-        control_mode.unmap = msg->data[0];
-        return;
-    }
-}
-
-void start_controller_init(void)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void StartController_Init(void)
 {
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
-    app = luos_module_create(rx_start_controller_cb, START_CONTROLLER_APP, "start_control", STRINGIFY(VERSION));
+    app = Luos_CreateModule(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", STRINGIFY(VERSION));
 }
-
-void start_controller_loop(void)
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void StartController_Loop(void)
 {
     static short previous_id = -1;
     static uint32_t switch_date = 0;
@@ -238,5 +229,45 @@ void start_controller_loop(void)
             luos_send(app, &msg);
         }
         animation_state = 0;
+    }
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void StartController_MsgHandler(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == IO_STATE)
+    {
+        if (control_mode.mode_control == PLAY)
+        {
+            if (type_from_id(msg->header.source) == STATE_MOD)
+            {
+                // this is the button reply we have filter it to manage monostability
+                if ((!last_btn_state) & (last_btn_state != msg->data[0]))
+                {
+                    lock = (!lock);
+                    state_switch++;
+                }
+            }
+            else
+            {
+                // this is an already filtered information
+                if ((lock != msg->data[0]))
+                {
+                    lock = msg->data[0];
+                    state_switch++;
+                }
+            }
+            last_btn_state = msg->data[0];
+        }
+        return;
+    }
+    if (msg->header.cmd == CONTROL)
+    {
+        control_mode.unmap = msg->data[0];
+        return;
     }
 }
