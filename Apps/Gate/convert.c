@@ -128,7 +128,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
     // target Linear speed
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "target_trans_speed")))
     {
-        linear_speed_t linear_speed = LinearOD_SpeedFrom_mm_s((float)cJSON_GetObjectItem(jobj, "target_trans_speed")->valuedouble);
+        linear_speed_t linear_speed = LinearOD_Speedfrom_mm_s((float)cJSON_GetObjectItem(jobj, "target_trans_speed")->valuedouble);
         LinearOD_SpeedToMsg(&linear_speed, msg);
         Luos_SendMsg(module, msg);
     }
