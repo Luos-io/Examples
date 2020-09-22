@@ -1,10 +1,22 @@
+/******************************************************************************
+ * @file IMU
+ * @brief driver example a simple IMU
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "imu.h"
 #include <mpu_configuration.h>
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 volatile uint32_t hal_timestamp = 0;
 unsigned char *mpl_key = (unsigned char *)"eMPL 5.1";
 
@@ -12,57 +24,28 @@ module_t *module_pointer;
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 
-/* Every time new gyro data is available, this function is called in an
- * ISR context. In this example, it sets a flag protecting the FIFO read
- * function.
- */
-void gyro_data_ready_cb(void)
-{
-    hal.new_gyro = 1;
-}
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Imu_MsgHandler(module_t *module, msg_t *msg);
 
-void HAL_SYSTICK_Callback(void)
-{
-    if (pub != LUOS_PROTOCOL_NB)
-    {
-        luos_send(module_pointer, (msg_t *)&pub_msg);
-        pub = LUOS_PROTOCOL_NB;
-    }
-}
-
-void rx_imu_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == ASK_PUB_CMD)
-    {
-        // fill the message infos
-        hal.update_request = 1;
-        module_pointer = module;
-        hal.source_id = msg->header.source;
-        pub = LUOS_PROTOCOL_NB;
-        return;
-    }
-    if (msg->header.cmd == PARAMETERS)
-    {
-        // check the message size
-        if (msg->header.size == sizeof(short))
-        {
-            module_pointer = module;
-            // fill the message infos
-            memcpy(&hal.report, msg->data, msg->header.size);
-        }
-        pub = LUOS_PROTOCOL_NB;
-        return;
-    }
-}
-
-void imu_init(void)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Imu_Init(void)
 {
     mpu_setup();
     hal.report.quat = 1;
-    luos_module_enable_rt(luos_module_create(rx_imu_cb, IMU_MOD, "Imu_mod", STRINGIFY(VERSION)));
+    Luos_ModuleEnableRT(Luos_CreateModule(Imu_MsgHandler, IMU_MOD, "Imu_mod", STRINGIFY(VERSION)));
 }
-
-void imu_loop(void)
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Imu_Loop(void)
 {
     // *********************IMU management*******************************
     unsigned long sensor_timestamp;
@@ -249,5 +232,52 @@ void imu_loop(void)
     {
         read_from_mpl(module_pointer);
         hal.update_request = 0;
+    }
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this module
+ * @param Module destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Imu_MsgHandler(module_t *module, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
+        // fill the message infos
+        hal.update_request = 1;
+        module_pointer = module;
+        hal.source_id = msg->header.source;
+        pub = LUOS_PROTOCOL_NB;
+        return;
+    }
+    if (msg->header.cmd == PARAMETERS)
+    {
+        // check the message size
+        if (msg->header.size == sizeof(short))
+        {
+            module_pointer = module;
+            // fill the message infos
+            memcpy(&hal.report, msg->data, msg->header.size);
+        }
+        pub = LUOS_PROTOCOL_NB;
+        return;
+    }
+}
+/* Every time new gyro data is available, this function is called in an
+ * ISR context. In this example, it sets a flag protecting the FIFO read
+ * function.
+ */
+void gyro_data_ready_cb(void)
+{
+    hal.new_gyro = 1;
+}
+
+void HAL_SYSTICK_Callback(void)
+{
+    if (pub != LUOS_PROTOCOL_NB)
+    {
+        Luos_SendMsg(module_pointer, (msg_t *)&pub_msg);
+        pub = LUOS_PROTOCOL_NB;
     }
 }

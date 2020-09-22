@@ -50,7 +50,7 @@ void read_from_mpl(module_t *module)
                              (float)data[2] / (1 << 30),
                              (float)data[3] / (1 << 30)};
             memcpy(msg.data, quat, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
 
@@ -66,7 +66,7 @@ void read_from_mpl(module_t *module)
                                (float)data[1] / (1 << 16),
                                (float)data[2] / (1 << 16)};
             memcpy(msg.data, accell, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.gyro)
@@ -81,7 +81,7 @@ void read_from_mpl(module_t *module)
                              (float)data[1] / (1 << 16),
                              (float)data[2] / (1 << 16)};
             memcpy(msg.data, gyro, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
 #ifdef COMPASS_ENABLED
@@ -97,7 +97,7 @@ void read_from_mpl(module_t *module)
                                 (float)data[1] / (1 << 16),
                                 (float)data[2] / (1 << 16)};
             memcpy(msg.data, compass, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
 #endif
@@ -113,7 +113,7 @@ void read_from_mpl(module_t *module)
                               (float)data[1] / (1 << 16),
                               (float)data[2] / (1 << 16)};
             memcpy(msg.data, euler, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.rot_mat)
@@ -134,7 +134,7 @@ void read_from_mpl(module_t *module)
                             (float)data[7] / (1 << 14),
                             (float)data[8] / (1 << 14)};
             memcpy(msg.data, tmp, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.heading)
@@ -147,7 +147,7 @@ void read_from_mpl(module_t *module)
             msg.header.size = sizeof(float);
             float heading = (float)data[0] / (1 << 16);
             memcpy(msg.data, &heading, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.linear_accel)
@@ -159,7 +159,7 @@ void read_from_mpl(module_t *module)
             msg.header.target = hal.source_id;
             msg.header.size = 3 * sizeof(float);
             memcpy(msg.data, float_data, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.gravity_vector)
@@ -172,7 +172,7 @@ void read_from_mpl(module_t *module)
             msg.header.target = hal.source_id;
             msg.header.size = 3 * sizeof(float);
             memcpy(msg.data, float_data, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
     if (hal.report.pedo)
@@ -191,7 +191,7 @@ void read_from_mpl(module_t *module)
             msg.header.target = hal.source_id;
             msg.header.size = 2 * sizeof(long);
             memcpy(msg.data, pedo, msg.header.size);
-            luos_send(module, &msg);
+            Luos_SendMsg(module, &msg);
         }
     }
 }
