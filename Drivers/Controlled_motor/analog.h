@@ -22,9 +22,11 @@ typedef struct __attribute__((__packed__))
     {
         struct __attribute__((__packed__))
         {
+            //uint32_t voltage_sensor;
             uint32_t current;
+            //uint32_t temperature_sensor;
         };
-        uint32_t unmap[3]; /*!< Unmaped form. */
+        uint32_t unmap[1]; /*!< Unmaped form. */
     };
 } analog_input_t;
 

@@ -83,29 +83,67 @@ static void enable_motor(char state);
 void ControlledMotor_Init(void)
 {
     // ******************* Analog measurement *******************
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig = {0};
-    // Stop DMA
-    HAL_ADC_Stop_DMA(&ControlledMotor_adc);
-
-    // Configure analog input pin channel
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // Enable  ADC Gpio clocks
+    //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
+    /**ADC GPIO Configuration
+    */
     GPIO_InitStruct.Pin = FB_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(FB_GPIO_Port, &GPIO_InitStruct);
-
-    // Add ADC channel to Luos adc configuration.
+    // Enable  ADC clocks
+    __HAL_RCC_ADC1_CLK_ENABLE();
+    // Setup Adc to loop on DMA continuously
+    ControlledMotor_adc.Instance = ADC1;
+    ControlledMotor_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    ControlledMotor_adc.Init.Resolution = ADC_RESOLUTION_12B;
+    ControlledMotor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    ControlledMotor_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    ControlledMotor_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    ControlledMotor_adc.Init.LowPowerAutoWait = DISABLE;
+    ControlledMotor_adc.Init.LowPowerAutoPowerOff = DISABLE;
+    ControlledMotor_adc.Init.ContinuousConvMode = ENABLE;
+    ControlledMotor_adc.Init.DiscontinuousConvMode = DISABLE;
+    ControlledMotor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    ControlledMotor_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    ControlledMotor_adc.Init.DMAContinuousRequests = ENABLE;
+    ControlledMotor_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    if (HAL_ADC_Init(&ControlledMotor_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /** Configure voltage input channel. */
     sConfig.Channel = ADC_CHANNEL_8;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    while (HAL_ADC_ConfigChannel(&ControlledMotor_adc, &sConfig) != HAL_OK)
-        ;
-    // relinik DMA
+    if (HAL_ADC_ConfigChannel(&ControlledMotor_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    // Enable DMA1 clock
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    /* ADC1 DMA Init */
+    /* ADC Init */
+    ControlledMotor_dma_adc.Instance = DMA1_Channel1;
+    ControlledMotor_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    ControlledMotor_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+    ControlledMotor_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    ControlledMotor_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    ControlledMotor_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    ControlledMotor_dma_adc.Init.Mode = DMA_CIRCULAR;
+    ControlledMotor_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&ControlledMotor_dma_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
     __HAL_LINKDMA(&ControlledMotor_adc, DMA_Handle, ControlledMotor_dma_adc);
-
-    // Restart DMA
-    HAL_ADC_Start_DMA(&ControlledMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
-
+    // disable DMA Irq
+    HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
+    // Start infinite ADC measurement
+    HAL_ADC_Start_DMA(&ControlledMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************** Pwm settings *****************
     time = TimeOD_TimeFrom_ms(SAMPLING_PERIOD_MS);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
