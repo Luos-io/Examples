@@ -199,7 +199,7 @@ static void rx_analog_read_cb(module_t *module, msg_t *msg)
         // fill the message infos
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
-        voltage_to_msg(&volt, &pub_msg);
+        ElectricOD_VoltageToMsg(&volt, &pub_msg);
         Luos_SendMsg(module, &pub_msg);
         return;
     }
