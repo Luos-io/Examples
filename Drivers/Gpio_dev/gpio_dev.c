@@ -56,11 +56,13 @@ static void rx_analog_read_cb(module_t *module, msg_t *msg);
 void GpioDev_Init(void)
 {
     // ******************* Analog measurement *******************
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig = {0};
-    // Stop DMA
-    HAL_ADC_Stop_DMA(&GpioDev_adc);
-
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // Enable  ADC Gpio clocks
+    //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
+    /**ADC GPIO Configuration
+    */
     // Configure analog input pin channel
     GPIO_InitStruct.Pin = P1_Pin | P9_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -71,34 +73,78 @@ void GpioDev_Init(void)
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    // Enable  ADC clocks
+    __HAL_RCC_ADC1_CLK_ENABLE();
+    // Setup Adc to loop on DMA continuously
+    GpioDev_adc.Instance = ADC1;
+    GpioDev_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    GpioDev_adc.Init.Resolution = ADC_RESOLUTION_12B;
+    GpioDev_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    GpioDev_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    GpioDev_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    GpioDev_adc.Init.LowPowerAutoWait = DISABLE;
+    GpioDev_adc.Init.LowPowerAutoPowerOff = DISABLE;
+    GpioDev_adc.Init.ContinuousConvMode = ENABLE;
+    GpioDev_adc.Init.DiscontinuousConvMode = DISABLE;
+    GpioDev_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    GpioDev_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    GpioDev_adc.Init.DMAContinuousRequests = ENABLE;
+    GpioDev_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    if (HAL_ADC_Init(&GpioDev_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-    // Add ADC channel to Luos adc configuration.
     sConfig.Channel = ADC_CHANNEL_0;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    while (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
-        ;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
     sConfig.Channel = ADC_CHANNEL_9;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    while (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
-        ;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
     sConfig.Channel = ADC_CHANNEL_8;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    while (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
-        ;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
     sConfig.Channel = ADC_CHANNEL_1;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    while (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
-        ;
+    if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-    // relinik DMA
+    // Enable DMA1 clock
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    /* ADC1 DMA Init */
+    /* ADC Init */
+    GpioDev_dma_adc.Instance = DMA1_Channel1;
+    GpioDev_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    GpioDev_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+    GpioDev_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    GpioDev_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    GpioDev_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    GpioDev_dma_adc.Init.Mode = DMA_CIRCULAR;
+    GpioDev_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&GpioDev_dma_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
     __HAL_LINKDMA(&GpioDev_adc, DMA_Handle, GpioDev_dma_adc);
-
-    // Restart DMA
-    HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
+    // disable DMA Irq
+    HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
+    // Start infinite ADC measurement
+    HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************* modules creation *******************
     pin[P1] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", STRINGIFY(VERSION));
     pin[P7] = Luos_CreateModule(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", STRINGIFY(VERSION));
