@@ -267,28 +267,6 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->header.size = sizeof(char);
         Luos_SendMsg(module, msg);
     }
-    // NODE_LED
-    if (cJSON_IsBool(cJSON_GetObjectItem(jobj, "led")))
-    {
-        msg->data[0] = cJSON_IsTrue(cJSON_GetObjectItem(jobj, "led"));
-        msg->header.cmd = NODE_LED;
-        msg->header.size = sizeof(char);
-        Luos_SendMsg(module, msg);
-    }
-    // NODE_TEMPERATURE
-    if (cJSON_GetObjectItem(jobj, "node_temperature"))
-    {
-        msg->header.cmd = NODE_TEMPERATURE;
-        msg->header.size = 0;
-        Luos_SendMsg(module, msg);
-    }
-    // NODE_VOLTAGE
-    if (cJSON_GetObjectItem(jobj, "node_voltage"))
-    {
-        msg->header.cmd = NODE_VOLTAGE;
-        msg->header.size = 0;
-        Luos_SendMsg(module, msg);
-    }
     // UUID
     if (cJSON_GetObjectItem(jobj, "uuid"))
     {
@@ -475,8 +453,6 @@ void msg_to_json(msg_t *msg, char *json)
 {
     switch (msg->header.cmd)
     {
-    case NODE_TEMPERATURE:
-    case NODE_VOLTAGE:
     case LINEAR_POSITION:
     case LINEAR_SPEED:
     case ANGULAR_POSITION:
@@ -497,12 +473,6 @@ void msg_to_json(msg_t *msg, char *json)
             char name[20] = {0};
             switch (msg->header.cmd)
             {
-            case NODE_TEMPERATURE:
-                strcpy(name, "node_temperature");
-                break;
-            case NODE_VOLTAGE:
-                strcpy(name, "node_voltage");
-                break;
             case LINEAR_POSITION:
                 strcpy(name, "trans_position");
                 break;
