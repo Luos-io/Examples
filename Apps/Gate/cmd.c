@@ -77,7 +77,7 @@ void send_cmds(module_t *module)
             if (cJSON_IsNumber(cJSON_GetObjectItem(root, "baudrate")))
             {
                 uint32_t baudrate = (float)cJSON_GetObjectItem(root, "baudrate")->valueint;
-                Luos_SetBaudrate(module, baudrate);
+                Luos_SendBaudrate(module, baudrate);
             }
         }
         if (cJSON_GetObjectItem(root, "benchmark") != NULL)
