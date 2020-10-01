@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "crc.h"
 #include "dma.h"
 #include "rtc.h"
 #include "usart.h"
@@ -96,7 +95,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
   MX_RTC_Init();
-  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   Luos_Init();
   Gate_Init();
