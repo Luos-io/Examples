@@ -311,7 +311,6 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->header.size = 0;
         Luos_SendMsg(module, msg);
     }
-    handy_t position;
     switch (type)
     {
     case VOID_MOD:
@@ -354,62 +353,6 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
             msg->header.size = sizeof(char);
             Luos_SendMsg(module, msg);
         }
-        break;
-    case HANDY_MOD:
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "pinky")))
-        {
-            position.pinky = (char)(cJSON_GetObjectItem(jobj, "pinky")->valueint);
-            if (position.pinky > 100)
-                position.pinky = 100;
-        }
-        else
-        {
-            position.pinky = 200;
-        }
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "index")))
-        {
-            position.index = (char)(cJSON_GetObjectItem(jobj, "index")->valueint);
-            if (position.index > 100)
-                position.index = 100;
-        }
-        else
-        {
-            position.index = 200;
-        }
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "middle")))
-        {
-            position.middle = (char)(cJSON_GetObjectItem(jobj, "middle")->valueint);
-            if (position.middle > 100)
-                position.middle = 100;
-        }
-        else
-        {
-            position.middle = 200;
-        }
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "ring")))
-        {
-            position.ring = (char)(cJSON_GetObjectItem(jobj, "ring")->valueint);
-            if (position.ring > 100)
-                position.ring = 100;
-        }
-        else
-        {
-            position.ring = 200;
-        }
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "thumb")))
-        {
-            position.thumb = (char)(cJSON_GetObjectItem(jobj, "thumb")->valueint);
-            if (position.thumb > 100)
-                position.thumb = 100;
-        }
-        else
-        {
-            position.thumb = 200;
-        }
-        memcpy(msg->data, &position.unmap, sizeof(handy_t));
-        msg->header.cmd = HANDY_SET_POSITION;
-        msg->header.size = sizeof(handy_t);
-        Luos_SendMsg(module, msg);
         break;
     case IMU_MOD:
     case STEPPER_MOD:
