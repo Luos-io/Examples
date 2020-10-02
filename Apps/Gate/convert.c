@@ -311,6 +311,13 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->header.size = 0;
         Luos_SendMsg(module, msg);
     }
+    // Luos STAT
+    if (cJSON_GetObjectItem(jobj, "luos_statistics"))
+    {
+        msg->header.cmd = LUOS_STATISTICS;
+        msg->header.size = 0;
+        Luos_SendMsg(module, msg);
+    }
     switch (type)
     {
     case VOID_MOD:
@@ -478,6 +485,15 @@ void msg_to_json(msg_t *msg, char *json)
             msg->data[msg->header.size] = '\0';
             //create the Json content
             sprintf(json, "\"luos_revision\":\"%s\",", msg->data);
+        }
+        break;
+    case LUOS_STATISTICS:
+        // clean data to be used as string
+        if (msg->header.size < MAX_DATA_MSG_SIZE)
+        {
+            msg->data[msg->header.size] = '\0';
+            //create the Json content
+            sprintf(json, "\"luos_statistics\":[%d,%d,%d,%d,%d],", msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
         }
         break;
     case IO_STATE:
