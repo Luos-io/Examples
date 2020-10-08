@@ -15,12 +15,12 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-module_t *app;
+container_t *app;
 
 typedef enum
 {
     MDL_APPDETECTION = LUOS_LAST_TYPE
-}App_type_t;
+} App_type_t;
 
 int8_t id_button;
 int8_t id_led;
@@ -28,8 +28,8 @@ uint8_t button_last_state = 0;
 /*******************************************************************************
  * Functions
  ******************************************************************************/
-static void Detection_MsgHandler(module_t *module, msg_t *msg);
-static void Detection_LedState(msg_t *msg , uint8_t state);
+static void Detection_MsgHandler(container_t *container, msg_t *msg);
+static void Detection_LedState(msg_t *msg, uint8_t state);
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -45,29 +45,28 @@ static void Detection_LedState(msg_t *msg , uint8_t state);
 void Detection_Init(void)
 {
 
-	app=Luos_CreateModule(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", "0.0.1");
-	HAL_Delay(1000);
-	// Detect all modules of your network and create a route_table
-	RouteTB_DetectModules(app);
+    app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", "0.0.1");
+    HAL_Delay(1000);
+    // Detect all containers of your network and create a route_table
+    RouteTB_DetectContainers(app);
 
+    id_button = RouteTB_IDFromAlias("button_mod");
+    id_led = RouteTB_IDFromAlias("rgb_led_mod1");
 
-	id_button = RouteTB_IDFromAlias("button_mod");
-	id_led = RouteTB_IDFromAlias("rgb_led_mod1");
+    /*button Configuration*/
+    if (id_button > 0)
+    {
+        msg_t msg;
 
-	/*button Configuration*/
-	if (id_button > 0)
-	{
-		msg_t msg;
+        msg.header.target = id_button;
+        msg.header.target_mode = IDACK;
 
-		msg.header.target = id_button;
-		msg.header.target_mode = IDACK;
-
-		// Setup auto update each 10ms on button
-		time_luos_t time = TimeOD_TimeFrom_ms(10);
-		TimeOD_TimeToMsg(&time, &msg);
-		msg.header.cmd = UPDATE_PUB;
-		Luos_SendMsg(app, &msg);
-	}
+        // Setup auto update each 10ms on button
+        time_luos_t time = TimeOD_TimeFrom_ms(10);
+        TimeOD_TimeToMsg(&time, &msg);
+        msg.header.cmd = UPDATE_PUB;
+        Luos_SendMsg(app, &msg);
+    }
 }
 /******************************************************************************
  * @brief
@@ -88,24 +87,23 @@ void Detection_Loop(void)
  * @Return
  *
  *****************************************************************************/
-static void Detection_MsgHandler(module_t *module, msg_t *msg)
+static void Detection_MsgHandler(container_t *container, msg_t *msg)
 {
     msg_t led_msg;
 
     if (msg->header.cmd == IO_STATE)
     {
-        if(msg->data[0] != button_last_state)
+        if (msg->data[0] != button_last_state)
         {
-        	button_last_state = msg->data[0];
-            if(id_led > 0)
+            button_last_state = msg->data[0];
+            if (id_led > 0)
             {
                 led_msg.header.cmd = IO_STATE;
                 led_msg.header.target_mode = IDACK;
                 led_msg.header.target = id_led;
                 led_msg.header.size = sizeof(char);
                 Detection_LedState(&led_msg, button_last_state);
-                Luos_SendMsg(module,&led_msg);
-
+                Luos_SendMsg(container, &led_msg);
             }
         }
     }
@@ -119,25 +117,21 @@ static void Detection_MsgHandler(module_t *module, msg_t *msg)
  * @Return
  *
  *****************************************************************************/
-static void Detection_LedState(msg_t *msg , uint8_t state)
+static void Detection_LedState(msg_t *msg, uint8_t state)
 {
     color_t color;
 
-    if(state == 0)
+    if (state == 0)
     {
-    	color.r = 0;
-		color.g = 0;
-		color.b = 0;
+        color.r = 0;
+        color.g = 0;
+        color.b = 0;
     }
     else
     {
-    	color.r = 255;
-		color.g = 0;
-		color.b = 0;
+        color.r = 255;
+        color.g = 0;
+        color.b = 0;
     }
     IlluminanceOD_ColorToMsg(&color, msg);
 }
-
-
-
-

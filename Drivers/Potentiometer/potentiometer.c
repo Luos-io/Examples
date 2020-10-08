@@ -26,7 +26,7 @@ volatile angular_position_t angle = 0.0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Potentiometer_MsgHandler(module_t *module, msg_t *msg);
+static void Potentiometer_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -100,8 +100,8 @@ void Potentiometer_Init(void)
     // Restart DMA
     HAL_ADC_Start_DMA(&Potentiometer_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
-    // ******************* module creation *******************
-    Luos_CreateModule(Potentiometer_MsgHandler, ANGLE_MOD, "potentiometer_mod", STRINGIFY(VERSION));
+    // ******************* container creation *******************
+    Luos_CreateContainer(Potentiometer_MsgHandler, ANGLE_MOD, "potentiometer_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -113,12 +113,12 @@ void Potentiometer_Loop(void)
     angle = ((float)analog_input.pos / 4096.0) * 300.0;
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Potentiometer_MsgHandler(module_t *module, msg_t *msg)
+static void Potentiometer_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -127,7 +127,7 @@ static void Potentiometer_MsgHandler(module_t *module, msg_t *msg)
         pub_msg.header.target_mode = ID;
         pub_msg.header.target = msg->header.source;
         AngularOD_PositionToMsg((angular_position_t *)&angle, &pub_msg);
-        Luos_SendMsg(module, &pub_msg);
+        Luos_SendMsg(container, &pub_msg);
         return;
     }
 }

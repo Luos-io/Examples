@@ -24,15 +24,15 @@ typedef struct
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static module_t *module_serv[SERVONUMBER];
+static container_t *container_serv[SERVONUMBER];
 volatile servo_t servo[SERVONUMBER];
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Servo_MsgHandler(module_t *module, msg_t *msg);
+static void Servo_MsgHandler(container_t *container, msg_t *msg);
 static void set_position(uint8_t motor_id);
-static uint8_t find_id(module_t *my_module);
+static uint8_t find_id(container_t *my_container);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -41,14 +41,10 @@ static uint8_t find_id(module_t *my_module);
  ******************************************************************************/
 void Servo_Init(void)
 {
-    module_serv[0] = Luos_CreateModule(Servo_MsgHandler, SERVO_MOD, "servo1_mod", STRINGIFY(VERSION));
-    module_serv[1] = Luos_CreateModule(Servo_MsgHandler, SERVO_MOD, "servo2_mod", STRINGIFY(VERSION));
-    module_serv[2] = Luos_CreateModule(Servo_MsgHandler, SERVO_MOD, "servo3_mod", STRINGIFY(VERSION));
-    module_serv[3] = Luos_CreateModule(Servo_MsgHandler, SERVO_MOD, "servo4_mod", STRINGIFY(VERSION));
-    Luos_ModuleEnableRT(module_serv[0]);
-    Luos_ModuleEnableRT(module_serv[1]);
-    Luos_ModuleEnableRT(module_serv[2]);
-    Luos_ModuleEnableRT(module_serv[3]);
+    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", STRINGIFY(VERSION));
+    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", STRINGIFY(VERSION));
+    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", STRINGIFY(VERSION));
+    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", STRINGIFY(VERSION));
     servo_parameters_t param;
     param.max_angle = 180.0;
     param.max_pulse_time = 1.5 / 1000.0;
@@ -71,17 +67,17 @@ void Servo_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Servo_MsgHandler(module_t *module, msg_t *msg)
+static void Servo_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ANGULAR_POSITION)
     {
         // set the motor position
-        uint8_t motor_id = find_id(module);
+        uint8_t motor_id = find_id(container);
         AngularOD_PositionFromMsg((angular_position_t *)&servo[motor_id].angle, msg);
         set_position(motor_id);
         return;
@@ -89,7 +85,7 @@ static void Servo_MsgHandler(module_t *module, msg_t *msg)
     if (msg->header.cmd == PARAMETERS)
     {
         // set the servo parameters
-        uint8_t motor_id = find_id(module);
+        uint8_t motor_id = find_id(container);
         memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
         set_position(motor_id);
         return;
@@ -153,12 +149,12 @@ static void set_position(uint8_t motor_id)
     }
 }
 
-static uint8_t find_id(module_t *my_module)
+static uint8_t find_id(container_t *my_container)
 {
     uint8_t i = 0;
     for (i = 0; i <= SERVONUMBER; i++)
     {
-        if ((int)my_module == (int)module_serv[i])
+        if ((int)my_container == (int)container_serv[i])
             return i;
     }
     return i;

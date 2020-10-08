@@ -29,7 +29,7 @@ static int elapsed_ms = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Led_MsgHandler(module_t *module, msg_t *msg);
+static void Led_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -42,7 +42,7 @@ void Led_Init(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    Luos_ModuleEnableRT(Luos_CreateModule(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION)));
+    Luos_CreateContainer(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -53,12 +53,12 @@ void Led_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg manager callback when a msg receive for this module
- * @param Module destination
+ * @brief Msg manager callback when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Led_MsgHandler(module_t *module, msg_t *msg)
+static void Led_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == COLOR)
     {

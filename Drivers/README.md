@@ -9,7 +9,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Drivers
 
-This folder contains the module's sources of each **driver** project (see [Drivers section](https://docs.luos.io/pages/low/modules/create-modules.html?#drivers-guidelines) in documentation).
+This folder contains the container's sources of each **driver** project (see [Drivers section](https://docs.luos.io/pages/low/containers/create-containers.html?#drivers-guidelines) in documentation).
 
 
 [![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)

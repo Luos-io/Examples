@@ -26,7 +26,7 @@ typedef enum
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-module_t *app;
+container_t *app;
 volatile control_mode_t control_mode;
 uint8_t lock = 1;
 uint8_t last_btn_state = 0;
@@ -36,7 +36,7 @@ uint8_t init = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void StartController_MsgHandler(module_t *module, msg_t *msg);
+static void StartController_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -48,7 +48,7 @@ void StartController_Init(void)
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
-    app = Luos_CreateModule(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", STRINGIFY(VERSION));
+    app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -61,10 +61,10 @@ void StartController_Loop(void)
     static uint32_t switch_date = 0;
     static uint8_t animation_state = 0;
     // ********** hot plug management ************
-    // Check if we have done the first init or if module Id have changed
-    if (previous_id != id_from_module(app))
+    // Check if we have done the first init or if container Id have changed
+    if (previous_id != RouteTB_IDFromContainer(app))
     {
-        if (id_from_module(app) == 0)
+        if (RouteTB_IDFromContainer(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -74,34 +74,34 @@ void StartController_Loop(void)
                 if (HAL_GetTick() > 1000)
                 {
                     // No detection occure, do it
-                    detect_modules(app);
+                    RouteTB_DetectContainers(app);
                 }
             }
             else
             {
                 // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup module at the end of detection
+                // reset the init state to be ready to setup container at the end of detection
                 previous_id = 0;
             }
         }
         else
         {
-            // Make modules configurations
-            int id = id_from_alias("lock");
+            // Make containers configurations
+            int id = RouteTB_IDFromAlias("lock");
             if (id > 0)
             {
                 msg_t msg;
                 msg.header.target = id;
                 msg.header.target_mode = IDACK;
                 // Setup auto update each UPDATE_PERIOD_MS on button
-                // This value is resetted on all module at each detection
+                // This value is resetted on all container at each detection
                 // It's important to setting it each time.
-                time_luos_t time = time_from_ms(UPDATE_PERIOD_MS);
-                time_to_msg(&time, &msg);
+                time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
+                TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
-                luos_send(app, &msg);
+                Luos_SendMsg(app, &msg);
             }
-            previous_id = id_from_module(app);
+            previous_id = RouteTB_IDFromContainer(app);
         }
         return;
     }
@@ -111,7 +111,7 @@ void StartController_Loop(void)
         msg_t msg;
         msg.header.target_mode = IDACK;
         // Share the lock state with the alarm_control app
-        int id = id_from_alias("alarm_control");
+        int id = RouteTB_IDFromAlias("alarm_control");
         if (id > 0)
         {
             // we have an alarm_controller App control it
@@ -131,11 +131,11 @@ void StartController_Loop(void)
             msg.header.cmd = CONTROL;
             msg.header.size = sizeof(control_mode_t);
             msg.data[0] = alarm_control.unmap;
-            luos_send(app, &msg);
+            Luos_SendMsg(app, &msg);
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id = id_from_type(COLOR_MOD);
+        id = RouteTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -152,10 +152,10 @@ void StartController_Loop(void)
                 color.b = LIGHT_INTENSITY;
             }
             msg.header.target = id;
-            color_to_msg(&color, &msg);
-            luos_send(app, &msg);
+            IlluminanceOD_ColorToMsg(&color, &msg);
+            Luos_SendMsg(app, &msg);
         }
-        id = id_from_alias("horn");
+        id = RouteTB_IDFromAlias("horn");
         if (id > 0)
         {
             // we get a horn
@@ -164,32 +164,32 @@ void StartController_Loop(void)
             msg.header.cmd = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 1;
-            luos_send(app, &msg);
+            Luos_SendMsg(app, &msg);
         }
         // try to reach a buzzer and drive it to make a happy sound
         if (!lock)
         {
-            id = id_from_alias("buzzer_mod");
+            id = RouteTB_IDFromAlias("buzzer_mod");
             if (id > 0)
             {
                 msg.header.target = id;
                 msg.header.cmd = IO_STATE;
                 msg.header.size = 1;
                 msg.data[0] = 1;
-                luos_send(app, &msg);
+                Luos_SendMsg(app, &msg);
             }
         }
         // Save switch date
         switch_date = HAL_GetTick();
         animation_state++;
     }
-    // This part is a start stop animation using available modules
+    // This part is a start stop animation using available containers
     if (((HAL_GetTick() - switch_date) > 100) & (animation_state == 1))
     {
         // 100ms after button turn of light and horn
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = id_from_alias("horn");
+        int id = RouteTB_IDFromAlias("horn");
         if (id > 0)
         {
             // we get a horn
@@ -198,7 +198,7 @@ void StartController_Loop(void)
             msg.header.cmd = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 0;
-            luos_send(app, &msg);
+            Luos_SendMsg(app, &msg);
         }
         animation_state++;
     }
@@ -207,7 +207,7 @@ void StartController_Loop(void)
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = id_from_type(COLOR_MOD);
+        int id = RouteTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -225,25 +225,25 @@ void StartController_Loop(void)
                 color.b = LIGHT_INTENSITY;
             }
             msg.header.target = id;
-            color_to_msg(&color, &msg);
-            luos_send(app, &msg);
+            IlluminanceOD_ColorToMsg(&color, &msg);
+            Luos_SendMsg(app, &msg);
         }
         animation_state = 0;
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void StartController_MsgHandler(module_t *module, msg_t *msg)
+static void StartController_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
         if (control_mode.mode_control == PLAY)
         {
-            if (type_from_id(msg->header.source) == STATE_MOD)
+            if (RouteTB_TypeFromID(msg->header.source) == STATE_MOD)
             {
                 // this is the button reply we have filter it to manage monostability
                 if ((!last_btn_state) & (last_btn_state != msg->data[0]))

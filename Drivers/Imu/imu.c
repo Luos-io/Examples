@@ -20,14 +20,14 @@
 volatile uint32_t hal_timestamp = 0;
 unsigned char *mpl_key = (unsigned char *)"eMPL 5.1";
 
-module_t *module_pointer;
+container_t *container_pointer;
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Imu_MsgHandler(module_t *module, msg_t *msg);
+static void Imu_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -38,7 +38,7 @@ void Imu_Init(void)
 {
     mpu_setup();
     hal.report.quat = 1;
-    Luos_ModuleEnableRT(Luos_CreateModule(Imu_MsgHandler, IMU_MOD, "Imu_mod", STRINGIFY(VERSION)));
+    Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -230,23 +230,23 @@ void Imu_Loop(void)
     }
     if (hal.update_request == 1)
     {
-        read_from_mpl(module_pointer);
+        read_from_mpl(container_pointer);
         hal.update_request = 0;
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Imu_MsgHandler(module_t *module, msg_t *msg)
+static void Imu_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
         // fill the message infos
         hal.update_request = 1;
-        module_pointer = module;
+        container_pointer = container;
         hal.source_id = msg->header.source;
         pub = LUOS_PROTOCOL_NB;
         return;
@@ -256,7 +256,7 @@ static void Imu_MsgHandler(module_t *module, msg_t *msg)
         // check the message size
         if (msg->header.size == sizeof(short))
         {
-            module_pointer = module;
+            container_pointer = container;
             // fill the message infos
             memcpy(&hal.report, msg->data, msg->header.size);
         }
@@ -277,7 +277,7 @@ void HAL_SYSTICK_Callback(void)
 {
     if (pub != LUOS_PROTOCOL_NB)
     {
-        Luos_SendMsg(module_pointer, (msg_t *)&pub_msg);
+        Luos_SendMsg(container_pointer, (msg_t *)&pub_msg);
         pub = LUOS_PROTOCOL_NB;
     }
 }

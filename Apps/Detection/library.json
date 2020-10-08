@@ -1,6 +1,6 @@
 {
     "name": "AppDetection",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,module,ST,cJSON",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST,cJSON",
     "description": "A Luos movement detection rising an alarm.",
     "version": "0.0.1",
     "authors": {

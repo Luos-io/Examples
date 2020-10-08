@@ -25,7 +25,7 @@ char have_to_tare = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Load_MsgHandler(module_t *module, msg_t *msg);
+static void Load_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -35,7 +35,7 @@ static void Load_MsgHandler(module_t *module, msg_t *msg);
 void Load_Init(void)
 {
     hx711_init(128);
-    Luos_CreateModule(Load_MsgHandler, LOAD_MOD, "load_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -56,12 +56,12 @@ void Load_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Load_MsgHandler(module_t *module, msg_t *msg)
+static void Load_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -72,7 +72,7 @@ static void Load_MsgHandler(module_t *module, msg_t *msg)
             pub_msg.header.target_mode = ID;
             pub_msg.header.target = msg->header.source;
             ForceOD_ForceToMsg((force_t *)&load, &pub_msg);
-            Luos_SendMsg(module, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
             new_data_ready = 0;
         }
         return;

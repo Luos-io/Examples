@@ -29,7 +29,7 @@ volatile int imgsize = MAX_LED_NUMBER;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void LedStrip_MsgHandler(module_t *module, msg_t *msg);
+static void LedStrip_MsgHandler(container_t *container, msg_t *msg);
 static void convert_color(color_t color, int led_nb);
 static void image_size(int size);
 
@@ -40,7 +40,7 @@ static void image_size(int size);
  ******************************************************************************/
 void LedStrip_Init(void)
 {
-    Luos_CreateModule(LedStrip_MsgHandler, COLOR_MOD, "led_strip_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(LedStrip_MsgHandler, COLOR_MOD, "led_strip_mod", STRINGIFY(VERSION));
     TIM2->CCR1 = 0;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);
@@ -62,12 +62,12 @@ void LedStrip_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void LedStrip_MsgHandler(module_t *module, msg_t *msg)
+static void LedStrip_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == COLOR)
     {
@@ -83,7 +83,7 @@ static void LedStrip_MsgHandler(module_t *module, msg_t *msg)
         else
         {
             // image management
-            Luos_ReceiveData(module, msg, (void *)matrix);
+            Luos_ReceiveData(container, msg, (void *)matrix);
         }
         return;
     }

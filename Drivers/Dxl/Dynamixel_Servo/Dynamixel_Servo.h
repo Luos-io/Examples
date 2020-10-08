@@ -28,7 +28,7 @@
  *  This code is open-source and free for all. Enjoy!
  *
  * @discussion
- *  This module presents a high-level interface and a low-level interface for
+ *  This container presents a high-level interface and a low-level interface for
  *  manipulating the servo's registers. The high-level interface looks up
  *  the width (one or two bytes) of the specified value and manipulates all
  *  relevant registers (low byte and high byte) as a single value. The high-
@@ -60,9 +60,9 @@
  *   When the motor is powered on, the value returned servo_get(SERVO_REGISTER_MOVING_SPEED)
  *   will be incorrect (0) until it is set to some other value.
  *  @bug
- *   This module only supports one Dynamixel bus.
+ *   This container only supports one Dynamixel bus.
  *  @bug
- *   This module has only been tested with MX 64-T. It is unknown whether it works with others.
+ *   This container has only been tested with MX 64-T. It is unknown whether it works with others.
  *
  *
  * @author
@@ -107,7 +107,7 @@ extern "C"
         SERVO_ERROR_INSTRUCTION = 0x0040,
         SERVO_ERROR_UNKNOWN = 0x0080,
 
-        /* defined by this module */
+        /* defined by this container */
         SERVO_ERROR_TIMEOUT = 0x0100,
         SERVO_ERROR_INVALID_RESPONSE = 0x0200,
 
@@ -263,7 +263,7 @@ typedef enum servo_register_enum
     /*--------------------------------------------------------------------------------------------*/
     /*!
  * @function    servo_init
- * @abstract      Initialize this module.
+ * @abstract      Initialize this container.
  * @param       baud
  *                The baud rate that the servo wants to use to communicate, as defined in the
  *                servo's SERVO_REGISTER_BAUD_RATE. If you have not changed it, it should be
@@ -281,7 +281,7 @@ typedef enum servo_register_enum
  *                will respond. If you have not changed it, the id of the motor will be
  *                SERVO_DEFAULT_ID.
  * @param       timeout_ms
- *                The number of milliseconds that this module should wait for a response
+ *                The number of milliseconds that this container should wait for a response
  *                before timing out. If you don't expect a response (ie because you changed
  *                the servo's SERVO_REGISTER_RETURN_LEVEL) or don't care about it, you may
  *                pass 0.
@@ -305,7 +305,7 @@ typedef enum servo_register_enum
  *                will respond. If you have not changed it, the id of the motor will be
  *                SERVO_DEFAULT_ID.
  * @param       timeout_ms
- *                The number of milliseconds that this module should wait for a response
+ *                The number of milliseconds that this container should wait for a response
  *                before timing out.
  * @result        SERVO_NO_ERROR or one or several error codes "or'd" together. To check for
  *                a specific error, use the "&" operator rather than "==", as in:
@@ -329,7 +329,7 @@ typedef enum servo_register_enum
  * @param       reg
  *                The servo's register that you are trying to access. For 16-bit registers,
  *                it is not necessary to access the high and low bytes separately, as this
- *                module 'knows' which registers are 16 bit, will access both of them in a
+ *                container 'knows' which registers are 16 bit, will access both of them in a
  *                single operation, and treat them as a single value. For instance,
  *                rather than using SERVO_REGISTER_GOAL_ANGLE_L and SERVO_REGISTER_GOAL_ANGLE_H,
  *                you should just use SERVO_REGISTER_GOAL_ANGLE.
@@ -342,7 +342,7 @@ typedef enum servo_register_enum
  *                Volts, Amperes, radians-per-second, or radians-per-square-second, according to
  *                the type of quantity being read.
  * @param       timeout_ms
- *                The number of milliseconds that this module should wait for a response
+ *                The number of milliseconds that this container should wait for a response
  *                before timing out. If you don't expect a response (ie because you changed
  *                the servo's SERVO_REGISTER_RETURN_LEVEL) or don't care about it, you may
  *                pass 0.
@@ -368,7 +368,7 @@ typedef enum servo_register_enum
  * @param       reg
  *                The servo's register that you are trying to access. For 16-bit registers,
  *                it is not necessary to access the high and low bytes separately, as this
- *                module 'knows' which registers are 16 bit, will access both of them in a
+ *                container 'knows' which registers are 16 bit, will access both of them in a
  *                single operation, and treat them as a single value. For instance,
  *                rather than using SERVO_REGISTER_GOAL_ANGLE_L and SERVO_REGISTER_GOAL_ANGLE_H,
  *                you should just use SERVO_REGISTER_GOAL_ANGLE.
@@ -381,7 +381,7 @@ typedef enum servo_register_enum
  *                the type of quantity being read. This metohod converts this to a raw value,
  *                and  attempts to write it to reg.
  * @param       timeout_ms
- *                The number of milliseconds that this module should wait for a response
+ *                The number of milliseconds that this container should wait for a response
  *                before timing out. If you don't expect a response (ie because you changed
  *                the servo's SERVO_REGISTER_RETURN_LEVEL) or don't care about it, you may
  *                pass 0.
@@ -408,10 +408,10 @@ typedef enum servo_register_enum
  *                The lowest ot the servo's register that you are trying to access.
  *                The registers must be sequential. For 16-bit registers,
  *                it is not necessary to access the high and low bytes separately, as this
- *                module 'knows' which registers are 16 bit, will access both of them in a
+ *                container 'knows' which registers are 16 bit, will access both of them in a
  *                single operation, and treat them as a single value. For instance,
  *                if start_reg is SERVO_REGISTER_GOAL_ANGLE and num_values_per_servo is 2,
- *                this module will write 4 1-byte registers: 2 for the goal angle, and
+ *                this container will write 4 1-byte registers: 2 for the goal angle, and
  *                2 for the moving speed.
  * @param       values
  *                An array containing the desired values of the specified registers in physical units
@@ -461,7 +461,7 @@ typedef enum servo_register_enum
  *                will respond. If you have not changed it, the id of the motor will be
  *                SERVO_DEFAULT_ID.
  * @param       timeout_ms
- *                The number of milliseconds that this module should wait for a response
+ *                The number of milliseconds that this container should wait for a response
  *                before timing out. If you don't expect a response (ie because you changed
  *                the servo's SERVO_REGISTER_RETURN_LEVEL) or don't care about it, you may
  *                pass 0.
@@ -480,8 +480,8 @@ typedef enum servo_register_enum
  * @function    servo_errors_to_string
  * @abstract      Convert an error code to a human-readable string.
  * @param       error
- *                An error code returned by another function in this module.
- * @result        The human readable string. The memory for this is owned by this module and
+ *                An error code returned by another function in this container.
+ * @result        The human readable string. The memory for this is owned by this container and
  *                should not be freed.
  */
     char *servo_errors_to_string(servo_error_t error);

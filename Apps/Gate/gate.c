@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file gate
- * @brief Module gate
+ * @brief Container gate
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
@@ -16,10 +16,10 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-module_t *module;
+container_t *container;
 msg_t msg;
 uint8_t RxData;
-module_t *module_pointer;
+container_t *container_pointer;
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 /*******************************************************************************
@@ -43,7 +43,7 @@ void Gate_Init(void)
     LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
     LL_USART_EnableDMAReq_RX(USART3);
-    module = Luos_CreateModule(0, GATE_MOD, "gate", STRINGIFY(VERSION));
+    container = Luos_CreateContainer(0, GATE_MOD, "gate", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -56,23 +56,23 @@ void Gate_Loop(void)
     static volatile uint8_t detection_done = 0;
     static char state = 0;
 
-    // Check if there is a dead module
-    if (module->vm->dead_module_spotted)
+    // Check if there is a dead container
+    if (container->vm->dead_container_spotted)
     {
         char json[JSON_BUFF_SIZE] = {0};
-        exclude_module_to_json(module->vm->dead_module_spotted, json);
+        exclude_container_to_json(container->vm->dead_container_spotted, json);
 #ifdef USE_SERIAL
         serial_write(json, strlen(json));
 #else
         printf(json);
 #endif
-        module->vm->dead_module_spotted = 0;
+        container->vm->dead_container_spotted = 0;
     }
     if (detection_done)
     {
         char json[JSON_BUFF_SIZE] = {0};
         state = !state;
-        format_data(module, json);
+        format_data(container, json);
         if (json[0] != '\0')
         {
 #ifdef USE_SERIAL
@@ -98,19 +98,19 @@ void Gate_Loop(void)
                 keepAlive++;
             }
         }
-        collect_data(module);
+        collect_data(container);
     }
     if (pub != LUOS_PROTOCOL_NB)
     {
-        Luos_SendMsg(module_pointer, (msg_t *)&pub_msg);
+        Luos_SendMsg(container_pointer, (msg_t *)&pub_msg);
         pub = LUOS_PROTOCOL_NB;
     }
     // check if serial input messages ready and convert it into a luos message
-    send_cmds(module);
+    send_cmds(container);
     if (detection_ask)
     {
         char json[JSON_BUFF_SIZE * 2] = {0};
-        RouteTB_DetectModules(module);
+        RouteTB_DetectContainers(container);
         route_table_to_json(json);
 #ifdef USE_SERIAL
         serial_write(json, strlen(json));

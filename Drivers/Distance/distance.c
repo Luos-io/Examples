@@ -25,7 +25,7 @@ VL53L0X_Dev_t dev;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Distance_MsgHandler(module_t *module, msg_t *msg);
+static void Distance_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -57,7 +57,7 @@ void Distance_Init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
-    Luos_CreateModule(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -76,12 +76,12 @@ void Distance_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg handler call back when a msg receive for this module
- * @param Module destination
+ * @brief Msg handler call back when a msg receive for this container
+ * @param Container destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Distance_MsgHandler(module_t *module, msg_t *msg)
+static void Distance_MsgHandler(container_t *container, msg_t *msg)
 {
     if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready))
     {
@@ -98,6 +98,6 @@ static void Distance_MsgHandler(module_t *module, msg_t *msg)
         pub_msg.header.target = msg->header.source;
         LinearOD_PositionToMsg(&dist, &pub_msg);
         new_data_ready = 0;
-        Luos_SendMsg(module, &pub_msg);
+        Luos_SendMsg(container, &pub_msg);
     }
 }

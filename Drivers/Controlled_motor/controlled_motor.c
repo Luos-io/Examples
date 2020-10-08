@@ -71,7 +71,7 @@ char speed_bootstrap = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void ControlledMotor_MsgHandler(module_t *module, msg_t *msg);
+static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg);
 static void set_ratio(float ratio);
 static void enable_motor(char state);
 
@@ -193,8 +193,8 @@ void ControlledMotor_Init(void)
     trajectory = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
     measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
-    // ************** Module creation *****************
-    Luos_CreateModule(ControlledMotor_MsgHandler, CONTROLLED_MOTOR_MOD, "controlled_motor_mod", STRINGIFY(VERSION));
+    // ************** Container creation *****************
+    Luos_CreateContainer(ControlledMotor_MsgHandler, CONTROLLED_MOTOR_MOD, "controlled_motor_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -342,12 +342,12 @@ void ControlledMotor_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg manager call by luos when module created a msg receive
- * @param Module send msg
+ * @brief Msg manager call by luos when container created a msg receive
+ * @param Container send msg
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void ControlledMotor_MsgHandler(module_t *module, msg_t *msg)
+static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -361,35 +361,35 @@ static void ControlledMotor_MsgHandler(module_t *module, msg_t *msg)
             {
                 // send back a record stream
                 pub_msg.header.cmd = ANGULAR_POSITION;
-                Luos_SendStreaming(module, &pub_msg, &measurement);
+                Luos_SendStreaming(container, &pub_msg, &measurement);
             }
             else
             {
                 LuosHAL_SetIrqState(false);
                 AngularOD_PositionToMsg((angular_position_t *)&motor.angular_position, &pub_msg);
                 LuosHAL_SetIrqState(true);
-                Luos_SendMsg(module, &pub_msg);
+                Luos_SendMsg(container, &pub_msg);
             }
         }
         if (motor.mode.angular_speed)
         {
             AngularOD_SpeedToMsg((angular_speed_t *)&motor.angular_speed, &pub_msg);
-            Luos_SendMsg(module, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
         }
         if (motor.mode.linear_position)
         {
             LinearOD_PositionToMsg((linear_position_t *)&motor.linear_position, &pub_msg);
-            Luos_SendMsg(module, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
         }
         if (motor.mode.linear_speed)
         {
             LinearOD_SpeedToMsg((linear_speed_t *)&motor.linear_speed, &pub_msg);
-            Luos_SendMsg(module, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
         }
         if (motor.mode.current)
         {
             ElectricOD_CurrentToMsg((current_t *)&motor.current, &pub_msg);
-            Luos_SendMsg(module, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
         }
         return;
     }
@@ -497,7 +497,7 @@ static void ControlledMotor_MsgHandler(module_t *module, msg_t *msg)
             else
             {
                 // this is a trajectory, save it into streaming channel.
-                Luos_ReceiveStreaming(module, msg, &trajectory);
+                Luos_ReceiveStreaming(container, msg, &trajectory);
             }
         }
         return;
@@ -526,7 +526,7 @@ static void ControlledMotor_MsgHandler(module_t *module, msg_t *msg)
         else
         {
             // this is a trajectory, save it into ring buffer.
-            Luos_ReceiveStreaming(module, msg, &trajectory);
+            Luos_ReceiveStreaming(container, msg, &trajectory);
             // values will be converted one by one during trajectory management.
         }
         return;

@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-// Create msg from a module json data
-void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
+// Create msg from a container json data
+void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
 {
     time_luos_t time;
     float data = 0.0;
@@ -18,14 +18,14 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
     {
         ratio_t ratio = (ratio_t)cJSON_GetObjectItem(jobj, "power_ratio")->valuedouble;
         RatioOD_RatioToMsg(&ratio, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // target angular position
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "target_rot_position")))
     {
         angular_position_t angular_position = (angular_position_t)cJSON_GetObjectItem(jobj, "target_rot_position")->valuedouble;
         AngularOD_PositionToMsg(&angular_position, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "target_rot_position")))
     {
@@ -45,7 +45,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         if (i < JSON_BUFF_SIZE - 1)
         {
             msg->header.cmd = ANGULAR_POSITION;
-            Luos_SendData(module, msg, &bin_data[i], (unsigned int)size);
+            Luos_SendData(container, msg, &bin_data[i], (unsigned int)size);
         }
     }
     // Limit angular position
@@ -58,7 +58,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(&msg->data[0], limits, 2 * sizeof(float));
         msg->header.cmd = ANGULAR_POSITION_LIMIT;
         msg->header.size = 2 * sizeof(float);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Limit linear position
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "limit_trans_position")))
@@ -70,7 +70,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(&msg->data[0], limits, 2 * sizeof(linear_position_t));
         msg->header.cmd = LINEAR_POSITION_LIMIT;
         msg->header.size = 2 * sizeof(linear_position_t);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Limit ratio
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "limit_power")))
@@ -79,14 +79,14 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(msg->data, &data, sizeof(data));
         msg->header.cmd = RATIO_LIMIT;
         msg->header.size = sizeof(float);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Limit current
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "limit_current")))
     {
         current_t current = (current_t)cJSON_GetObjectItem(jobj, "limit_current")->valuedouble;
         ElectricOD_CurrentToMsg(&current, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // target Rotation speed
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "target_rot_speed")))
@@ -94,14 +94,14 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         // this should be a function because it is frequently used
         angular_speed_t angular_speed = (angular_speed_t)cJSON_GetObjectItem(jobj, "target_rot_speed")->valuedouble;
         AngularOD_SpeedToMsg(&angular_speed, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // target linear position
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "target_trans_position")))
     {
         linear_position_t linear_position = LinearOD_PositionFrom_mm((float)cJSON_GetObjectItem(jobj, "target_trans_position")->valuedouble);
         LinearOD_PositionToMsg(&linear_position, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "target_trans_position")))
     {
@@ -122,7 +122,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         {
             msg->header.cmd = LINEAR_POSITION;
             // todo WATCHOUT this could be mm !
-            Luos_SendData(module, msg, &bin_data[i], (unsigned int)size);
+            Luos_SendData(container, msg, &bin_data[i], (unsigned int)size);
         }
     }
     // target Linear speed
@@ -130,7 +130,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
     {
         linear_speed_t linear_speed = LinearOD_Speedfrom_mm_s((float)cJSON_GetObjectItem(jobj, "target_trans_speed")->valuedouble);
         LinearOD_SpeedToMsg(&linear_speed, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // time
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "time")))
@@ -138,7 +138,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         // this should be a function because it is frequently used
         time = TimeOD_TimeFrom_s((float)cJSON_GetObjectItem(jobj, "time")->valuedouble);
         TimeOD_TimeToMsg(&time, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Compliance
     if (cJSON_IsBool(cJSON_GetObjectItem(jobj, "compliant")))
@@ -146,7 +146,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->data[0] = cJSON_IsTrue(cJSON_GetObjectItem(jobj, "compliant"));
         msg->header.cmd = COMPLIANT;
         msg->header.size = sizeof(char);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Pid
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "pid")))
@@ -159,7 +159,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(&msg->data[0], pid, sizeof(asserv_pid_t));
         msg->header.cmd = PID;
         msg->header.size = sizeof(asserv_pid_t);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // resolution
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "resolution")))
@@ -169,7 +169,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(msg->data, &data, sizeof(data));
         msg->header.cmd = RESOLUTION;
         msg->header.size = sizeof(data);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     //offset
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "offset")))
@@ -179,7 +179,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(msg->data, &data, sizeof(data));
         msg->header.cmd = OFFSET;
         msg->header.size = sizeof(data);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // reduction ratio
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "reduction")))
@@ -189,7 +189,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         memcpy(msg->data, &data, sizeof(data));
         msg->header.cmd = REDUCTION;
         msg->header.size = sizeof(data);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // dimension (m)
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "dimension")))
@@ -198,7 +198,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         LinearOD_PositionToMsg(&linear_position, msg);
         // redefine a specific message type.
         msg->header.cmd = DIMENSION;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // voltage
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "volt")))
@@ -206,14 +206,14 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         // this should be a function because it is frequently used
         voltage_t volt = (voltage_t)cJSON_GetObjectItem(jobj, "volt")->valuedouble;
         ElectricOD_VoltageToMsg(&volt, msg);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // reinit
     if (cJSON_GetObjectItem(jobj, "reinit"))
     {
         msg->header.cmd = REINIT;
         msg->header.size = 0;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // control (play, pause, stop, rec)
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "control")))
@@ -221,7 +221,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->data[0] = cJSON_GetObjectItem(jobj, "control")->valueint;
         msg->header.cmd = CONTROL;
         msg->header.size = sizeof(control_mode_t);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Color
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "color")))
@@ -236,7 +236,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
                 color.unmap[i] = (char)cJSON_GetArrayItem(item, i)->valueint;
             }
             IlluminanceOD_ColorToMsg(&color, msg);
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         else
         {
@@ -255,7 +255,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
             if (i < JSON_BUFF_SIZE - 1)
             {
                 msg->header.cmd = COLOR;
-                Luos_SendData(module, msg, &bin_data[i], (unsigned int)size);
+                Luos_SendData(container, msg, &bin_data[i], (unsigned int)size);
             }
         }
     }
@@ -265,14 +265,14 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         msg->data[0] = cJSON_IsTrue(cJSON_GetObjectItem(jobj, "io_state"));
         msg->header.cmd = IO_STATE;
         msg->header.size = sizeof(char);
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // UUID
     if (cJSON_GetObjectItem(jobj, "uuid"))
     {
         msg->header.cmd = NODE_UUID;
         msg->header.size = 0;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // RENAMING
     if (cJSON_IsString(cJSON_GetObjectItem(jobj, "rename")))
@@ -295,28 +295,28 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
         }
         msg->data[msg->header.size] = '\0';
         msg->header.cmd = WRITE_ALIAS;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // FIRMWARE REVISION
     if (cJSON_GetObjectItem(jobj, "revision"))
     {
         msg->header.cmd = REVISION;
         msg->header.size = 0;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Luos REVISION
     if (cJSON_GetObjectItem(jobj, "luos_revision"))
     {
         msg->header.cmd = LUOS_REVISION;
         msg->header.size = 0;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     // Luos STAT
     if (cJSON_GetObjectItem(jobj, "luos_statistics"))
     {
         msg->header.cmd = LUOS_STATISTICS;
         msg->header.size = 0;
-        Luos_SendMsg(module, msg);
+        Luos_SendMsg(container, msg);
     }
     switch (type)
     {
@@ -344,21 +344,21 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
                 msg->header.size = sizeof(uint16_t) + sizeof(uint32_t);
             }
             msg->header.cmd = REGISTER;
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "set_id")))
         {
             msg->data[0] = (char)(cJSON_GetObjectItem(jobj, "set_id")->valueint);
             msg->header.cmd = SETID;
             msg->header.size = sizeof(char);
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         if (cJSON_IsBool(cJSON_GetObjectItem(jobj, "wheel_mode")))
         {
             msg->data[0] = cJSON_IsTrue(cJSON_GetObjectItem(jobj, "wheel_mode"));
             msg->header.cmd = DXL_WHEELMODE;
             msg->header.size = sizeof(char);
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         break;
     case IMU_MOD:
@@ -370,7 +370,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
             memcpy(msg->data, &val, sizeof(uint16_t));
             msg->header.cmd = PARAMETERS;
             msg->header.size = 2;
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         break;
     case SERVO_MOD:
@@ -384,7 +384,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
             memcpy(msg->data, servo_param.unmap, sizeof(servo_parameters_t));
             msg->header.cmd = PARAMETERS;
             msg->header.size = sizeof(servo_parameters_t);
-            Luos_SendMsg(module, msg);
+            Luos_SendMsg(container, msg);
         }
         break;
     case GATE_MOD:
@@ -398,7 +398,7 @@ void json_to_msg(module_t *module, uint16_t id, module_type_t type, cJSON *jobj,
     }
 }
 
-// Create Json from a module msg
+// Create Json from a container msg
 void msg_to_json(msg_t *msg, char *json)
 {
     switch (msg->header.cmd)
@@ -603,11 +603,11 @@ void route_table_to_json(char *json)
 {
     // Init the json string
     sprintf(json, "{\"route_table\":[");
-    // loop into modules.
+    // loop into containers.
     route_table_t *route_table = RouteTB_Get();
     int last_entry = RouteTB_GetLastEntry();
     int i = 0;
-    //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only modules.
+    //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only containers.
     while (i < last_entry)
     {
         if (route_table[i].mode == NODE)
@@ -628,14 +628,14 @@ void route_table_to_json(char *json)
                     break;
                 }
             }
-            sprintf(json, "%s],\"modules\":[", json);
+            sprintf(json, "%s],\"containers\":[", json);
             i++;
-            // Modules loop
+            // Containers loop
             while (i < last_entry)
             {
-                if (route_table[i].mode == MODULE)
+                if (route_table[i].mode == CONTAINER)
                 {
-                    // Create module description
+                    // Create container description
                     sprintf(json, "%s{\"type\":\"%s", json, RouteTB_StringFromType(route_table[i].type));
                     sprintf(json, "%s\",\"id\":%d", json, route_table[i].id);
                     sprintf(json, "%s,\"alias\":\"%s\"},", json, route_table[i].alias);
@@ -655,9 +655,9 @@ void route_table_to_json(char *json)
     sprintf(json, "%s]}\n", json);
 }
 
-void exclude_module_to_json(int id, char *json)
+void exclude_container_to_json(int id, char *json)
 {
-    sprintf(json, "%s", "{\"dead_module\": ");
+    sprintf(json, "%s", "{\"dead_container\": ");
     sprintf(json, "%s\"%s\"", json, RouteTB_AliasFromId(id));
     sprintf(json, "%s}\n", json);
     RouteTB_RemoveOnRouteTable(id);

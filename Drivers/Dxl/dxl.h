@@ -54,7 +54,7 @@ typedef struct
     int reg;
     float val;
     float val2;
-    module_t *module_pointer;
+    container_t *container_pointer;
 } dxl_t;
 /*******************************************************************************
  * Function
