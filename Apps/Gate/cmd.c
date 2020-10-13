@@ -147,7 +147,7 @@ void send_cmds(container_t *container)
             {
                 // Create msg
                 char *alias = container_jsn->string;
-                uint16_t id = RouteTB_IDFromAlias(alias);
+                uint16_t id = RoutingTB_IDFromAlias(alias);
                 if (id == 65535)
                 {
                     // If alias doesn't exist in our list id_from_alias send us back -1 = 65535
@@ -156,7 +156,7 @@ void send_cmds(container_t *container)
                     cmd_ready--;
                     return;
                 }
-                luos_type_t type = RouteTB_TypeFromID(id);
+                luos_type_t type = RoutingTB_TypeFromID(id);
                 json_to_msg(container, id, type, container_jsn, &msg, (char *)buf[concerned_table]);
                 // Get next container
                 container_jsn = container_jsn->next;

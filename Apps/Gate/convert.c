@@ -599,27 +599,27 @@ void msg_to_json(msg_t *msg, char *json)
     }
 }
 
-void route_table_to_json(char *json)
+void routing_table_to_json(char *json)
 {
     // Init the json string
-    sprintf(json, "{\"route_table\":[");
+    sprintf(json, "{\"routing_table\":[");
     // loop into containers.
-    route_table_t *route_table = RouteTB_Get();
-    int last_entry = RouteTB_GetLastEntry();
+    routing_table_t *routing_table = RoutingTB_Get();
+    int last_entry = RoutingTB_GetLastEntry();
     int i = 0;
     //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only containers.
     while (i < last_entry)
     {
-        if (route_table[i].mode == NODE)
+        if (routing_table[i].mode == NODE)
         {
-            sprintf(json, "%s{\"uuid\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "]", json, route_table[i].uuid.uuid[0], route_table[i].uuid.uuid[1], route_table[i].uuid.uuid[2]);
+            sprintf(json, "%s{\"uuid\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "]", json, routing_table[i].uuid.uuid[0], routing_table[i].uuid.uuid[1], routing_table[i].uuid.uuid[2]);
             sprintf(json, "%s,\"port_table\":[", json);
             // Port loop
             for (int port = 0; port < 4; port++)
             {
-                if (route_table[i].port_table[port])
+                if (routing_table[i].port_table[port])
                 {
-                    sprintf(json, "%s%d,", json, route_table[i].port_table[port]);
+                    sprintf(json, "%s%d,", json, routing_table[i].port_table[port]);
                 }
                 else
                 {
@@ -633,12 +633,12 @@ void route_table_to_json(char *json)
             // Containers loop
             while (i < last_entry)
             {
-                if (route_table[i].mode == CONTAINER)
+                if (routing_table[i].mode == CONTAINER)
                 {
                     // Create container description
-                    sprintf(json, "%s{\"type\":\"%s", json, RouteTB_StringFromType(route_table[i].type));
-                    sprintf(json, "%s\",\"id\":%d", json, route_table[i].id);
-                    sprintf(json, "%s,\"alias\":\"%s\"},", json, route_table[i].alias);
+                    sprintf(json, "%s{\"type\":\"%s", json, RoutingTB_StringFromType(routing_table[i].type));
+                    sprintf(json, "%s\",\"id\":%d", json, routing_table[i].id);
+                    sprintf(json, "%s,\"alias\":\"%s\"},", json, routing_table[i].alias);
                     i++;
                 }
                 else
@@ -658,7 +658,7 @@ void route_table_to_json(char *json)
 void exclude_container_to_json(int id, char *json)
 {
     sprintf(json, "%s", "{\"dead_container\": ");
-    sprintf(json, "%s\"%s\"", json, RouteTB_AliasFromId(id));
+    sprintf(json, "%s\"%s\"", json, RoutingTB_AliasFromId(id));
     sprintf(json, "%s}\n", json);
-    RouteTB_RemoveOnRouteTable(id);
+    RoutingTB_RemoveOnRoutingTable(id);
 }

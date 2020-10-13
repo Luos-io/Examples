@@ -110,8 +110,8 @@ void Gate_Loop(void)
     if (detection_ask)
     {
         char json[JSON_BUFF_SIZE * 2] = {0};
-        RouteTB_DetectContainers(container);
-        route_table_to_json(json);
+        RoutingTB_DetectContainers(container);
+        routing_table_to_json(json);
 #ifdef USE_SERIAL
         serial_write(json, strlen(json));
 #else

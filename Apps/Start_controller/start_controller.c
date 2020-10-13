@@ -62,9 +62,9 @@ void StartController_Loop(void)
     static uint8_t animation_state = 0;
     // ********** hot plug management ************
     // Check if we have done the first init or if container Id have changed
-    if (previous_id != RouteTB_IDFromContainer(app))
+    if (previous_id != RoutingTB_IDFromContainer(app))
     {
-        if (RouteTB_IDFromContainer(app) == 0)
+        if (RoutingTB_IDFromContainer(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -74,7 +74,7 @@ void StartController_Loop(void)
                 if (HAL_GetTick() > 1000)
                 {
                     // No detection occure, do it
-                    RouteTB_DetectContainers(app);
+                    RoutingTB_DetectContainers(app);
                 }
             }
             else
@@ -87,7 +87,7 @@ void StartController_Loop(void)
         else
         {
             // Make containers configurations
-            int id = RouteTB_IDFromAlias("lock");
+            int id = RoutingTB_IDFromAlias("lock");
             if (id > 0)
             {
                 msg_t msg;
@@ -101,7 +101,7 @@ void StartController_Loop(void)
                 msg.header.cmd = UPDATE_PUB;
                 Luos_SendMsg(app, &msg);
             }
-            previous_id = RouteTB_IDFromContainer(app);
+            previous_id = RoutingTB_IDFromContainer(app);
         }
         return;
     }
@@ -111,7 +111,7 @@ void StartController_Loop(void)
         msg_t msg;
         msg.header.target_mode = IDACK;
         // Share the lock state with the alarm_control app
-        int id = RouteTB_IDFromAlias("alarm_control");
+        int id = RoutingTB_IDFromAlias("alarm_control");
         if (id > 0)
         {
             // we have an alarm_controller App control it
@@ -135,7 +135,7 @@ void StartController_Loop(void)
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id = RouteTB_IDFromType(COLOR_MOD);
+        id = RoutingTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -155,7 +155,7 @@ void StartController_Loop(void)
             IlluminanceOD_ColorToMsg(&color, &msg);
             Luos_SendMsg(app, &msg);
         }
-        id = RouteTB_IDFromAlias("horn");
+        id = RoutingTB_IDFromAlias("horn");
         if (id > 0)
         {
             // we get a horn
@@ -169,7 +169,7 @@ void StartController_Loop(void)
         // try to reach a buzzer and drive it to make a happy sound
         if (!lock)
         {
-            id = RouteTB_IDFromAlias("buzzer_mod");
+            id = RoutingTB_IDFromAlias("buzzer_mod");
             if (id > 0)
             {
                 msg.header.target = id;
@@ -189,7 +189,7 @@ void StartController_Loop(void)
         // 100ms after button turn of light and horn
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = RouteTB_IDFromAlias("horn");
+        int id = RoutingTB_IDFromAlias("horn");
         if (id > 0)
         {
             // we get a horn
@@ -207,7 +207,7 @@ void StartController_Loop(void)
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = RouteTB_IDFromType(COLOR_MOD);
+        int id = RoutingTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -243,7 +243,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg)
     {
         if (control_mode.mode_control == PLAY)
         {
-            if (RouteTB_TypeFromID(msg->header.source) == STATE_MOD)
+            if (RoutingTB_TypeFromID(msg->header.source) == STATE_MOD)
             {
                 // this is the button reply we have filter it to manage monostability
                 if ((!last_btn_state) & (last_btn_state != msg->data[0]))

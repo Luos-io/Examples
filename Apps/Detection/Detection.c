@@ -47,11 +47,11 @@ void Detection_Init(void)
 
     app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", "0.0.1");
     HAL_Delay(1000);
-    // Detect all containers of your network and create a route_table
-    RouteTB_DetectContainers(app);
+    // Detect all containers of your network and create a routing_table
+    RoutingTB_DetectContainers(app);
 
-    id_button = RouteTB_IDFromAlias("button_mod");
-    id_led = RouteTB_IDFromAlias("rgb_led_mod1");
+    id_button = RoutingTB_IDFromAlias("button_mod");
+    id_led = RoutingTB_IDFromAlias("rgb_led_mod1");
 
     /*button Configuration*/
     if (id_button > 0)
