@@ -84,9 +84,9 @@ void AlarmController_Loop(void)
 
     // ********** hot plug management ************
     // Check if we have done the first init or if container Id have changed
-    if (previous_id != RouteTB_IDFromContainer(app))
+    if (previous_id != RoutingTB_IDFromContainer(app))
     {
-        if (RouteTB_IDFromContainer(app) == 0)
+        if (RoutingTB_IDFromContainer(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -96,7 +96,7 @@ void AlarmController_Loop(void)
                 if (HAL_GetTick() > 1500)
                 {
                     // No detection occure, do it
-                    RouteTB_DetectContainers(app);
+                    RoutingTB_DetectContainers(app);
                 }
             }
             else
@@ -110,7 +110,7 @@ void AlarmController_Loop(void)
         {
             // Make containers configurations
             // try to find a RGB led and set light transition time just to be fancy
-            int id = RouteTB_IDFromType(COLOR_MOD);
+            int id = RoutingTB_IDFromType(COLOR_MOD);
             if (id > 0)
             {
                 msg_t msg;
@@ -125,7 +125,7 @@ void AlarmController_Loop(void)
             report.gyro = 1;
             report.euler = 1;
             report.quat = 0;
-            id = RouteTB_IDFromType(IMU_MOD);
+            id = RoutingTB_IDFromType(IMU_MOD);
             if (id > 0)
             {
                 msg_t msg;
@@ -144,7 +144,7 @@ void AlarmController_Loop(void)
                 msg.header.cmd = UPDATE_PUB;
                 Luos_SendMsg(app, &msg);
             }
-            previous_id = RouteTB_IDFromContainer(app);
+            previous_id = RoutingTB_IDFromContainer(app);
         }
         return;
     }
@@ -157,7 +157,7 @@ void AlarmController_Loop(void)
             blink_nb = 0;
             blink = 0;
             // try to reach a buzzer and drive it if there is
-            int id = RouteTB_IDFromAlias("buzzer_mod");
+            int id = RoutingTB_IDFromAlias("buzzer_mod");
             if (id > 0)
             {
                 msg_t msg;
@@ -174,7 +174,7 @@ void AlarmController_Loop(void)
             if ((HAL_GetTick() - last_blink) >= 500)
             {
                 blink_nb++;
-                int id = RouteTB_IDFromType(COLOR_MOD);
+                int id = RoutingTB_IDFromType(COLOR_MOD);
                 if (id > 0)
                 {
                     // we get a led alarm, set color
@@ -193,7 +193,7 @@ void AlarmController_Loop(void)
                     IlluminanceOD_ColorToMsg(&color, &msg);
                     Luos_SendMsg(app, &msg);
                 }
-                id = RouteTB_IDFromAlias("horn");
+                id = RoutingTB_IDFromAlias("horn");
                 if (id > 0)
                 {
                     // we get a horn

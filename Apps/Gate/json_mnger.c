@@ -14,10 +14,10 @@ void collect_data(container_t *container)
     json_msg.header.cmd = ASK_PUB_CMD;
     json_msg.header.size = 0;
     // ask containers to publish datas
-    for (uint8_t i = 1; i <= RouteTB_GetLastContainer(); i++)
+    for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
     {
         // Check if this container is a sensor
-        if (RouteTB_ContainerIsSensor(RouteTB_TypeFromID(i)))
+        if (RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i)))
         {
             // This container is a sensor so create a msg and send it
             json_msg.header.target = i;
@@ -43,7 +43,7 @@ void format_data(container_t *container, char *json)
             i = json_msg->header.source;
             // Create container description
             char *alias;
-            alias = RouteTB_AliasFromId(i);
+            alias = RoutingTB_AliasFromId(i);
             if (alias != 0)
             {
                 sprintf(json, "%s\"%s\":{", json, alias);
