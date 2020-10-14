@@ -24,7 +24,8 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -41,28 +42,28 @@ extern "C" {
 
 #include "stm32f0xx_ll_exti.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+    /* Private includes ----------------------------------------------------------*/
+    /* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
+    /* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+    /* Exported types ------------------------------------------------------------*/
+    /* USER CODE BEGIN ET */
 
-/* USER CODE END ET */
+    /* USER CODE END ET */
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+    /* Exported constants --------------------------------------------------------*/
+    /* USER CODE BEGIN EC */
 
-/* USER CODE END EC */
+    /* USER CODE END EC */
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+    /* Exported macro ------------------------------------------------------------*/
+    /* USER CODE BEGIN EM */
 
-/* USER CODE END EM */
+    /* USER CODE END EM */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+    /* Exported functions prototypes ---------------------------------------------*/
+    void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -73,37 +74,37 @@ void Error_Handler(void);
 #define PWM1A_GPIO_Port GPIOA
 #define NFAULT_Pin GPIO_PIN_1
 #define NFAULT_GPIO_Port GPIOA
-#define ROBUS_POWER_SENSOR_Pin GPIO_PIN_2
-#define ROBUS_POWER_SENSOR_GPIO_Port GPIOA
+#define POWER_SENSOR_Pin GPIO_PIN_2
+#define POWER_SENSOR_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOA
-#define RS485_LVL_DOWN_Pin GPIO_PIN_5
-#define RS485_LVL_DOWN_GPIO_Port GPIOA
-#define RS485_LVL_UP_Pin GPIO_PIN_6
-#define RS485_LVL_UP_GPIO_Port GPIOA
+#define COM_LVL_DOWN_Pin GPIO_PIN_5
+#define COM_LVL_DOWN_GPIO_Port GPIOA
+#define COM_LVL_UP_Pin GPIO_PIN_6
+#define COM_LVL_UP_GPIO_Port GPIOA
 #define NSLEEP_Pin GPIO_PIN_0
 #define NSLEEP_GPIO_Port GPIOB
-#define ROBUS_PTPB_Pin GPIO_PIN_13
-#define ROBUS_PTPB_GPIO_Port GPIOB
-#define ROBUS_RE_Pin GPIO_PIN_14
-#define ROBUS_RE_GPIO_Port GPIOB
-#define ROBUS_DE_Pin GPIO_PIN_15
-#define ROBUS_DE_GPIO_Port GPIOB
-#define ROBUS_PTPA_Pin GPIO_PIN_8
-#define ROBUS_PTPA_GPIO_Port GPIOA
-#define ROBUS_TX_Pin GPIO_PIN_9
-#define ROBUS_TX_GPIO_Port GPIOA
-#define ROBUS_RX_Pin GPIO_PIN_10
-#define ROBUS_RX_GPIO_Port GPIOA
+#define PTPB_Pin GPIO_PIN_13
+#define PTPB_GPIO_Port GPIOB
+#define RX_EN_Pin GPIO_PIN_14
+#define RX_EN_GPIO_Port GPIOB
+#define TX_EN_Pin GPIO_PIN_15
+#define TX_EN_GPIO_Port GPIOB
+#define PTPA_Pin GPIO_PIN_8
+#define PTPA_GPIO_Port GPIOA
+#define COM_TX_Pin GPIO_PIN_9
+#define COM_TX_GPIO_Port GPIOA
+#define COM_RX_Pin GPIO_PIN_10
+#define COM_RX_GPIO_Port GPIOA
 #define PWM1B_Pin GPIO_PIN_3
 #define PWM1B_GPIO_Port GPIOB
 #define PWM2A_Pin GPIO_PIN_4
 #define PWM2A_GPIO_Port GPIOB
 #define PWM2B_Pin GPIO_PIN_5
 #define PWM2B_GPIO_Port GPIOB
-/* USER CODE BEGIN Private defines */
+    /* USER CODE BEGIN Private defines */
 
-/* USER CODE END Private defines */
+    /* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

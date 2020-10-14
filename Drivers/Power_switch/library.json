@@ -1,6 +1,6 @@
 {
     "name": "Power_switch",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,module,ST",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST",
     "description": "a simple Power_switch",
     "version": "0.6.0",
     "authors": {

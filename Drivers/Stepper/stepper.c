@@ -1,17 +1,151 @@
+/******************************************************************************
+ * @file Stepper
+ * @brief driver example a simple Stepper
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "stepper.h"
 #include "math.h"
 #include "tim.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 volatile motor_config_t motor;
 volatile uint8_t microstepping = 16;
 volatile int target_step_nb = 0;
 volatile int current_step_nb = 0;
 
-void compute_speed(void)
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Stepper_MsgHandler(container_t *container, msg_t *msg);
+static void compute_speed(void);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Stepper_Init(void)
+{
+    Luos_CreateContainer(Stepper_MsgHandler, STEPPER_MOD, "stepper_mod", STRINGIFY(VERSION));
+    motor.resolution = 200.0;
+    motor.wheel_diameter = 0.0;
+    motor.target_angular_speed = 100.0;
+
+    motor.mode.mode_compliant = 1;
+    motor.mode.mode_angular_position = 1;
+    motor.mode.mode_angular_speed = 0;
+    motor.mode.mode_linear_position = 0;
+    motor.mode.mode_linear_speed = 0;
+
+    HAL_GPIO_WritePin(MS1_GPIO_Port, MS1_Pin, 1);
+    HAL_GPIO_WritePin(MS2_GPIO_Port, MS2_Pin, 1);
+    HAL_GPIO_WritePin(MS3_GPIO_Port, MS3_Pin, 1);
+
+    HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 1);
+
+    compute_speed();
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Stepper_Loop(void)
+{
+    // compute values
+    float degPerStep = 360.0 / (float)(motor.resolution * microstepping);
+    target_step_nb = (int)(motor.target_angular_position / degPerStep);
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Stepper_MsgHandler(container_t *container, msg_t *msg)
+{
+    if (msg->header.cmd == PARAMETERS)
+    {
+        // check the message size
+        if (msg->header.size == sizeof(motor_mode_t))
+        {
+            // fill the message infos
+            memcpy((void *)&motor.mode, msg->data, msg->header.size);
+            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, motor.mode.mode_compliant);
+        }
+        return;
+    }
+    if (msg->header.cmd == RESOLUTION)
+    {
+        // set the encoder resolution
+        memcpy((void *)&motor.resolution, msg->data, sizeof(float));
+        return;
+    }
+    if (msg->header.cmd == REINIT)
+    {
+        // set motor position to 0
+        motor.angular_position = 0.0;
+        motor.target_angular_position = 0.0;
+        motor.target_angular_speed = 100.0;
+        return;
+    }
+    if (msg->header.cmd == DIMENSION)
+    {
+        // set the wheel diameter m
+        LinearOD_PositionFromMsg((linear_position_t *)&motor.wheel_diameter, msg);
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_POSITION)
+    {
+        // set the motor target rotation position
+        if (motor.mode.mode_angular_position)
+        {
+            AngularOD_PositionFromMsg((angular_position_t *)&motor.target_angular_position, msg);
+        }
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_SPEED)
+    {
+        // set the motor target rotation position
+        AngularOD_SpeedFromMsg((angular_speed_t *)&motor.target_angular_speed, msg);
+        return;
+    }
+
+    if (msg->header.cmd == LINEAR_POSITION)
+    {
+        // set the motor target translation position
+        if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
+        {
+            linear_position_t linear_position = 0.0;
+            LinearOD_PositionFromMsg(&linear_position, msg);
+            motor.target_angular_position = (linear_position * 360.0) / (M_PI * motor.wheel_diameter);
+        }
+        return;
+    }
+    if (msg->header.cmd == LINEAR_SPEED)
+    {
+        // set the motor target rotation position
+        if (motor.wheel_diameter != 0)
+        {
+            linear_speed_t linear_speed = 0.0;
+            LinearOD_SpeedFromMsg(&linear_speed, msg);
+            motor.target_angular_speed = (linear_speed * 360.0) / (M_PI * motor.wheel_diameter);
+        }
+        return;
+    }
+}
+
+static void compute_speed(void)
 {
     if (fabs(motor.target_angular_speed) > 0.1)
     {
@@ -83,106 +217,4 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             current_step_nb--;
         }
     }
-}
-
-void rx_stp_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == PARAMETERS)
-    {
-        // check the message size
-        if (msg->header.size == sizeof(motor_mode_t))
-        {
-            // fill the message infos
-            memcpy((void *)&motor.mode, msg->data, msg->header.size);
-            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, motor.mode.mode_compliant);
-        }
-        return;
-    }
-    if (msg->header.cmd == RESOLUTION)
-    {
-        // set the encoder resolution
-        memcpy((void *)&motor.resolution, msg->data, sizeof(float));
-        return;
-    }
-    if (msg->header.cmd == REINIT)
-    {
-        // set motor position to 0
-        motor.angular_position = 0.0;
-        motor.target_angular_position = 0.0;
-        motor.target_angular_speed = 100.0;
-        return;
-    }
-    if (msg->header.cmd == DIMENSION)
-    {
-        // set the wheel diameter m
-        linear_position_from_msg((linear_position_t *)&motor.wheel_diameter, msg);
-        return;
-    }
-    if (msg->header.cmd == ANGULAR_POSITION)
-    {
-        // set the motor target rotation position
-        if (motor.mode.mode_angular_position)
-        {
-            angular_position_from_msg((angular_position_t *)&motor.target_angular_position, msg);
-        }
-        return;
-    }
-    if (msg->header.cmd == ANGULAR_SPEED)
-    {
-        // set the motor target rotation position
-        angular_speed_from_msg((angular_speed_t *)&motor.target_angular_speed, msg);
-        return;
-    }
-
-    if (msg->header.cmd == LINEAR_POSITION)
-    {
-        // set the motor target translation position
-        if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
-        {
-            linear_position_t linear_position = 0.0;
-            linear_position_from_msg(&linear_position, msg);
-            motor.target_angular_position = (linear_position * 360.0) / (M_PI * motor.wheel_diameter);
-        }
-        return;
-    }
-    if (msg->header.cmd == LINEAR_SPEED)
-    {
-        // set the motor target rotation position
-        if (motor.wheel_diameter != 0)
-        {
-            linear_speed_t linear_speed = 0.0;
-            linear_speed_from_msg(&linear_speed, msg);
-            motor.target_angular_speed = (linear_speed * 360.0) / (M_PI * motor.wheel_diameter);
-        }
-        return;
-    }
-}
-
-void stepper_init(void)
-{
-    luos_module_enable_rt(luos_module_create(rx_stp_cb, STEPPER_MOD, "stepper_mod", STRINGIFY(VERSION)));
-    motor.resolution = 200.0;
-    motor.wheel_diameter = 0.0;
-    motor.target_angular_speed = 100.0;
-
-    motor.mode.mode_compliant = 1;
-    motor.mode.mode_angular_position = 1;
-    motor.mode.mode_angular_speed = 0;
-    motor.mode.mode_linear_position = 0;
-    motor.mode.mode_linear_speed = 0;
-
-    HAL_GPIO_WritePin(MS1_GPIO_Port, MS1_Pin, 1);
-    HAL_GPIO_WritePin(MS2_GPIO_Port, MS2_Pin, 1);
-    HAL_GPIO_WritePin(MS3_GPIO_Port, MS3_Pin, 1);
-
-    HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, 1);
-
-    compute_speed();
-}
-
-void stepper_loop(void)
-{
-    // compute values
-    float degPerStep = 360.0 / (float)(motor.resolution * microstepping);
-    target_step_nb = (int)(motor.target_angular_position / degPerStep);
 }

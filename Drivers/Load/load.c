@@ -1,16 +1,67 @@
+/******************************************************************************
+ * @file load
+ * @brief driver example a simple load
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "load.h"
 #include "HX711.h"
 #include "string.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 uint8_t new_data_ready = 0;
 volatile force_t load = 0.0;
 char have_to_tare = 0;
 
-void rx_load_cb(module_t *module, msg_t *msg)
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Load_MsgHandler(container_t *container, msg_t *msg);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Load_Init(void)
+{
+    hx711_init(128);
+    Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", STRINGIFY(VERSION));
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Load_Loop(void)
+{
+    if (hx711_is_ready())
+    {
+        load = hx711_get_units(1);
+        new_data_ready = 1;
+    }
+    if (have_to_tare)
+    {
+        hx711_tare(10);
+        have_to_tare = 0;
+    }
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Load_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {
@@ -20,8 +71,8 @@ void rx_load_cb(module_t *module, msg_t *msg)
             // fill the message infos
             pub_msg.header.target_mode = ID;
             pub_msg.header.target = msg->header.source;
-            force_to_msg((force_t *)&load, &pub_msg);
-            luos_send(module, &pub_msg);
+            ForceOD_ForceToMsg((force_t *)&load, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
             new_data_ready = 0;
         }
         return;
@@ -44,28 +95,8 @@ void rx_load_cb(module_t *module, msg_t *msg)
     {
         // offset the load measurement using the scale parameter
         force_t value = 0.0;
-        force_from_msg(&value, msg);
+        ForceOD_ForceFromMsg(&value, msg);
         hx711_set_offset((long)(value * hx711_get_scale()));
         return;
-    }
-}
-
-void load_init(void)
-{
-    hx711_init(128);
-    luos_module_create(rx_load_cb, LOAD_MOD, "load_mod", STRINGIFY(VERSION));
-}
-
-void load_loop(void)
-{
-    if (hx711_is_ready())
-    {
-        load = hx711_get_units(1);
-        new_data_ready = 1;
-    }
-    if (have_to_tare)
-    {
-        hx711_tare(10);
-        have_to_tare = 0;
     }
 }

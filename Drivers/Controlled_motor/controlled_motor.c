@@ -1,5 +1,13 @@
-#include "main.h"
+/******************************************************************************
+ * @file controlled_motor
+ * @brief driver example a simple controlled motor
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "controlled_motor.h"
+
+#include "main.h"
+#include "stdbool.h"
 #include "analog.h"
 #include "tim.h"
 #include "math.h"
@@ -7,6 +15,11 @@
 #include "luos.h"
 #include "tim.h"
 
+#include "LuosHAL.h"
+
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define ASSERV_PERIOD 1
 #define SPEED_PERIOD 50
 #define SPEED_NB_INTEGRATION SPEED_PERIOD / ASSERV_PERIOD
@@ -23,6 +36,9 @@
 #define MINI 0
 #define MAXI 1
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 volatile motor_config_t motor;
 
 asserv_pid_t position;
@@ -52,362 +68,84 @@ streaming_channel_t measurement;
 
 // Speed calculation values
 char speed_bootstrap = 0;
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg);
+static void set_ratio(float ratio);
+static void enable_motor(char state);
 
-void HAL_SYSTICK_Motor_Callback(void)
-{
-    // ************* motion planning *************
-    // ****** recorder management *********
-    static uint32_t last_rec_systick = 0;
-    if (control.mode_rec && ((HAL_GetTick() - last_rec_systick) >= time_to_ms(time)))
-    {
-        // We have to save a sample of current position
-        set_sample(&measurement, (angular_position_t *)&motor.angular_position);
-        last_rec_systick = HAL_GetTick();
-    }
-    // ****** trajectory management *********
-    static uint32_t last_systick = 0;
-    if (control.mode_control == STOP)
-    {
-        reset_streaming_channel(&trajectory);
-    }
-    if ((get_nb_available_samples(&trajectory) > 0) && ((HAL_GetTick() - last_systick) >= time_to_ms(time)) && (control.mode_control == PLAY))
-    {
-        if (motor.mode.mode_linear_position == 1)
-        {
-            linear_position_t linear_position_tmp;
-            get_sample(&trajectory, &linear_position_tmp);
-            motor.target_angular_position = (linear_position_tmp * 360.0) / (3.141592653589793 * motor.wheel_diameter);
-        }
-        else
-        {
-            get_sample(&trajectory, (angular_position_t *)&motor.target_angular_position);
-        }
-        last_systick = HAL_GetTick();
-    }
-    // ****** Linear interpolation *********
-    if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
-        (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
-    {
-
-        // speed control and position control are enabled
-        // we need to move target position following target speed
-        float increment = (fabs(motor.target_angular_speed) / 1000.0);
-        if (fabs(motor.target_angular_position - last_position) <= increment)
-        {
-            // target_position is the final target position
-            motion_target_position = motor.target_angular_position;
-        }
-        else if ((motor.target_angular_position - motor.angular_position) < 0.0)
-        {
-            motion_target_position = last_position - increment;
-        }
-        else
-        {
-            motion_target_position = last_position + increment;
-        }
-    }
-    else
-    {
-        // target_position is the final target position
-        motion_target_position = motor.target_angular_position;
-    }
-    last_position = motion_target_position;
-}
-
-void set_ratio(float ratio)
-{
-    // limit power value
-    if (ratio < -motor.limit_ratio)
-        ratio = -motor.limit_ratio;
-    if (ratio > motor.limit_ratio)
-        ratio = motor.limit_ratio;
-    // transform power ratio to timer value
-    uint16_t pulse;
-    if (ratio > 0.0)
-    {
-        pulse = (uint16_t)(ratio * 24.0);
-        TIM3->CCR1 = pulse;
-        TIM3->CCR2 = 0;
-    }
-    else
-    {
-        pulse = (uint16_t)(-ratio * 24.0);
-        TIM3->CCR1 = 0;
-        TIM3->CCR2 = pulse;
-    }
-}
-
-void enable_motor(char state)
-{
-    HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, state);
-}
-
-void rx_ctrl_mot_cb(module_t *module, msg_t *msg)
-{
-    if (msg->header.cmd == ASK_PUB_CMD)
-    {
-        // Report management
-        msg_t pub_msg;
-        pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
-        if (motor.mode.angular_position)
-        {
-            if (control.mode_rec)
-            {
-                // send back a record stream
-                pub_msg.header.cmd = ANGULAR_POSITION;
-                luos_send_streaming(module, &pub_msg, &measurement);
-            }
-            else
-            {
-                node_disable_irq();
-                angular_position_to_msg((angular_position_t *)&motor.angular_position, &pub_msg);
-                node_enable_irq();
-                luos_send(module, &pub_msg);
-            }
-        }
-        if (motor.mode.angular_speed)
-        {
-            angular_speed_to_msg((angular_speed_t *)&motor.angular_speed, &pub_msg);
-            luos_send(module, &pub_msg);
-        }
-        if (motor.mode.linear_position)
-        {
-            linear_position_to_msg((linear_position_t *)&motor.linear_position, &pub_msg);
-            luos_send(module, &pub_msg);
-        }
-        if (motor.mode.linear_speed)
-        {
-            linear_speed_to_msg((linear_speed_t *)&motor.linear_speed, &pub_msg);
-            luos_send(module, &pub_msg);
-        }
-        if (motor.mode.current)
-        {
-            current_to_msg((current_t *)&motor.current, &pub_msg);
-            luos_send(module, &pub_msg);
-        }
-        return;
-    }
-    if (msg->header.cmd == PID)
-    {
-        // check the message size
-        if (msg->header.size == sizeof(asserv_pid_t))
-        {
-            // fill the message infos
-            if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
-                !(motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
-            {
-                // only position control is enable, we can save PID for positioning
-                memcpy(&position, msg->data, msg->header.size);
-            }
-            if ((motor.mode.mode_angular_speed || motor.mode.mode_linear_speed) &&
-                !(motor.mode.mode_angular_position || motor.mode.mode_linear_position))
-            {
-                // only speed control is enable, we can save PID for speed
-                memcpy(&speed, msg->data, msg->header.size);
-            }
-        }
-        return;
-    }
-    if (msg->header.cmd == PARAMETERS)
-    {
-        // check the message size
-        if (msg->header.size == sizeof(motor_mode_t))
-        {
-            // fill the message infos
-            memcpy((void *)&motor.mode, msg->data, msg->header.size);
-            enable_motor(motor.mode.mode_compliant == 0);
-            if (motor.mode.mode_compliant == 0)
-            {
-                node_disable_irq();
-                last_position = motor.angular_position;
-                errAngleSum = 0.0;
-                lastErrAngle = 0.0;
-                motor.target_angular_position = motor.angular_position;
-                node_enable_irq();
-            }
-        }
-        return;
-    }
-    if (msg->header.cmd == CONTROL)
-    {
-        control.unmap = msg->data[0];
-        if (control.mode_control == 3)
-        {
-            // impossible value, go back to default values
-            control.unmap = 0;
-        }
-        return;
-    }
-    if (msg->header.cmd == RESOLUTION)
-    {
-        // set the encoder resolution
-        memcpy((void *)&motor.resolution, msg->data, sizeof(float));
-        return;
-    }
-    if (msg->header.cmd == REDUCTION)
-    {
-        // set the motor reduction
-        memcpy((void *)&motor.motor_reduction, msg->data, sizeof(float));
-        return;
-    }
-    if (msg->header.cmd == REINIT)
-    {
-        // set state to 0
-        node_disable_irq();
-        motor.angular_position = 0.0;
-        motor.target_angular_position = 0.0;
-        node_enable_irq();
-        errAngleSum = 0.0;
-        lastErrAngle = 0.0;
-        last_position = 0.0;
-        speed_bootstrap = 0;
-        return;
-    }
-    if (msg->header.cmd == DIMENSION)
-    {
-        // set the wheel diameter m
-        linear_position_from_msg((linear_position_t *)&motor.wheel_diameter, msg);
-        return;
-    }
-    if (msg->header.cmd == RATIO)
-    {
-        // set the motor power ratio (no asserv)
-        ratio_from_msg((ratio_t *)&motor.target_ratio, msg);
-        return;
-    }
-    if (msg->header.cmd == ANGULAR_POSITION)
-    {
-        if (motor.mode.mode_angular_position)
-        {
-            // Check message size
-            if (msg->header.size == sizeof(float))
-            {
-                // set the motor target angular position
-                node_disable_irq();
-                last_position = motor.angular_position;
-                angular_position_from_msg((angular_position_t *)&motor.target_angular_position, msg);
-                node_enable_irq();
-            }
-            else
-            {
-                // this is a trajectory, save it into streaming channel.
-                luos_receive_streaming(module, msg, &trajectory);
-            }
-        }
-        return;
-    }
-    if (msg->header.cmd == ANGULAR_SPEED)
-    {
-        // set the motor target angular position
-        if (motor.mode.mode_angular_speed)
-        {
-            angular_speed_from_msg((angular_speed_t *)&motor.target_angular_speed, msg);
-            // reset the integral factor for speed
-            errSpeedSum = 0.0;
-        }
-        return;
-    }
-    if (msg->header.cmd == LINEAR_POSITION)
-    {
-        // set the motor target linear position
-        // Check message size
-        if (msg->header.size == sizeof(float))
-        {
-            linear_position_t linear_position = 0.0;
-            linear_position_from_msg(&linear_position, msg);
-            motor.target_angular_position = (linear_position * 360.0) / (3.141592653589793 * motor.wheel_diameter);
-        }
-        else
-        {
-            // this is a trajectory, save it into ring buffer.
-            luos_receive_streaming(module, msg, &trajectory);
-            // values will be converted one by one during trajectory management.
-        }
-        return;
-    }
-    if (msg->header.cmd == LINEAR_SPEED)
-    {
-        // set the motor target linear speed
-        if (motor.wheel_diameter > 0.0)
-        {
-            linear_speed_t linear_speed = 0.0;
-            linear_speed_from_msg(&linear_speed, msg);
-            motor.target_angular_speed = (linear_speed * 360.0) / (3.141592653589793 * motor.wheel_diameter);
-        }
-        return;
-    }
-    if (msg->header.cmd == ANGULAR_POSITION_LIMIT)
-    {
-        // set the motor limit anglular position
-        memcpy((angular_position_t *)motor.limit_angular_position, msg->data, 2 * sizeof(float));
-        return;
-    }
-    if (msg->header.cmd == LINEAR_POSITION_LIMIT)
-    {
-        // set the motor target linear position
-        if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
-        {
-            linear_position_t linear_position[2] = {0.0, 0.0};
-            memcpy(linear_position, msg->data, 2 * sizeof(linear_position_t));
-            motor.limit_angular_position[0] = (linear_position[0] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
-            motor.limit_angular_position[1] = (linear_position[1] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
-        }
-        return;
-    }
-    if (msg->header.cmd == RATIO_LIMIT)
-    {
-        // set the motor power ratio limit
-        memcpy((ratio_t *)&motor.limit_ratio, msg->data, sizeof(float));
-        motor.limit_ratio = fabs(motor.limit_ratio);
-        if (motor.limit_ratio > 100.0)
-            motor.limit_ratio = 100.0;
-        return;
-    }
-    if (msg->header.cmd == CURRENT_LIMIT)
-    {
-        // set the motor current limit
-        current_from_msg((current_t *)&motor.limit_current, msg);
-        return;
-    }
-    if (msg->header.cmd == TIME)
-    {
-        // save time in ms
-        time_from_msg((time_luos_t *)&time, msg);
-        return;
-    }
-}
-
-void controlled_motor_init(void)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void ControlledMotor_Init(void)
 {
     // ******************* Analog measurement *******************
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig = {0};
-    // Stop DMA
-    HAL_ADC_Stop_DMA(&luos_adc);
-
-    // Configure analog input pin channel
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // Enable  ADC Gpio clocks
+    //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
+    /**ADC GPIO Configuration
+    */
     GPIO_InitStruct.Pin = FB_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(FB_GPIO_Port, &GPIO_InitStruct);
-
-    // Add ADC channel to Luos adc configuration.
-    sConfig.Channel = ADC_CHANNEL_8;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&luos_adc, &sConfig) != HAL_OK)
+    // Enable  ADC clocks
+    __HAL_RCC_ADC1_CLK_ENABLE();
+    // Setup Adc to loop on DMA continuously
+    ControlledMotor_adc.Instance = ADC1;
+    ControlledMotor_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    ControlledMotor_adc.Init.Resolution = ADC_RESOLUTION_12B;
+    ControlledMotor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    ControlledMotor_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    ControlledMotor_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    ControlledMotor_adc.Init.LowPowerAutoWait = DISABLE;
+    ControlledMotor_adc.Init.LowPowerAutoPowerOff = DISABLE;
+    ControlledMotor_adc.Init.ContinuousConvMode = ENABLE;
+    ControlledMotor_adc.Init.DiscontinuousConvMode = DISABLE;
+    ControlledMotor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    ControlledMotor_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    ControlledMotor_adc.Init.DMAContinuousRequests = ENABLE;
+    ControlledMotor_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    if (HAL_ADC_Init(&ControlledMotor_adc) != HAL_OK)
     {
         Error_Handler();
     }
-    // relinik DMA
-    __HAL_LINKDMA(&luos_adc, DMA_Handle, luos_dma_adc);
-
-    // Restart DMA
-    HAL_ADC_Start_DMA(&luos_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
-
+    /** Configure voltage input channel. */
+    sConfig.Channel = ADC_CHANNEL_8;
+    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+    if (HAL_ADC_ConfigChannel(&ControlledMotor_adc, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    // Enable DMA1 clock
+    __HAL_RCC_DMA1_CLK_ENABLE();
+    /* ADC1 DMA Init */
+    /* ADC Init */
+    ControlledMotor_dma_adc.Instance = DMA1_Channel1;
+    ControlledMotor_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    ControlledMotor_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+    ControlledMotor_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    ControlledMotor_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    ControlledMotor_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    ControlledMotor_dma_adc.Init.Mode = DMA_CIRCULAR;
+    ControlledMotor_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&ControlledMotor_dma_adc) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    __HAL_LINKDMA(&ControlledMotor_adc, DMA_Handle, ControlledMotor_dma_adc);
+    // disable DMA Irq
+    HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
+    // Start infinite ADC measurement
+    HAL_ADC_Start_DMA(&ControlledMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************** Pwm settings *****************
-    time = time_from_ms(SAMPLING_PERIOD_MS);
+    time = TimeOD_TimeFrom_ms(SAMPLING_PERIOD_MS);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1 | TIM_CHANNEL_2);
@@ -452,19 +190,19 @@ void controlled_motor_init(void)
     control.unmap = 0; // PLAY and no REC
 
     // Init streaming channels
-    trajectory = create_streaming_channel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
-    measurement = create_streaming_channel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
+    trajectory = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
+    measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
-    // ************** Module creation *****************
-    luos_module_create(rx_ctrl_mot_cb, CONTROLLED_MOTOR_MOD, "controlled_motor_mod", STRINGIFY(VERSION));
+    // ************** Container creation *****************
+    Luos_CreateContainer(ControlledMotor_MsgHandler, CONTROLLED_MOTOR_MOD, "controlled_motor_mod", STRINGIFY(VERSION));
 }
-
-void controlled_motor_loop(void)
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void ControlledMotor_Loop(void)
 {
-    // copy analog value to the L0 struct
-    node_analog.temperature_sensor = analog_input.temperature_sensor;
-    node_analog.voltage_sensor = analog_input.voltage_sensor;
-
     // Time management
     static uint32_t last_asserv_systick = 0;
     uint32_t timestamp = HAL_GetTick();
@@ -602,4 +340,334 @@ void controlled_motor_loop(void)
             }
         }
     }
+}
+/******************************************************************************
+ * @brief Msg manager call by luos when container created a msg receive
+ * @param Container send msg
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg)
+{
+    if (msg->header.cmd == ASK_PUB_CMD)
+    {
+        // Report management
+        msg_t pub_msg;
+        pub_msg.header.target_mode = ID;
+        pub_msg.header.target = msg->header.source;
+        if (motor.mode.angular_position)
+        {
+            if (control.mode_rec)
+            {
+                // send back a record stream
+                pub_msg.header.cmd = ANGULAR_POSITION;
+                Luos_SendStreaming(container, &pub_msg, &measurement);
+            }
+            else
+            {
+                LuosHAL_SetIrqState(false);
+                AngularOD_PositionToMsg((angular_position_t *)&motor.angular_position, &pub_msg);
+                LuosHAL_SetIrqState(true);
+                Luos_SendMsg(container, &pub_msg);
+            }
+        }
+        if (motor.mode.angular_speed)
+        {
+            AngularOD_SpeedToMsg((angular_speed_t *)&motor.angular_speed, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
+        }
+        if (motor.mode.linear_position)
+        {
+            LinearOD_PositionToMsg((linear_position_t *)&motor.linear_position, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
+        }
+        if (motor.mode.linear_speed)
+        {
+            LinearOD_SpeedToMsg((linear_speed_t *)&motor.linear_speed, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
+        }
+        if (motor.mode.current)
+        {
+            ElectricOD_CurrentToMsg((current_t *)&motor.current, &pub_msg);
+            Luos_SendMsg(container, &pub_msg);
+        }
+        return;
+    }
+    if (msg->header.cmd == PID)
+    {
+        // check the message size
+        if (msg->header.size == sizeof(asserv_pid_t))
+        {
+            // fill the message infos
+            if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
+                !(motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
+            {
+                // only position control is enable, we can save PID for positioning
+                memcpy(&position, msg->data, msg->header.size);
+            }
+            if ((motor.mode.mode_angular_speed || motor.mode.mode_linear_speed) &&
+                !(motor.mode.mode_angular_position || motor.mode.mode_linear_position))
+            {
+                // only speed control is enable, we can save PID for speed
+                memcpy(&speed, msg->data, msg->header.size);
+            }
+        }
+        return;
+    }
+    if (msg->header.cmd == PARAMETERS)
+    {
+        // check the message size
+        if (msg->header.size == sizeof(motor_mode_t))
+        {
+            // fill the message infos
+            memcpy((void *)&motor.mode, msg->data, msg->header.size);
+            enable_motor(motor.mode.mode_compliant == 0);
+            if (motor.mode.mode_compliant == 0)
+            {
+                LuosHAL_SetIrqState(false);
+                last_position = motor.angular_position;
+                errAngleSum = 0.0;
+                lastErrAngle = 0.0;
+                motor.target_angular_position = motor.angular_position;
+                LuosHAL_SetIrqState(true);
+            }
+        }
+        return;
+    }
+    if (msg->header.cmd == CONTROL)
+    {
+        control.unmap = msg->data[0];
+        if (control.mode_control == 3)
+        {
+            // impossible value, go back to default values
+            control.unmap = 0;
+        }
+        return;
+    }
+    if (msg->header.cmd == RESOLUTION)
+    {
+        // set the encoder resolution
+        memcpy((void *)&motor.resolution, msg->data, sizeof(float));
+        return;
+    }
+    if (msg->header.cmd == REDUCTION)
+    {
+        // set the motor reduction
+        memcpy((void *)&motor.motor_reduction, msg->data, sizeof(float));
+        return;
+    }
+    if (msg->header.cmd == REINIT)
+    {
+        // set state to 0
+        LuosHAL_SetIrqState(false);
+        motor.angular_position = 0.0;
+        motor.target_angular_position = 0.0;
+        LuosHAL_SetIrqState(true);
+        errAngleSum = 0.0;
+        lastErrAngle = 0.0;
+        last_position = 0.0;
+        speed_bootstrap = 0;
+        return;
+    }
+    if (msg->header.cmd == DIMENSION)
+    {
+        // set the wheel diameter m
+        LinearOD_PositionFromMsg((linear_position_t *)&motor.wheel_diameter, msg);
+        return;
+    }
+    if (msg->header.cmd == RATIO)
+    {
+        // set the motor power ratio (no asserv)
+        RatioOD_RatioFromMsg((ratio_t *)&motor.target_ratio, msg);
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_POSITION)
+    {
+        if (motor.mode.mode_angular_position)
+        {
+            // Check message size
+            if (msg->header.size == sizeof(float))
+            {
+                // set the motor target angular position
+                LuosHAL_SetIrqState(false);
+                last_position = motor.angular_position;
+                AngularOD_PositionFromMsg((angular_position_t *)&motor.target_angular_position, msg);
+                LuosHAL_SetIrqState(true);
+            }
+            else
+            {
+                // this is a trajectory, save it into streaming channel.
+                Luos_ReceiveStreaming(container, msg, &trajectory);
+            }
+        }
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_SPEED)
+    {
+        // set the motor target angular position
+        if (motor.mode.mode_angular_speed)
+        {
+            AngularOD_SpeedFromMsg((angular_speed_t *)&motor.target_angular_speed, msg);
+            // reset the integral factor for speed
+            errSpeedSum = 0.0;
+        }
+        return;
+    }
+    if (msg->header.cmd == LINEAR_POSITION)
+    {
+        // set the motor target linear position
+        // Check message size
+        if (msg->header.size == sizeof(float))
+        {
+            linear_position_t linear_position = 0.0;
+            LinearOD_PositionFromMsg(&linear_position, msg);
+            motor.target_angular_position = (linear_position * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+        }
+        else
+        {
+            // this is a trajectory, save it into ring buffer.
+            Luos_ReceiveStreaming(container, msg, &trajectory);
+            // values will be converted one by one during trajectory management.
+        }
+        return;
+    }
+    if (msg->header.cmd == LINEAR_SPEED)
+    {
+        // set the motor target linear speed
+        if (motor.wheel_diameter > 0.0)
+        {
+            linear_speed_t linear_speed = 0.0;
+            LinearOD_SpeedFromMsg(&linear_speed, msg);
+            motor.target_angular_speed = (linear_speed * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+        }
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_POSITION_LIMIT)
+    {
+        // set the motor limit anglular position
+        memcpy((angular_position_t *)motor.limit_angular_position, msg->data, 2 * sizeof(float));
+        return;
+    }
+    if (msg->header.cmd == LINEAR_POSITION_LIMIT)
+    {
+        // set the motor target linear position
+        if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
+        {
+            linear_position_t linear_position[2] = {0.0, 0.0};
+            memcpy(linear_position, msg->data, 2 * sizeof(linear_position_t));
+            motor.limit_angular_position[0] = (linear_position[0] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+            motor.limit_angular_position[1] = (linear_position[1] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+        }
+        return;
+    }
+    if (msg->header.cmd == RATIO_LIMIT)
+    {
+        // set the motor power ratio limit
+        memcpy((ratio_t *)&motor.limit_ratio, msg->data, sizeof(float));
+        motor.limit_ratio = fabs(motor.limit_ratio);
+        if (motor.limit_ratio > 100.0)
+            motor.limit_ratio = 100.0;
+        return;
+    }
+    if (msg->header.cmd == CURRENT_LIMIT)
+    {
+        // set the motor current limit
+        ElectricOD_CurrentFromMsg((current_t *)&motor.limit_current, msg);
+        return;
+    }
+    if (msg->header.cmd == TIME)
+    {
+        // save time in ms
+        TimeOD_TimeFromMsg((time_luos_t *)&time, msg);
+        return;
+    }
+}
+
+void HAL_SYSTICK_Motor_Callback(void)
+{
+    // ************* motion planning *************
+    // ****** recorder management *********
+    static uint32_t last_rec_systick = 0;
+    if (control.mode_rec && ((HAL_GetTick() - last_rec_systick) >= TimeOD_TimeTo_ms(time)))
+    {
+        // We have to save a sample of current position
+        Stream_PutSample(&measurement, (angular_position_t *)&motor.angular_position, 1);
+        last_rec_systick = HAL_GetTick();
+    }
+    // ****** trajectory management *********
+    static uint32_t last_systick = 0;
+    if (control.mode_control == STOP)
+    {
+        Stream_ResetStreamingChannel(&trajectory);
+    }
+    if ((Stream_GetAvailableSampleNB(&trajectory) > 0) && ((HAL_GetTick() - last_systick) >= TimeOD_TimeTo_ms(time)) && (control.mode_control == PLAY))
+    {
+        if (motor.mode.mode_linear_position == 1)
+        {
+            linear_position_t linear_position_tmp;
+            Stream_GetSample(&trajectory, &linear_position_tmp, 1);
+            motor.target_angular_position = (linear_position_tmp * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+        }
+        else
+        {
+            Stream_GetSample(&trajectory, (angular_position_t *)&motor.target_angular_position, 1);
+        }
+        last_systick = HAL_GetTick();
+    }
+    // ****** Linear interpolation *********
+    if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
+        (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
+    {
+
+        // speed control and position control are enabled
+        // we need to move target position following target speed
+        float increment = (fabs(motor.target_angular_speed) / 1000.0);
+        if (fabs(motor.target_angular_position - last_position) <= increment)
+        {
+            // target_position is the final target position
+            motion_target_position = motor.target_angular_position;
+        }
+        else if ((motor.target_angular_position - motor.angular_position) < 0.0)
+        {
+            motion_target_position = last_position - increment;
+        }
+        else
+        {
+            motion_target_position = last_position + increment;
+        }
+    }
+    else
+    {
+        // target_position is the final target position
+        motion_target_position = motor.target_angular_position;
+    }
+    last_position = motion_target_position;
+}
+
+static void set_ratio(float ratio)
+{
+    // limit power value
+    if (ratio < -motor.limit_ratio)
+        ratio = -motor.limit_ratio;
+    if (ratio > motor.limit_ratio)
+        ratio = motor.limit_ratio;
+    // transform power ratio to timer value
+    uint16_t pulse;
+    if (ratio > 0.0)
+    {
+        pulse = (uint16_t)(ratio * 24.0);
+        TIM3->CCR1 = pulse;
+        TIM3->CCR2 = 0;
+    }
+    else
+    {
+        pulse = (uint16_t)(-ratio * 24.0);
+        TIM3->CCR1 = 0;
+        TIM3->CCR2 = pulse;
+    }
+}
+
+static void enable_motor(char state)
+{
+    HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, state);
 }

@@ -15,11 +15,11 @@ Feel free to produce and use all our design to create your own projects.
 
 ### Apps folder
 
-This folder contains the module's sources of each **app** project (see [Apps section](https://docs.luos.io/pages/low/modules/create-modules.html?#apps-guidelines) in documentation).
+This folder contains the container's sources of each **app** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation).
 
 ### Drivers folder
 
-This folder contains the module's sources of each **driver** project (see [Drivers section](https://docs.luos.io/pages/low/modules/create-modules.html?#drivers-guidelines) in documentation).
+This folder contains the container's sources of each **driver** project (see [Drivers section](https://docs.luos.io/pages/low/containers/create-containers.html?#drivers-guidelines) in documentation).
 
 ### Projects folder
 

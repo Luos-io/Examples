@@ -1,40 +1,38 @@
+/******************************************************************************
+ * @file distance
+ * @brief driver example a simple distance
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "distance.h"
 #include "vl53l0x_api.h"
 #include "vl53l0x_platform.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define ADDRESS_DEFAULT 0b0101001
-
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
-
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 VL53L0X_RangingMeasurementData_t ranging_data;
 uint8_t new_data_ready = 0;
 
 VL53L0X_Dev_t dev;
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Distance_MsgHandler(container_t *container, msg_t *msg);
 
-void rx_dist_cb(module_t *module, msg_t *msg)
-{
-    if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready))
-    {
-        msg_t pub_msg;
-
-        linear_position_t dist = -0.001;
-        if (ranging_data.RangeStatus == 0)
-        {
-            // dist measurement ok
-            dist = linear_position_from_mm((float)ranging_data.RangeMilliMeter);
-        }
-        // fill the message infos
-        pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
-        linear_position_to_msg(&dist, &pub_msg);
-        new_data_ready = 0;
-        luos_send(module, &pub_msg);
-    }
-}
-
-void distance_init(void)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Distance_Init(void)
 {
     //reset sensor
     HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
@@ -59,10 +57,14 @@ void distance_init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
-    luos_module_create(rx_dist_cb, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
 }
-
-void distance_loop(void)
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Distance_Loop(void)
 {
     uint8_t data_ready = 0;
     VL53L0X_GetMeasurementDataReady(&dev, &data_ready);
@@ -71,5 +73,31 @@ void distance_loop(void)
         VL53L0X_GetRangingMeasurementData(&dev, &ranging_data);
         VL53L0X_ClearInterruptMask(&dev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
         new_data_ready++;
+    }
+}
+/******************************************************************************
+ * @brief Msg handler call back when a msg receive for this container
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Distance_MsgHandler(container_t *container, msg_t *msg)
+{
+    if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready))
+    {
+        msg_t pub_msg;
+
+        linear_position_t dist = -0.001;
+        if (ranging_data.RangeStatus == 0)
+        {
+            // dist measurement ok
+            dist = LinearOD_PositionFrom_mm((float)ranging_data.RangeMilliMeter);
+        }
+        // fill the message infos
+        pub_msg.header.target_mode = ID;
+        pub_msg.header.target = msg->header.source;
+        LinearOD_PositionToMsg(&dist, &pub_msg);
+        new_data_ready = 0;
+        Luos_SendMsg(container, &pub_msg);
     }
 }

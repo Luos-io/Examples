@@ -1,39 +1,96 @@
+/******************************************************************************
+ * @file dxl
+ * @brief driver example a simple dxl
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "dxl.h"
 #include "Dynamixel_Servo.h"
 #include "math.h"
 #include "string.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 volatile dxl_t dxl[MAX_VM_NUMBER];
 volatile unsigned char request_nb = 0;
-module_t *my_module[MAX_VM_NUMBER];
-module_t *module_pointer;
+container_t *my_container[MAX_VM_NUMBER];
+container_t *container_pointer;
 uint16_t dxl_table[MAX_VM_NUMBER];
 uint8_t dxl_request_table[MAX_VM_NUMBER];
 dxl_models_t dxl_model[MAX_VM_NUMBER];
 uint16_t position[MAX_VM_NUMBER] = {0};
 uint16_t temperature[MAX_VM_NUMBER] = {0};
-
 volatile char publish = 0;
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Dxl_MsgHandler(container_t *container, msg_t *msg);
+static void discover_dxl(void);
+static void dxl_request_manager(void);
+static int find_id(container_t *container);
 
-int find_id(module_t *module)
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Dxl_Init(void)
 {
-
-    int i = 0;
-    for (i = 0; i <= MAX_VM_NUMBER; i++)
-    {
-        if ((int)module == (int)my_module[i])
-            return i;
-    }
-    return i;
+    servo_init(1000000);
+    HAL_Delay(500);
+    discover_dxl();
 }
-
-void rx_dxl_cb(module_t *module, msg_t *msg)
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Dxl_Loop(void)
+{
+    static int id = 0;
+    static uint32_t last_temp[MAX_VM_NUMBER] = {0};
+    //check motor values one by one
+    // Get motor info
+    if (dxl_table[id] == 0)
+        id = 0;
+    if (dxl_table[id] != 0)
+    {
+        uint16_t tmp_val = 0;
+        servo_error_t errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_ANGLE, &tmp_val, DXL_TIMEOUT);
+        if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
+        {
+            position[id] = tmp_val;
+        }
+        if (HAL_GetTick() - last_temp[id] > TEMP_REFRESH_MS)
+        {
+            errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_TEMPERATURE, &tmp_val, DXL_TIMEOUT);
+            if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
+            {
+                temperature[id] = tmp_val;
+                last_temp[id] = HAL_GetTick();
+            }
+        }
+    }
+    id++;
+    dxl_request_manager();
+}
+/******************************************************************************
+ * @brief Msg handler call back when a msg receive for this container
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Dxl_MsgHandler(container_t *container, msg_t *msg)
 {
     static unsigned char last = 0;
 
@@ -46,7 +103,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
 
         dxl[last].val = (float)val;
         dxl[last].reg = reg;
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_REG;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -61,7 +118,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
         char id;
         memcpy(&id, msg->data, sizeof(char));
         dxl[last].val = id;
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ID;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -73,7 +130,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     }
     if (msg->header.cmd == REINIT)
     {
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_DETECT;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -85,8 +142,8 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     }
     if (msg->header.cmd == ANGULAR_POSITION)
     {
-        angular_position_from_msg((angular_position_t *)&dxl[last].val, msg);
-        dxl[last].module_pointer = module;
+        AngularOD_PositionFromMsg((angular_position_t *)&dxl[last].val, msg);
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ANGLE;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -101,7 +158,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
         float load;
         memcpy(&load, msg->data, sizeof(float));
         dxl[last].val = load;
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_POWER_LIMIT;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -125,7 +182,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
             pid[i] = (int)fpid[i];
         }
         memcpy((void *)&dxl[last].val, pid, 3 * sizeof(char));
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_PID;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -141,7 +198,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
         memcpy(&angle, msg->data, 2 * sizeof(float));
         dxl[last].val = angle[0];
         dxl[last].val2 = angle[1];
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ANGLE_LIMIT;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -153,8 +210,8 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     }
     if (msg->header.cmd == ANGULAR_SPEED)
     {
-        angular_speed_from_msg((angular_speed_t *)&dxl[last].val, msg);
-        dxl[last].module_pointer = module;
+        AngularOD_SpeedFromMsg((angular_speed_t *)&dxl[last].val, msg);
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_SPEED;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -167,7 +224,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == DXL_WHEELMODE)
     {
         dxl[last].reg = (int)msg->data[0];
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_WHEEL;
         last++;
         if (last == MAX_VM_NUMBER)
@@ -180,7 +237,7 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
     if (msg->header.cmd == COMPLIANT)
     {
         dxl[last].reg = (int)msg->data[0];
-        dxl[last].module_pointer = module;
+        dxl[last].container_pointer = container;
         dxl[last].mode = MODE_COMPLIANT;
         request_nb++;
         last++;
@@ -192,17 +249,17 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
         {
             angular_position_t value;
             // convert data into deg
-            int i = find_id(module);
+            int i = find_id(container);
             if (dxl_model[i] == AX12 || dxl_model[i] == AX18 || dxl_model[i] == XL320)
             {
-                value = angular_position_from_deg(((300.0 * (float)position[i]) / (1024.0 - 1.0)) - (300.0 / 2));
+                value = AngularOD_PositionFrom_deg(((300.0 * (float)position[i]) / (1024.0 - 1.0)) - (300.0 / 2));
             }
             else
             {
-                value = angular_position_from_deg(((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2));
+                value = AngularOD_PositionFrom_deg(((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2));
             }
-            dxl[last].val = angular_position_to_deg(value);
-            dxl[last].module_pointer = module;
+            dxl[last].val = AngularOD_PositionTo_deg(value);
+            dxl[last].container_pointer = container;
             dxl[last].mode = MODE_ANGLE;
             last++;
             if (last == MAX_VM_NUMBER)
@@ -218,23 +275,22 @@ void rx_dxl_cb(module_t *module, msg_t *msg)
         if (!publish)
         {
             pub_msg.header.target = msg->header.source;
-            module_pointer = module;
+            container_pointer = container;
             pub = ASK_PUB_CMD;
-            dxl_request_table[find_id(module)] = 1;
+            dxl_request_table[find_id(container)] = 1;
         }
         return;
     }
 }
 
-void discover_dxl(void)
+static void discover_dxl(void)
 {
-    status_led(1);
     int y = 0;
     char my_string[15];
-    // Clear module table
-    luos_modules_clear();
+    // Clear container table
+    Luos_ContainersClear();
     // Clear local tables
-    memset(my_module, 0, sizeof(module_t *) * MAX_VM_NUMBER);
+    memset(my_container, 0, sizeof(container_t *) * MAX_VM_NUMBER);
     memset(dxl_table, 0, sizeof(uint16_t) * MAX_VM_NUMBER);
     memset(dxl_model, 0, sizeof(dxl_models_t) * MAX_VM_NUMBER);
     memset((void *)dxl, 0, sizeof(dxl_t) * MAX_VM_NUMBER);
@@ -249,8 +305,7 @@ void discover_dxl(void)
         {
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
-            my_module[y] = luos_module_create(rx_dxl_cb, DYNAMIXEL_MOD, my_string, STRINGIFY(VERSION));
-            luos_module_enable_rt(my_module[y]);
+            my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, DYNAMIXEL_MOD, my_string, STRINGIFY(VERSION));
             dxl_table[y] = i;
 
             servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl_model[y], DXL_TIMEOUT);
@@ -266,21 +321,12 @@ void discover_dxl(void)
     HAL_NVIC_EnableIRQ(USART3_4_IRQn);
     if (y == 0)
     {
-        // there is no motor detected, create a Void module to only manage l0 things
-        my_module[y] = luos_module_create(rx_dxl_cb, VOID_MOD, "void_dxl", STRINGIFY(VERSION));
-        luos_module_enable_rt(my_module[y]);
+        // there is no motor detected, create a Void container to only manage l0 things
+        my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, VOID_MOD, "void_dxl", STRINGIFY(VERSION));
     }
-    status_led(0);
 }
 
-void dxl_init(void)
-{
-    servo_init(1000000);
-    HAL_Delay(500);
-    discover_dxl();
-}
-
-void dxl_request_manager(void)
+static void dxl_request_manager(void)
 {
     static unsigned char last = 0;
     int i = 0;
@@ -290,15 +336,15 @@ void dxl_request_manager(void)
         __disable_irq();
         request_nb--;
         __enable_irq();
-        // find the motor id from module_pointer
-        i = find_id(dxl[last].module_pointer);
+        // find the motor id from container_pointer
+        i = find_id(dxl[last].container_pointer);
         if (i < MAX_VM_NUMBER)
         {
             if (dxl[last].mode == MODE_REG)
             {
                 if (dxl[last].reg == SERVO_REGISTER_BAUD_RATE)
                 {
-                    if (dxl[last].module_pointer->vm->type == VOID_MOD)
+                    if (dxl[last].container_pointer->vm->type == VOID_MOD)
                     {
                         servo_init(57600);
                         HAL_Delay(500);
@@ -343,7 +389,7 @@ void dxl_request_manager(void)
                         }
                         else
                         {
-                            // void module will use this mode
+                            // void container will use this mode
                             switch ((uint32_t)dxl[last].val)
                             {
                             case 9600:
@@ -362,16 +408,16 @@ void dxl_request_manager(void)
 
                         servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, baud, DXL_TIMEOUT);
 
-                        // Set actual baudrate into module
+                        // Set actual baudrate into container
                         servo_init((uint32_t)dxl[last].val);
                     }
                 }
                 if (dxl[last].reg == FACTORY_RESET_REG)
                 {
-                    // check if it is a void module or not
-                    if (dxl[last].module_pointer->vm->type == VOID_MOD)
+                    // check if it is a void container or not
+                    if (dxl[last].container_pointer->vm->type == VOID_MOD)
                     {
-                        //If it is a void module send it to general call
+                        //If it is a void container send it to general call
                         servo_factory_reset(SERVO_BROADCAST_ID, DXL_TIMEOUT);
                     }
                     else
@@ -551,14 +597,14 @@ void dxl_publish_manager(void)
                     value = ((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2);
                 }
                 // Send position informations deg
-                angular_position_to_msg(&value, (msg_t *)&pub_msg);
-                luos_send(my_module[i], (msg_t *)&pub_msg);
+                AngularOD_PositionToMsg(&value, (msg_t *)&pub_msg);
+                Luos_SendMsg(my_container[i], (msg_t *)&pub_msg);
                 // Send temperature informations °C if there is a value
                 if (temperature[i] != 0)
                 {
-                    temperature_t temp = temperature_from_deg_c(temperature[i]);
-                    temperature_to_msg(&temp, (msg_t *)&pub_msg);
-                    luos_send(my_module[i], (msg_t *)&pub_msg);
+                    temperature_t temp = TemperatureOD_TemperatureFrom_deg_c(temperature[i]);
+                    TemperatureOD_TemperatureToMsg(&temp, (msg_t *)&pub_msg);
+                    Luos_SendMsg(my_container[i], (msg_t *)&pub_msg);
                     temperature[i] = 0;
                 }
             }
@@ -569,33 +615,14 @@ void dxl_publish_manager(void)
     publish = 0;
 }
 
-void dxl_loop(void)
+static int find_id(container_t *container)
 {
-    static int id = 0;
-    static uint32_t last_temp[MAX_VM_NUMBER] = {0};
-    //check motor values one by one
-    // Get motor info
-    if (dxl_table[id] == 0)
-        id = 0;
-    if (dxl_table[id] != 0)
+
+    int i = 0;
+    for (i = 0; i <= MAX_VM_NUMBER; i++)
     {
-        uint16_t tmp_val = 0;
-        servo_error_t errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_ANGLE, &tmp_val, DXL_TIMEOUT);
-        if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
-        {
-            position[id] = tmp_val;
-        }
-        if (HAL_GetTick() - last_temp[id] > TEMP_REFRESH_MS)
-        {
-            errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_TEMPERATURE, &tmp_val, DXL_TIMEOUT);
-            if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
-            {
-                temperature[id] = tmp_val;
-                last_temp[id] = HAL_GetTick();
-            }
-        }
+        if ((int)container == (int)my_container[i])
+            return i;
     }
-    id++;
-    dxl_request_manager();
-    dxl_publish_manager();
+    return i;
 }
