@@ -612,7 +612,15 @@ void routing_table_to_json(char *json)
     {
         if (routing_table[i].mode == NODE)
         {
-            sprintf(json, "%s{\"uuid\":[%" PRIu32 ",%" PRIu32 ",%" PRIu32 "]", json, routing_table[i].uuid.uuid[0], routing_table[i].uuid.uuid[1], routing_table[i].uuid.uuid[2]);
+            sprintf(json, "%s{\"node_id\":%d", json, routing_table[i].node_id);
+            if (routing_table[i].node_id)
+            {
+                sprintf(json, "%s,\"certified\":true", json);
+            }
+            else
+            {
+                sprintf(json, "%s,\"certified\":false", json);
+            }
             sprintf(json, "%s,\"port_table\":[", json);
             // Port loop
             for (int port = 0; port < 4; port++)
