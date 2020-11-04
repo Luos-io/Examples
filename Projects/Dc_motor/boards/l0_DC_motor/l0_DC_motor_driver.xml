@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>D:\DATA\_GIT\Examples\Projects\Dc_motor\boards\l0_DC_motor\l0_DC_motor_driver.sch</source>
+    <date>26/10/2020 12:12:08</date>
+    <tool>Eeschema (5.0.0)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>l0_DC_motor_driver.sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="U1">
+      <value>DRV8833</value>
+      <footprint>Common_Footprint:HTSSOP-16</footprint>
+      <datasheet>www.ti.com/lit/ds/symlink/drv8833.pdf</datasheet>
+      <fields>
+        <field name="CodeCommande">2057085</field>
+        <field name="Fournisseur">Farnell</field>
+      </fields>
+      <libsource lib="Common_Lib" part="DRV8833" description="Dual H-Bridge Motor Driver"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5A9D7EF9</tstamp>
+    </comp>
+    <comp ref="J1">
+      <value>l0_Shield_Socket</value>
+      <footprint>Common_Footprint:l0_Shield_Socket</footprint>
+      <libsource lib="Common_Lib" part="l0_Shield_Socket" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5A9D7FAF</tstamp>
+    </comp>
+    <comp ref="U2">
+      <value>LMV301</value>
+      <footprint>Common_Footprint:SC-70-5</footprint>
+      <fields>
+        <field name="CodeCommande">2774604</field>
+        <field name="Fournisseur">Farnell</field>
+      </fields>
+      <libsource lib="Common_Lib" part="LMV301" description=""/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>5A9E4134</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Common_Lib" part="DRV8833">
+      <description>Dual H-Bridge Motor Driver</description>
+      <docs>Documentation/Controleur_Moteur/DRV8833.pdf</docs>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">DRV8833</field>
+        <field name="Footprint">Common_Footprint:HTSSOP-16</field>
+        <field name="Datasheet">www.ti.com/lit/ds/symlink/drv8833.pdf</field>
+        <field name="Fournisseur">Farnell</field>
+        <field name="CodeCommande">2057085</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~nSLEEP" type="input"/>
+        <pin num="2" name="AOUT1" type="output"/>
+        <pin num="3" name="AISEN" type="openCol"/>
+        <pin num="4" name="AOUT2" type="output"/>
+        <pin num="5" name="BOUT2" type="output"/>
+        <pin num="6" name="BISEN" type="openCol"/>
+        <pin num="7" name="BOUT1" type="output"/>
+        <pin num="8" name="~nFAULT" type="openCol"/>
+        <pin num="9" name="BIN1" type="input"/>
+        <pin num="10" name="BIN2" type="input"/>
+        <pin num="11" name="VCP" type="BiDi"/>
+        <pin num="12" name="VM" type="power_in"/>
+        <pin num="13" name="GND" type="power_out"/>
+        <pin num="14" name="VINT" type="power_in"/>
+        <pin num="15" name="AIN2" type="input"/>
+        <pin num="16" name="AIN1" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="Common_Lib" part="LMV301">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LMV301</field>
+        <field name="Footprint">Common_Footprint:SC-70-5</field>
+        <field name="Fournisseur">Farnell</field>
+        <field name="CodeCommande">2774604</field>
+      </fields>
+      <pins>
+        <pin num="1" name="+" type="input"/>
+        <pin num="2" name="Vee" type="power_out"/>
+        <pin num="3" name="-" type="input"/>
+        <pin num="4" name="~" type="output"/>
+        <pin num="5" name="V+" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Common_Lib" part="l0_Shield_Socket">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">l0_Shield_Socket</field>
+        <field name="Footprint">Common_Footprint:l0_Shield_Socket</field>
+      </fields>
+      <pins>
+        <pin num="1" name="p1/PA0" type="unspc"/>
+        <pin num="2" name="p2/PB5" type="unspc"/>
+        <pin num="3" name="p3/PB4" type="unspc"/>
+        <pin num="4" name="p4/PB3" type="unspc"/>
+        <pin num="5" name="3v3" type="power_out"/>
+        <pin num="6" name="Vin" type="power_in"/>
+        <pin num="7" name="GND" type="power_out"/>
+        <pin num="8" name="p5/PB11" type="unspc"/>
+        <pin num="9" name="p6/PB10" type="unspc"/>
+        <pin num="10" name="p7/PB1" type="unspc"/>
+        <pin num="11" name="p8/PB0" type="unspc"/>
+        <pin num="12" name="p9/PA1" type="unspc"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Common_Lib">
+      <uri>D:/DATA/_GIT/Electronics/00_Common_Libraries/Common_Library/Common_Lib.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(U2-Pad5)">
+      <node ref="U2" pin="5"/>
+    </net>
+    <net code="2" name="Net-(U2-Pad4)">
+      <node ref="U2" pin="4"/>
+    </net>
+    <net code="3" name="Net-(U2-Pad2)">
+      <node ref="U2" pin="2"/>
+    </net>
+    <net code="4" name="/Robus_PS">
+      <node ref="U1" pin="12"/>
+      <node ref="J1" pin="6"/>
+    </net>
+    <net code="5" name="Net-(U1-Pad13)">
+      <node ref="U1" pin="13"/>
+    </net>
+    <net code="6" name="Net-(U1-Pad14)">
+      <node ref="U1" pin="14"/>
+    </net>
+    <net code="7" name="Net-(U2-Pad3)">
+      <node ref="U2" pin="3"/>
+    </net>
+    <net code="8" name="/Vmax">
+      <node ref="U2" pin="1"/>
+    </net>
+    <net code="9" name="Net-(J1-Pad10)">
+      <node ref="J1" pin="10"/>
+    </net>
+    <net code="10" name="/NC_PWM2">
+      <node ref="U1" pin="9"/>
+      <node ref="J1" pin="3"/>
+    </net>
+    <net code="11" name="Net-(U1-Pad7)">
+      <node ref="U1" pin="7"/>
+    </net>
+    <net code="12" name="Net-(U1-Pad6)">
+      <node ref="U1" pin="6"/>
+    </net>
+    <net code="13" name="Net-(U1-Pad5)">
+      <node ref="U1" pin="5"/>
+    </net>
+    <net code="14" name="Net-(U1-Pad4)">
+      <node ref="U1" pin="4"/>
+    </net>
+    <net code="15" name="/~nSLEEP">
+      <node ref="J1" pin="11"/>
+    </net>
+    <net code="16" name="Net-(U1-Pad2)">
+      <node ref="U1" pin="2"/>
+    </net>
+    <net code="17" name="/NC_PWM1">
+      <node ref="U1" pin="16"/>
+      <node ref="J1" pin="1"/>
+    </net>
+    <net code="18" name="/NO_PWM1">
+      <node ref="U1" pin="15"/>
+      <node ref="J1" pin="4"/>
+    </net>
+    <net code="19" name="Net-(U1-Pad11)">
+      <node ref="U1" pin="11"/>
+    </net>
+    <net code="20" name="/NO_PWM2">
+      <node ref="J1" pin="2"/>
+      <node ref="U1" pin="10"/>
+    </net>
+    <net code="21" name="Net-(J1-Pad9)">
+      <node ref="J1" pin="9"/>
+    </net>
+    <net code="22" name="Net-(U1-Pad3)">
+      <node ref="U1" pin="3"/>
+    </net>
+    <net code="23" name="Net-(U1-Pad1)">
+      <node ref="U1" pin="1"/>
+    </net>
+    <net code="24" name="Net-(J1-Pad8)">
+      <node ref="J1" pin="8"/>
+    </net>
+    <net code="25" name="Net-(J1-Pad7)">
+      <node ref="J1" pin="7"/>
+    </net>
+    <net code="26" name="Net-(J1-Pad5)">
+      <node ref="J1" pin="5"/>
+    </net>
+    <net code="27" name="/~nFAULT">
+      <node ref="U1" pin="8"/>
+      <node ref="J1" pin="12"/>
+    </net>
+  </nets>
+</export>

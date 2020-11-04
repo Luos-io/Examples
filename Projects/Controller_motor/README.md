@@ -1,14 +1,14 @@
 <a href="https://luos.io"><img src="https://www.luos.io/wp-content/uploads/2020/03/Luos-color.png" alt="Luos logo" title="Luos" align="right" height="60" /></a>
 
-![](https://github.com/Luos-io/Mod_controlled_motor/workflows/Build/badge.svg)
+![](https://github.com/Luos-io/Mod_controller_motor/workflows/Build/badge.svg)
 [![](http://certified.luos.io)](https://luos.io)
 [![](https://img.shields.io/github/license/Luos-io/Examples)](
 https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 
 
-# Controlled motor project example :bulb:
-This project demonstrate how to make and use a simple controlled motor through Luos. Feel free to use electronics and code example as you want.
+# Controller motor project example :bulb:
+This project demonstrate how to make and use a simple controller motor through Luos. Feel free to use electronics and code example as you want.
 
 ## How to compile the code :computer:
 
@@ -20,7 +20,7 @@ This project demonstrate how to make and use a simple controlled motor through L
 You can open [a working example electronic design](https://github.com/Luos-io/Electronics) with Kicad. This design use Luos_components library for more information to install and use it read [our doc](https://docs.luos.io).
 
 ## Linked driver
-This project is linked to the [Controlled motor driver](../../Drivers/Controlled_motor).
+This project is linked to the [Controller motor driver](../../Drivers/Controller_motor).
 
 ## Don't hesitate to read [our documentation](https://docs.luos.io), or to post your questions/issues on the [Luos' Forum](https://community.luos.io). :books:
 

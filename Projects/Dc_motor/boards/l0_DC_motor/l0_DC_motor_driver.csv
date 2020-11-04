@@ -1,0 +1,4 @@
+Reference, Value, Footprint, Datasheet, CodeCommande, Fournisseur
+"U1","DRV8833","Common_Footprint:HTSSOP-16","www.ti.com/lit/ds/symlink/drv8833.pdf","2057085","Farnell"
+"J1","l0_Shield_Socket","Common_Footprint:l0_Shield_Socket",""
+"U2","LMV301","Common_Footprint:SC-70-5","","2774604","Farnell"

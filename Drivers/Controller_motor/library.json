@@ -1,7 +1,7 @@
 {
-    "name": "Controlled_motor",
+    "name": "Controller_motor",
     "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST",
-    "description": "a simple Controlled_motor",
+    "description": "a simple Controller_motor",
     "version": "0.6.0",
     "authors": {
         "name": "Luos",

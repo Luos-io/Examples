@@ -363,7 +363,7 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         break;
     case IMU_MOD:
     case STEPPER_MOD:
-    case CONTROLLED_MOTOR_MOD:
+    case CONTROLLER_MOTOR_MOD:
         if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters")))
         {
             uint16_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;

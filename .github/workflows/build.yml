@@ -23,7 +23,7 @@ jobs:
     - name: Run PlatformIO
       run: |
         platformio run -d Projects/Button
-        platformio run -d Projects/Controlled_motor
+        platformio run -d Projects/Controller_motor
         platformio run -d Projects/Dc_motor
         platformio run -d Projects/Distance
         platformio run -d Projects/Dxl
