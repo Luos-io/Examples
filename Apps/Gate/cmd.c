@@ -121,7 +121,10 @@ void send_cmds(container_t *container)
                         int i = 0;
                         for (i = 0; i < repetition; i++)
                         {
-                            failed_msg_nb += Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size);
+                            if(Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size) == FAIL)
+                            {
+                                failed_msg_nb++;
+                            }
                         }
                         uint32_t end_systick = HAL_GetTick();
                         float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
