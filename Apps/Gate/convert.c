@@ -656,6 +656,10 @@ void routing_table_to_json(char *json)
             json[strlen(json) - 1] = '\0';
             sprintf(json, "%s]},", json);
         }
+        else
+        {
+            i++;
+        }
     }
     // remove the last "," char
     json[strlen(json) - 1] = '\0';

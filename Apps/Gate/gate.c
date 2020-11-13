@@ -57,16 +57,16 @@ void Gate_Loop(void)
     static char state = 0;
 
     // Check if there is a dead container
-    if (container->vm->dead_container_spotted)
+    if (container->ll_container->dead_container_spotted)
     {
         char json[JSON_BUFF_SIZE] = {0};
-        exclude_container_to_json(container->vm->dead_container_spotted, json);
+        exclude_container_to_json(container->ll_container->dead_container_spotted, json);
 #ifdef USE_SERIAL
         serial_write(json, strlen(json));
 #else
         printf(json);
 #endif
-        container->vm->dead_container_spotted = 0;
+        container->ll_container->dead_container_spotted = 0;
     }
     if (detection_done)
     {
