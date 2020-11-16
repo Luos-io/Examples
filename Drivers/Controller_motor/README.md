@@ -7,11 +7,11 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 [![](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Unleash%20electronic%20devices%20as%20microservices%20thanks%20to%20Luos&https://luos.io&via=Luos_io&hashtags=embeddedsystems,electronics,microservices,api)
 [![](https://img.shields.io/badge/LinkedIn-Share-0077B5?style=social&logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fluos-io)
 
-# Controlled motor driver
+# Controller motor driver
 Driver for using a DC motor with an encoder and a reduction in your projects with Luos.
 
 # Linked project
-This driver is linked to the [Controlled motor project](../../Projects/Controlled_motor).
+This driver is linked to the [Controller motor project](../../Projects/Controller_motor).
 
 [![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)
 [![](https://img.shields.io/badge/Luos-Documentation-34A3B4)](https://docs.luos.io)
