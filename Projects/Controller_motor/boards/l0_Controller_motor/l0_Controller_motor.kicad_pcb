@@ -93,7 +93,7 @@
       (mirror false)
       (drillshape 0)
       (scaleselection 1)
-      (outputdirectory "Controlled_motor_v0.0.2/"))
+      (outputdirectory "Controller_motor_v0.0.2/"))
   )
 
   (net 0 "")
@@ -927,7 +927,7 @@
     (arrow2a (pts (xy 125.932198 76.531813) (xy 127.056866 77.121747)))
     (arrow2b (pts (xy 125.932198 76.531813) (xy 127.060527 75.948911)))
   )
-  (gr_text "Controlled motor v0.0.3" (at 137.397501 82.170001) (layer F.SilkS)
+  (gr_text "Controller motor v0.0.3" (at 137.397501 82.170001) (layer F.SilkS)
     (effects (font (size 0.75 0.75) (thickness 0.1875)))
   )
   (gr_circle (center 127.242501 82.805001) (end 128.258501 83.313001) (layer F.SilkS) (width 0.2) (tstamp 5BE9DAD5))

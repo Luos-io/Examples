@@ -1,10 +1,10 @@
 /******************************************************************************
- * @file controlled_motor
- * @brief driver example a simple controlled motor
+ * @file controller_motor
+ * @brief driver example a simple controller motor
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#include "controlled_motor.h"
+#include "controller_motor.h"
 
 #include "main.h"
 #include "stdbool.h"
@@ -71,7 +71,7 @@ char speed_bootstrap = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg);
+static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg);
 static void set_ratio(float ratio);
 static void enable_motor(char state);
 
@@ -80,7 +80,7 @@ static void enable_motor(char state);
  * @param None
  * @return None
  ******************************************************************************/
-void ControlledMotor_Init(void)
+void ControllerMotor_Init(void)
 {
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
@@ -97,21 +97,21 @@ void ControlledMotor_Init(void)
     // Enable  ADC clocks
     __HAL_RCC_ADC1_CLK_ENABLE();
     // Setup Adc to loop on DMA continuously
-    ControlledMotor_adc.Instance = ADC1;
-    ControlledMotor_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-    ControlledMotor_adc.Init.Resolution = ADC_RESOLUTION_12B;
-    ControlledMotor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    ControlledMotor_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
-    ControlledMotor_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-    ControlledMotor_adc.Init.LowPowerAutoWait = DISABLE;
-    ControlledMotor_adc.Init.LowPowerAutoPowerOff = DISABLE;
-    ControlledMotor_adc.Init.ContinuousConvMode = ENABLE;
-    ControlledMotor_adc.Init.DiscontinuousConvMode = DISABLE;
-    ControlledMotor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-    ControlledMotor_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    ControlledMotor_adc.Init.DMAContinuousRequests = ENABLE;
-    ControlledMotor_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    if (HAL_ADC_Init(&ControlledMotor_adc) != HAL_OK)
+    ControllerMotor_adc.Instance = ADC1;
+    ControllerMotor_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+    ControllerMotor_adc.Init.Resolution = ADC_RESOLUTION_12B;
+    ControllerMotor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+    ControllerMotor_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    ControllerMotor_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+    ControllerMotor_adc.Init.LowPowerAutoWait = DISABLE;
+    ControllerMotor_adc.Init.LowPowerAutoPowerOff = DISABLE;
+    ControllerMotor_adc.Init.ContinuousConvMode = ENABLE;
+    ControllerMotor_adc.Init.DiscontinuousConvMode = DISABLE;
+    ControllerMotor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+    ControllerMotor_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    ControllerMotor_adc.Init.DMAContinuousRequests = ENABLE;
+    ControllerMotor_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    if (HAL_ADC_Init(&ControllerMotor_adc) != HAL_OK)
     {
         Error_Handler();
     }
@@ -119,7 +119,7 @@ void ControlledMotor_Init(void)
     sConfig.Channel = ADC_CHANNEL_8;
     sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-    if (HAL_ADC_ConfigChannel(&ControlledMotor_adc, &sConfig) != HAL_OK)
+    if (HAL_ADC_ConfigChannel(&ControllerMotor_adc, &sConfig) != HAL_OK)
     {
         Error_Handler();
     }
@@ -127,23 +127,23 @@ void ControlledMotor_Init(void)
     __HAL_RCC_DMA1_CLK_ENABLE();
     /* ADC1 DMA Init */
     /* ADC Init */
-    ControlledMotor_dma_adc.Instance = DMA1_Channel1;
-    ControlledMotor_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    ControlledMotor_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
-    ControlledMotor_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
-    ControlledMotor_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    ControlledMotor_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    ControlledMotor_dma_adc.Init.Mode = DMA_CIRCULAR;
-    ControlledMotor_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
-    if (HAL_DMA_Init(&ControlledMotor_dma_adc) != HAL_OK)
+    ControllerMotor_dma_adc.Instance = DMA1_Channel1;
+    ControllerMotor_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    ControllerMotor_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
+    ControllerMotor_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    ControllerMotor_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    ControllerMotor_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    ControllerMotor_dma_adc.Init.Mode = DMA_CIRCULAR;
+    ControllerMotor_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&ControllerMotor_dma_adc) != HAL_OK)
     {
         Error_Handler();
     }
-    __HAL_LINKDMA(&ControlledMotor_adc, DMA_Handle, ControlledMotor_dma_adc);
+    __HAL_LINKDMA(&ControllerMotor_adc, DMA_Handle, ControllerMotor_dma_adc);
     // disable DMA Irq
     HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
     // Start infinite ADC measurement
-    HAL_ADC_Start_DMA(&ControlledMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
+    HAL_ADC_Start_DMA(&ControllerMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************** Pwm settings *****************
     time = TimeOD_TimeFrom_ms(SAMPLING_PERIOD_MS);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
@@ -194,14 +194,14 @@ void ControlledMotor_Init(void)
     measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
     // ************** Container creation *****************
-    Luos_CreateContainer(ControlledMotor_MsgHandler, CONTROLLED_MOTOR_MOD, "controlled_motor_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(ControllerMotor_MsgHandler, CONTROLLER_MOTOR_MOD, "controller_motor_mod", STRINGIFY(VERSION));
 }
 /******************************************************************************
  * @brief loop must be call in project loop
  * @param None
  * @return None
  ******************************************************************************/
-void ControlledMotor_Loop(void)
+void ControllerMotor_Loop(void)
 {
     // Time management
     static uint32_t last_asserv_systick = 0;
@@ -347,7 +347,7 @@ void ControlledMotor_Loop(void)
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void ControlledMotor_MsgHandler(container_t *container, msg_t *msg)
+static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == ASK_PUB_CMD)
     {

@@ -1,11 +1,11 @@
 /******************************************************************************
- * @file controlled_motor
- * @brief driver example a simple controlled motor
+ * @file controller_motor
+ * @brief driver example a simple controller motor
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#ifndef CONTROLLED_MOTOR_H
-#define CONTROLLED_MOTOR_H
+#ifndef CONTROLLER_MOTOR_H
+#define CONTROLLER_MOTOR_H
 
 #include "luos.h"
 
@@ -73,7 +73,7 @@ typedef struct __attribute__((__packed__))
 /*******************************************************************************
  * Function
  ******************************************************************************/
-void ControlledMotor_Init(void);
-void ControlledMotor_Loop(void);
+void ControllerMotor_Init(void);
+void ControllerMotor_Loop(void);
 
-#endif /* CONTROLLED_MOTOR_H */
+#endif /* CONTROLLER_MOTOR_H */

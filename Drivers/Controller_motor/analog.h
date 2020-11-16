@@ -11,8 +11,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-ADC_HandleTypeDef ControlledMotor_adc;
-DMA_HandleTypeDef ControlledMotor_dma_adc;
+ADC_HandleTypeDef ControllerMotor_adc;
+DMA_HandleTypeDef ControllerMotor_dma_adc;
 
 // This structure need to list all ADC configured in the good order determined by the
 // ADC_CHANEL number in increasing order
