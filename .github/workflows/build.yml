@@ -29,7 +29,6 @@ jobs:
         platformio run -d Projects/Dxl
         platformio run -d Projects/Gate
         platformio run -d Projects/Gpio  
-        platformio run -d Projects/Handy 
         platformio run -d Projects/Imu
         platformio run -d Projects/Led
         platformio run -d Projects/Led_strip
