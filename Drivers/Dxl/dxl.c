@@ -21,15 +21,15 @@
  ******************************************************************************/
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
-volatile dxl_t dxl[MAX_VM_NUMBER];
+volatile dxl_t dxl[MAX_CONTAINER_NUMBER];
 volatile unsigned char request_nb = 0;
-container_t *my_container[MAX_VM_NUMBER];
+container_t *my_container[MAX_CONTAINER_NUMBER];
 container_t *container_pointer;
-uint16_t dxl_table[MAX_VM_NUMBER];
-uint8_t dxl_request_table[MAX_VM_NUMBER];
-dxl_models_t dxl_model[MAX_VM_NUMBER];
-uint16_t position[MAX_VM_NUMBER] = {0};
-uint16_t temperature[MAX_VM_NUMBER] = {0};
+uint16_t dxl_table[MAX_CONTAINER_NUMBER];
+uint8_t dxl_request_table[MAX_CONTAINER_NUMBER];
+dxl_models_t dxl_model[MAX_CONTAINER_NUMBER];
+uint16_t position[MAX_CONTAINER_NUMBER] = {0};
+uint16_t temperature[MAX_CONTAINER_NUMBER] = {0};
 volatile char publish = 0;
 /*******************************************************************************
  * Function
@@ -58,7 +58,7 @@ void Dxl_Init(void)
 void Dxl_Loop(void)
 {
     static int id = 0;
-    static uint32_t last_temp[MAX_VM_NUMBER] = {0};
+    static uint32_t last_temp[MAX_CONTAINER_NUMBER] = {0};
     //check motor values one by one
     // Get motor info
     if (dxl_table[id] == 0)
@@ -106,7 +106,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_REG;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -121,7 +121,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ID;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -133,7 +133,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_DETECT;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -146,7 +146,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ANGLE;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -161,7 +161,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_POWER_LIMIT;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -185,7 +185,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_PID;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -201,7 +201,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_ANGLE_LIMIT;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -214,7 +214,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_SPEED;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -227,7 +227,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].container_pointer = container;
         dxl[last].mode = MODE_WHEEL;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -241,7 +241,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         dxl[last].mode = MODE_COMPLIANT;
         request_nb++;
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -262,7 +262,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
             dxl[last].container_pointer = container;
             dxl[last].mode = MODE_ANGLE;
             last++;
-            if (last == MAX_VM_NUMBER)
+            if (last == MAX_CONTAINER_NUMBER)
             {
                 last = 0;
             }
@@ -290,10 +290,10 @@ static void discover_dxl(void)
     // Clear container table
     Luos_ContainersClear();
     // Clear local tables
-    memset(my_container, 0, sizeof(container_t *) * MAX_VM_NUMBER);
-    memset(dxl_table, 0, sizeof(uint16_t) * MAX_VM_NUMBER);
-    memset(dxl_model, 0, sizeof(dxl_models_t) * MAX_VM_NUMBER);
-    memset((void *)dxl, 0, sizeof(dxl_t) * MAX_VM_NUMBER);
+    memset(my_container, 0, sizeof(container_t *) * MAX_CONTAINER_NUMBER);
+    memset(dxl_table, 0, sizeof(uint16_t) * MAX_CONTAINER_NUMBER);
+    memset(dxl_model, 0, sizeof(dxl_models_t) * MAX_CONTAINER_NUMBER);
+    memset((void *)dxl, 0, sizeof(dxl_t) * MAX_CONTAINER_NUMBER);
 
     HAL_NVIC_DisableIRQ(USART3_4_IRQn);
     HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
@@ -338,13 +338,13 @@ static void dxl_request_manager(void)
         __enable_irq();
         // find the motor id from container_pointer
         i = find_id(dxl[last].container_pointer);
-        if (i < MAX_VM_NUMBER)
+        if (i < MAX_CONTAINER_NUMBER)
         {
             if (dxl[last].mode == MODE_REG)
             {
                 if (dxl[last].reg == SERVO_REGISTER_BAUD_RATE)
                 {
-                    if (dxl[last].container_pointer->vm->type == VOID_MOD)
+                    if (dxl[last].container_pointer->ll_container->type == VOID_MOD)
                     {
                         servo_init(57600);
                         HAL_Delay(500);
@@ -415,7 +415,7 @@ static void dxl_request_manager(void)
                 if (dxl[last].reg == FACTORY_RESET_REG)
                 {
                     // check if it is a void container or not
-                    if (dxl[last].container_pointer->vm->type == VOID_MOD)
+                    if (dxl[last].container_pointer->ll_container->type == VOID_MOD)
                     {
                         //If it is a void container send it to general call
                         servo_factory_reset(SERVO_BROADCAST_ID, DXL_TIMEOUT);
@@ -565,7 +565,7 @@ static void dxl_request_manager(void)
             }
         }
         last++;
-        if (last == MAX_VM_NUMBER)
+        if (last == MAX_CONTAINER_NUMBER)
         {
             last = 0;
         }
@@ -619,7 +619,7 @@ static int find_id(container_t *container)
 {
 
     int i = 0;
-    for (i = 0; i <= MAX_VM_NUMBER; i++)
+    for (i = 0; i <= MAX_CONTAINER_NUMBER; i++)
     {
         if ((int)container == (int)my_container[i])
             return i;
