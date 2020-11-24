@@ -363,9 +363,9 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
             }
             else
             {
-                LuosHAL_SetIrqState(false);
+                __disable_irq();
                 AngularOD_PositionToMsg((angular_position_t *)&motor.angular_position, &pub_msg);
-                LuosHAL_SetIrqState(true);
+                __enable_irq();
                 Luos_SendMsg(container, &pub_msg);
             }
         }
@@ -422,12 +422,12 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
             enable_motor(motor.mode.mode_compliant == 0);
             if (motor.mode.mode_compliant == 0)
             {
-                LuosHAL_SetIrqState(false);
+                __disable_irq();
                 last_position = motor.angular_position;
                 errAngleSum = 0.0;
                 lastErrAngle = 0.0;
                 motor.target_angular_position = motor.angular_position;
-                LuosHAL_SetIrqState(true);
+                __enable_irq();
             }
         }
         return;
@@ -457,10 +457,10 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == REINIT)
     {
         // set state to 0
-        LuosHAL_SetIrqState(false);
+        __disable_irq();
         motor.angular_position = 0.0;
         motor.target_angular_position = 0.0;
-        LuosHAL_SetIrqState(true);
+        __enable_irq();
         errAngleSum = 0.0;
         lastErrAngle = 0.0;
         last_position = 0.0;
@@ -487,10 +487,10 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
             if (msg->header.size == sizeof(float))
             {
                 // set the motor target angular position
-                LuosHAL_SetIrqState(false);
+                __disable_irq();
                 last_position = motor.angular_position;
                 AngularOD_PositionFromMsg((angular_position_t *)&motor.target_angular_position, msg);
-                LuosHAL_SetIrqState(true);
+                __enable_irq();
             }
             else
             {
