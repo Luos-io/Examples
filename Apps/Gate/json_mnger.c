@@ -37,7 +37,7 @@ void format_data(container_t *container, char *json)
         // loop into containers.
         uint16_t i = 1;
         // get the oldest message
-        while (Luos_ReadMsg(container, &json_msg) == SUCESS)
+        while (Luos_ReadMsg(container, &json_msg) == SUCCEED)
         {
             // get the source of this message
             i = json_msg->header.source;
@@ -50,7 +50,7 @@ void format_data(container_t *container, char *json)
                 // now add json data from container
                 msg_to_json(json_msg, &json[strlen(json)]);
                 // Check if we receive other messages from this container
-                while (Luos_ReadFromContainer(container, i, &json_msg) == SUCESS)
+                while (Luos_ReadFromContainer(container, i, &json_msg) == SUCCEED)
                 {
                     // we receive some, add it to the Json
                     msg_to_json(json_msg, &json[strlen(json)]);

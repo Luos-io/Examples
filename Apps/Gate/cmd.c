@@ -121,7 +121,7 @@ void send_cmds(container_t *container)
                         int i = 0;
                         for (i = 0; i < repetition; i++)
                         {
-                            if(Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size) == FAIL)
+                            if (Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size) == FAILED)
                             {
                                 failed_msg_nb++;
                             }
