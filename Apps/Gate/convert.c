@@ -493,7 +493,7 @@ void msg_to_json(msg_t *msg, char *json)
         {
             msg->data[msg->header.size] = '\0';
             //create the Json content
-            sprintf(json, "\"luos_statistics\":[%d,%d,%d,%d,%d],", msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4]);
+            sprintf(json, "\"luos_statistics\":[%d,%d,%d,%d],", msg->data[0], msg->data[1], msg->data[2], msg->data[3]);
         }
         break;
     case IO_STATE:
