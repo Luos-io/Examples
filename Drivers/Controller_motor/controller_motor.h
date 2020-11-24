@@ -12,10 +12,28 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+
+/*
+ * Pid
+ */
+typedef struct __attribute__((__packed__))
+{
+    union
+    {
+        struct __attribute__((__packed__))
+        {
+            float p;
+            float i;
+            float d;
+        };
+        unsigned char unmap[3 * sizeof(float)];
+    };
+} asserv_pid_t;
 // Motor
 typedef struct __attribute__((__packed__))
 {
-    union {
+    union
+    {
         struct __attribute__((__packed__))
         {
             // target modes
