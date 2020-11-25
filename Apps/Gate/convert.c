@@ -488,12 +488,18 @@ void msg_to_json(msg_t *msg, char *json)
         }
         break;
     case LUOS_STATISTICS:
-        // clean data to be used as string
-        if (msg->header.size < MAX_DATA_MSG_SIZE)
+        if (msg->header.size == sizeof(general_stats_t))
         {
-            msg->data[msg->header.size] = '\0';
-            //create the Json content
-            sprintf(json, "\"luos_statistics\":[%d,%d,%d,%d],", msg->data[0], msg->data[1], msg->data[2], msg->data[3]);
+            general_stats_t *stat = (general_stats_t *)msg->data;
+            // create the Json content
+            sprintf(json, "\"luos_statistics\":{\"msg_stack\":%d,\"luos_stack\":%d,\"msg_drop\":%d,\"loop_ms\":%d,\"fail_ratio\":%d,\"collision_max\":%d,\"nak_max\":%d},",
+                    stat->node_stat.memory.msg_stack_ratio,
+                    stat->node_stat.memory.luos_stack_ratio,
+                    stat->node_stat.memory.msg_drop_number,
+                    stat->node_stat.max_loop_time_ms,
+                    stat->container_stat.msg_fail_ratio,
+                    stat->container_stat.max_collision_retry,
+                    stat->container_stat.max_nak_retry);
         }
         break;
     case IO_STATE:
