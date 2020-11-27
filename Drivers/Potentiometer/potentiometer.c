@@ -15,8 +15,9 @@
 #define POS_Pin GPIO_PIN_0
 #define POS_GPIO_Port GPIOA
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -101,7 +102,7 @@ void Potentiometer_Init(void)
     HAL_ADC_Start_DMA(&Potentiometer_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* container creation *******************
-    Luos_CreateContainer(Potentiometer_MsgHandler, ANGLE_MOD, "potentiometer_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Potentiometer_MsgHandler, ANGLE_MOD, "potentiometer_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

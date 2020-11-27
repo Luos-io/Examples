@@ -11,8 +11,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -38,7 +39,7 @@ void Imu_Init(void)
 {
     mpu_setup();
     hal.report.quat = 1;
-    Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

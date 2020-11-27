@@ -12,8 +12,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -36,7 +37,7 @@ static void compute_speed(void);
  ******************************************************************************/
 void Stepper_Init(void)
 {
-    Luos_CreateContainer(Stepper_MsgHandler, STEPPER_MOD, "stepper_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Stepper_MsgHandler, STEPPER_MOD, "stepper_mod", revision);
     motor.resolution = 200.0;
     motor.wheel_diameter = 0.0;
     motor.target_angular_speed = 100.0;

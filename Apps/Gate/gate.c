@@ -11,8 +11,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -43,7 +44,7 @@ void Gate_Init(void)
     LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
     LL_USART_EnableDMAReq_RX(USART3);
-    container = Luos_CreateContainer(0, GATE_MOD, "gate", STRINGIFY(VERSION));
+    container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

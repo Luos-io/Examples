@@ -475,7 +475,7 @@ void msg_to_json(msg_t *msg, char *json)
         {
             msg->data[msg->header.size] = '\0';
             //create the Json content
-            sprintf(json, "\"revision\":\"%s\",", msg->data);
+            sprintf(json,"\"revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
         }
         break;
     case LUOS_REVISION:
@@ -484,7 +484,7 @@ void msg_to_json(msg_t *msg, char *json)
         {
             msg->data[msg->header.size] = '\0';
             //create the Json content
-            sprintf(json, "\"luos_revision\":\"%s\",", msg->data);
+            sprintf(json,"\"luos_revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
         }
         break;
     case LUOS_STATISTICS:

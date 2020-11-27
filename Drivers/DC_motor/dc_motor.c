@@ -11,8 +11,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 #define MOTORNUMBER 2
 /*******************************************************************************
@@ -37,8 +38,8 @@ void MotorDC_Init(void)
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    container[0] = Luos_CreateContainer(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor1_mod", STRINGIFY(VERSION));
-    container[1] = Luos_CreateContainer(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor2_mod", STRINGIFY(VERSION));
+    container[0] = Luos_CreateContainer(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor1_mod", revision);
+    container[1] = Luos_CreateContainer(MotorDC_MsgHandler, DCMOTOR_MOD, "DC_motor2_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

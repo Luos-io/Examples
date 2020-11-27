@@ -10,8 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef VERSION
+revision_t AlarmControllerVersion = {.unmap = VERSION};
+#endif
 
 #define UPDATE_PERIOD_MS 10
 #define BLINK_NUMBER 3
@@ -68,7 +69,7 @@ void AlarmController_Init(void)
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
-    app = Luos_CreateContainer(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", STRINGIFY(VERSION));
+    app = Luos_CreateContainer(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", AlarmControllerVersion);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

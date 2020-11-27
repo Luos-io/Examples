@@ -12,8 +12,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -35,7 +36,7 @@ static void Load_MsgHandler(container_t *container, msg_t *msg);
 void Load_Init(void)
 {
     hx711_init(128);
-    Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

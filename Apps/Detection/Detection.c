@@ -10,8 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -44,8 +45,7 @@ static void Detection_LedState(msg_t *msg, uint8_t state);
  ******************************************************************************/
 void Detection_Init(void)
 {
-
-    app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", "0.0.1");
+    app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", revision);
     HAL_Delay(1000);
     // Detect all containers of your network and create a routing_table
     RoutingTB_DetectContainers(app);
