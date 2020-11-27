@@ -10,8 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -28,7 +29,7 @@ static void PowerSwitch_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void PowerSwitch_Init(void)
 {
-    Luos_CreateContainer(PowerSwitch_MsgHandler, STATE_MOD, "switch_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(PowerSwitch_MsgHandler, STATE_MOD, "switch_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

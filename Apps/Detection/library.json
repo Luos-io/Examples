@@ -2,7 +2,7 @@
     "name": "AppDetection",
     "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST,cJSON",
     "description": "A Luos movement detection rising an alarm.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "authors": {
         "name": "Luos",
         "url": "https://www.luos.io/us/"
@@ -10,7 +10,7 @@
     "licence": "MIT",
     "build": {
         "flags": [
-            "-DVERSION=0.0.1"
+            "-DREV={0,1,0}"
         ]
     },
     "dependencies": [

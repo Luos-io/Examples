@@ -16,8 +16,9 @@
 #define OVERHEAD (9 * 24) // Number of data to add to create a reset between frames
 #define DECOMP_BUFF_SIZE (MAX_LED_NUMBER * 24 + OVERHEAD)
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -40,7 +41,7 @@ static void image_size(int size);
  ******************************************************************************/
 void LedStrip_Init(void)
 {
-    Luos_CreateContainer(LedStrip_MsgHandler, COLOR_MOD, "led_strip_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(LedStrip_MsgHandler, COLOR_MOD, "led_strip_mod", revision);
     TIM2->CCR1 = 0;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);

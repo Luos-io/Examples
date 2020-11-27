@@ -14,8 +14,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -42,7 +43,7 @@ void Led_Init(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    Luos_CreateContainer(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

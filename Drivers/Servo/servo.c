@@ -13,8 +13,9 @@
  ******************************************************************************/
 #define SERVONUMBER 4
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 typedef struct
 {
@@ -41,10 +42,10 @@ static uint8_t find_id(container_t *my_container);
  ******************************************************************************/
 void Servo_Init(void)
 {
-    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", STRINGIFY(VERSION));
-    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", STRINGIFY(VERSION));
-    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", STRINGIFY(VERSION));
-    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", STRINGIFY(VERSION));
+    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", revision);
+    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", revision);
+    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", revision);
+    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", revision);
     servo_parameters_t param;
     param.max_angle = 180.0;
     param.max_pulse_time = 1.5 / 1000.0;

@@ -28,8 +28,9 @@
 #define FB_Pin GPIO_PIN_0
 #define FB_GPIO_Port GPIOB
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 #define MINI 0
 #define MAXI 1
@@ -192,7 +193,7 @@ void ControllerMotor_Init(void)
     measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
     // ************** Container creation *****************
-    Luos_CreateContainer(ControllerMotor_MsgHandler, CONTROLLER_MOTOR_MOD, "controller_motor_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(ControllerMotor_MsgHandler, CONTROLLER_MOTOR_MOD, "controller_motor_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

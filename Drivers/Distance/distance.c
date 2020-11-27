@@ -13,8 +13,10 @@
  * Definitions
  ******************************************************************************/
 #define ADDRESS_DEFAULT 0b0101001
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -57,7 +59,7 @@ void Distance_Init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
-    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

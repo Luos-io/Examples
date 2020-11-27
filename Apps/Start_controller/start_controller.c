@@ -12,8 +12,9 @@
  ******************************************************************************/
 #define LIGHT_INTENSITY 255
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 #define UPDATE_PERIOD_MS 10
 
@@ -48,7 +49,7 @@ void StartController_Init(void)
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
-    app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", STRINGIFY(VERSION));
+    app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

@@ -16,8 +16,9 @@
 #define LIGHT_Pin GPIO_PIN_1
 #define LIGHT_GPIO_Port GPIOA
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -103,7 +104,7 @@ void LightSensor_Init(void)
     // ******************* Analog measurement *******************
 
     // ******************* container creation *******************
-    Luos_CreateContainer(LightSensor_MsgHandler, LIGHT_MOD, "light_sensor_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(LightSensor_MsgHandler, LIGHT_MOD, "light_sensor_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

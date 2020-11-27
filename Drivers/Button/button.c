@@ -10,8 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -27,7 +28,7 @@ static void Button_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Button_Init(void)
 {
-    Luos_CreateContainer(Button_MsgHandler, STATE_MOD, "button_mod", STRINGIFY(VERSION));
+    Luos_CreateContainer(Button_MsgHandler, STATE_MOD, "button_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

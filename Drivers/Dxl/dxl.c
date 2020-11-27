@@ -13,8 +13,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 /*******************************************************************************
  * Variables
@@ -305,7 +306,7 @@ static void discover_dxl(void)
         {
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
-            my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, DYNAMIXEL_MOD, my_string, STRINGIFY(VERSION));
+            my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, DYNAMIXEL_MOD, my_string, revision);
             dxl_table[y] = i;
 
             servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl_model[y], DXL_TIMEOUT);
@@ -322,7 +323,7 @@ static void discover_dxl(void)
     if (y == 0)
     {
         // there is no motor detected, create a Void container to only manage l0 things
-        my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, VOID_MOD, "void_dxl", STRINGIFY(VERSION));
+        my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, VOID_MOD, "void_dxl", revision);
     }
 }
 

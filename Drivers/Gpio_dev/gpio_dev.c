@@ -11,8 +11,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
+#ifdef REV
+revision_t revision = {.unmap = REV};
+#endif
 
 // Pin configuration
 #define P1_Pin GPIO_PIN_0
@@ -146,15 +147,15 @@ void GpioDev_Init(void)
     // Start infinite ADC measurement
     HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************* containers creation *******************
-    pin[P1] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", STRINGIFY(VERSION));
-    pin[P7] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", STRINGIFY(VERSION));
-    pin[P8] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8", STRINGIFY(VERSION));
-    pin[P9] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9", STRINGIFY(VERSION));
-    pin[P5] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P5", STRINGIFY(VERSION));
-    pin[P6] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P6", STRINGIFY(VERSION));
-    pin[P2] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P2", STRINGIFY(VERSION));
-    pin[P3] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P3", STRINGIFY(VERSION));
-    pin[P4] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P4", STRINGIFY(VERSION));
+    pin[P1] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", revision);
+    pin[P7] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", revision);
+    pin[P8] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8", revision);
+    pin[P9] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9", revision);
+    pin[P5] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P5", revision);
+    pin[P6] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P6", revision);
+    pin[P2] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P2", revision);
+    pin[P3] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P3", revision);
+    pin[P4] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
