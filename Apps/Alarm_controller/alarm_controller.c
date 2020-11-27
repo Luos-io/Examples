@@ -10,9 +10,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 #define UPDATE_PERIOD_MS 10
 #define BLINK_NUMBER 3
@@ -66,6 +63,7 @@ static void AlarmController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void AlarmController_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App

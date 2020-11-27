@@ -12,9 +12,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 /*******************************************************************************
  * Variables
@@ -35,6 +32,8 @@ static void Load_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Load_Init(void)
 {
+    revision_t revision = {.unmap = REV};
+    
     hx711_init(128);
     Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", revision);
 }

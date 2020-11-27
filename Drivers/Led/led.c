@@ -14,9 +14,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
+
 
 /*******************************************************************************
  * Variables
@@ -39,6 +37,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Led_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     time = TimeOD_TimeFrom_ms(0.0);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);

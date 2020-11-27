@@ -11,9 +11,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 #define MOTORNUMBER 2
 /*******************************************************************************
@@ -34,6 +31,7 @@ static void set_power(container_t *container, ratio_t power);
  ******************************************************************************/
 void MotorDC_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);

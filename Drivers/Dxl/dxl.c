@@ -13,9 +13,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 /*******************************************************************************
  * Variables
@@ -286,6 +283,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
 
 static void discover_dxl(void)
 {
+    revision_t revision = {.unmap = REV};
     int y = 0;
     char my_string[15];
     // Clear container table

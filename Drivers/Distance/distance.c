@@ -14,9 +14,6 @@
  ******************************************************************************/
 #define ADDRESS_DEFAULT 0b0101001
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -36,6 +33,7 @@ static void Distance_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Distance_Init(void)
 {
+    revision_t revision = {.unmap = REV};
     //reset sensor
     HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
     HAL_Delay(10);

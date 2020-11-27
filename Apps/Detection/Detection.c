@@ -10,9 +10,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -45,6 +43,8 @@ static void Detection_LedState(msg_t *msg, uint8_t state);
  ******************************************************************************/
 void Detection_Init(void)
 {
+    revision_t revision = {.unmap = REV};
+    
     app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", revision);
     HAL_Delay(1000);
     // Detect all containers of your network and create a routing_table

@@ -11,9 +11,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 // Pin configuration
 #define P1_Pin GPIO_PIN_0
@@ -56,6 +53,7 @@ static void rx_analog_read_cb(container_t *container, msg_t *msg);
  ******************************************************************************/
 void GpioDev_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig = {0};

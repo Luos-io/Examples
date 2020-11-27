@@ -11,9 +11,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 /*******************************************************************************
  * Variables
@@ -37,6 +34,7 @@ static void Imu_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Imu_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     mpu_setup();
     hal.report.quat = 1;
     Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", revision);

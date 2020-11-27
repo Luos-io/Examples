@@ -28,10 +28,6 @@
 #define FB_Pin GPIO_PIN_0
 #define FB_GPIO_Port GPIOB
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
-
 #define MINI 0
 #define MAXI 1
 
@@ -81,6 +77,7 @@ static void enable_motor(char state);
  ******************************************************************************/
 void ControllerMotor_Init(void)
 {
+    revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig = {0};

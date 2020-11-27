@@ -12,9 +12,6 @@
  ******************************************************************************/
 #define LIGHT_INTENSITY 255
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 #define UPDATE_PERIOD_MS 10
 
@@ -46,6 +43,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void StartController_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App

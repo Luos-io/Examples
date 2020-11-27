@@ -12,9 +12,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 
 /*******************************************************************************
  * Variables
@@ -37,6 +34,8 @@ static void compute_speed(void);
  ******************************************************************************/
 void Stepper_Init(void)
 {
+    revision_t revision = {.unmap = REV};
+    
     Luos_CreateContainer(Stepper_MsgHandler, STEPPER_MOD, "stepper_mod", revision);
     motor.resolution = 200.0;
     motor.wheel_diameter = 0.0;

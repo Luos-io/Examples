@@ -15,10 +15,6 @@
 #define POS_Pin GPIO_PIN_0
 #define POS_GPIO_Port GPIOA
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
-
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -36,6 +32,7 @@ static void Potentiometer_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Potentiometer_Init(void)
 {
+	revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};

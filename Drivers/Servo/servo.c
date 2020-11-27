@@ -13,10 +13,6 @@
  ******************************************************************************/
 #define SERVONUMBER 4
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
-
 typedef struct
 {
     angular_position_t angle;
@@ -42,6 +38,8 @@ static uint8_t find_id(container_t *my_container);
  ******************************************************************************/
 void Servo_Init(void)
 {
+	revision_t revision = {.unmap = REV};
+	
     container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", revision);
     container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", revision);
     container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", revision);

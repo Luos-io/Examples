@@ -16,9 +16,6 @@
 #define LIGHT_Pin GPIO_PIN_1
 #define LIGHT_GPIO_Port GPIOA
 
-#ifdef REV
-revision_t revision = {.unmap = REV};
-#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -36,6 +33,7 @@ static void LightSensor_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void LightSensor_Init(void)
 {
+    revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     ADC_ChannelConfTypeDef sConfig = {0};
