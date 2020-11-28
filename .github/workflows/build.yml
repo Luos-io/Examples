@@ -3,33 +3,85 @@ name: Build
 on: [push]
 
 jobs:
-  build:
 
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+        - os: windows-latest
+          pio_lib_path: D:\a\Examples
+        - os: macos-latest
+          pio_lib_path: ~/work/Examples
+        - os: ubuntu-latest
+          pio_lib_path: ~/work/Examples
 
     steps:
-    - uses: actions/checkout@v2
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
         python-version: '3.x'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install platformio
+
+    - name: Check out Luos repository
+      uses: actions/checkout@v2
+#    - name: Setup tmate session
+#      uses: mxschmitt/action-tmate@v3
+
+    - name: Create env repo
+      shell: bash
+      run: |
+        # Save branch name
+        branch_name=$(git branch --show-current)
+        origine_branch_name="origin/${branch_name}"
+        # Step back and get dependancies
+        cd ..
+
+        # LuosHAL
+        git clone https://github.com/Luos-io/LuosHAL.git
+        cd LuosHAL
+        if [ `git branch -r --list $origine_branch_name` ]
+        then
+          echo A dependant branch have been found on LuosHAL
+          git checkout $branch_name
+          cd ..
+        else
+          echo Use last release of LuosHAL
+          cd ..
+          rm -rf LuosHAL
+        fi
+
+        # Luos
+        git clone https://github.com/Luos-io/Luos.git
+        cd Luos
+        if [ `git branch -r --list $origine_branch_name` ]
+        then
+          echo A dependant branch have been found on Luos
+          git checkout $branch_name
+          cd ..
+        else
+          echo Use last release of Luos
+          cd ..
+          rm -rf Luos
+        fi
+        
+
     - name: Run PlatformIO
+      env:
+        PLATFORMIO_LIB_EXTRA_DIRS: ${{ matrix.pio_lib_path }}
       run: |
         platformio run -d Projects/Button
-        platformio run -d Projects/Controlled_motor
+        platformio run -d Projects/Controller_motor
         platformio run -d Projects/Dc_motor
         platformio run -d Projects/Distance
         platformio run -d Projects/Dxl
         platformio run -d Projects/Gate
         platformio run -d Projects/Gpio  
-        platformio run -d Projects/Handy 
         platformio run -d Projects/Imu
         platformio run -d Projects/Led
         platformio run -d Projects/Led_strip

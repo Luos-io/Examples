@@ -31,6 +31,7 @@
 /* USER CODE END 1 */
 
 /** Configure pins
+     PA2   ------> ADC_IN2
 */
 void MX_GPIO_Init(void)
 {
@@ -42,13 +43,13 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DEBUG2_Pin|LED_Pin|RS485_LVL_DOWN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DEBUG2_Pin|LED_Pin|COM_LVL_DOWN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(RS485_LVL_UP_GPIO_Port, RS485_LVL_UP_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(COM_LVL_UP_GPIO_Port, COM_LVL_UP_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, DEBUG1_Pin|DXL_DIR_Pin|ROBUS_RE_Pin|ROBUS_DE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, DEBUG1_Pin|DXL_DIR_Pin|RX_EN_Pin|TX_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PAPin PAPin */
   GPIO_InitStruct.Pin = DEBUG2_Pin|LED_Pin;
@@ -58,37 +59,43 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = RS485_LVL_DOWN_Pin;
+  GPIO_InitStruct.Pin = POWER_SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(POWER_SENSOR_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = COM_LVL_DOWN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RS485_LVL_DOWN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(COM_LVL_DOWN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = RS485_LVL_UP_Pin;
+  GPIO_InitStruct.Pin = COM_LVL_UP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RS485_LVL_UP_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(COM_LVL_UP_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = DEBUG1_Pin|DXL_DIR_Pin|ROBUS_RE_Pin|ROBUS_DE_Pin;
+  GPIO_InitStruct.Pin = DEBUG1_Pin|DXL_DIR_Pin|RX_EN_Pin|TX_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = ROBUS_PTPB_Pin;
+  GPIO_InitStruct.Pin = PTPB_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(ROBUS_PTPB_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(PTPB_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = ROBUS_PTPA_Pin;
+  GPIO_InitStruct.Pin = PTPA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(ROBUS_PTPA_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(PTPA_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = OVERVOLTAGE_Pin;

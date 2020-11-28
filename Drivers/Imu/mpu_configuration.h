@@ -37,7 +37,8 @@
 // Imu report struct
 typedef struct __attribute__((__packed__))
 {
-    union {
+    union
+    {
         struct __attribute__((__packed__))
         {
             unsigned short accell : 1;
@@ -90,6 +91,6 @@ struct platform_data_s
 #define COMPASS_ENABLED 1
 
 void mpu_setup(void);
-void read_from_mpl(module_t *module);
+void read_from_mpl(container_t *container);
 
 #endif /* __MPU_SETUP_H__ */

@@ -1,33 +1,97 @@
+/******************************************************************************
+ * @file servo
+ * @brief driver example a simple servo motor
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #include "main.h"
 #include "servo.h"
 #include "tim.h"
 
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 #define SERVONUMBER 4
-
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
 
 typedef struct
 {
     angular_position_t angle;
     servo_parameters_t param;
 } servo_t;
-
-static module_t *module_serv[SERVONUMBER];
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+static container_t *container_serv[SERVONUMBER];
 volatile servo_t servo[SERVONUMBER];
 
-uint8_t find_id(module_t *my_module)
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+static void Servo_MsgHandler(container_t *container, msg_t *msg);
+static void set_position(uint8_t motor_id);
+static uint8_t find_id(container_t *my_container);
+
+/******************************************************************************
+ * @brief init must be call in project init
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Servo_Init(void)
 {
-    uint8_t i = 0;
-    for (i = 0; i <= SERVONUMBER; i++)
+	revision_t revision = {.unmap = REV};
+	
+    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", revision);
+    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", revision);
+    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", revision);
+    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", revision);
+    servo_parameters_t param;
+    param.max_angle = 180.0;
+    param.max_pulse_time = 1.5 / 1000.0;
+    param.min_pulse_time = 0.5 / 1000.0;
+    servo[0].param = param;
+    servo[0].angle = 0.0;
+    servo[1].param = param;
+    servo[1].angle = 0.0;
+    servo[2].param = param;
+    servo[2].angle = 0.0;
+    servo[3].param = param;
+    servo[3].angle = 0.0;
+}
+/******************************************************************************
+ * @brief loop must be call in project loop
+ * @param None
+ * @return None
+ ******************************************************************************/
+void Servo_Loop(void)
+{
+}
+/******************************************************************************
+ * @brief Msg Handler call back when a msg receive for this container
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+static void Servo_MsgHandler(container_t *container, msg_t *msg)
+{
+    if (msg->header.cmd == ANGULAR_POSITION)
     {
-        if ((int)my_module == (int)module_serv[i])
-            return i;
+        // set the motor position
+        uint8_t motor_id = find_id(container);
+        AngularOD_PositionFromMsg((angular_position_t *)&servo[motor_id].angle, msg);
+        set_position(motor_id);
+        return;
     }
-    return i;
+    if (msg->header.cmd == PARAMETERS)
+    {
+        // set the servo parameters
+        uint8_t motor_id = find_id(container);
+        memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
+        set_position(motor_id);
+        return;
+    }
 }
 
-void set_position(uint8_t motor_id)
+static void set_position(uint8_t motor_id)
 {
     static char chan1 = 0;
     static char chan2 = 0;
@@ -84,50 +148,13 @@ void set_position(uint8_t motor_id)
     }
 }
 
-void rx_servo_cb(module_t *module, msg_t *msg)
+static uint8_t find_id(container_t *my_container)
 {
-    if (msg->header.cmd == ANGULAR_POSITION)
+    uint8_t i = 0;
+    for (i = 0; i <= SERVONUMBER; i++)
     {
-        // set the motor position
-        uint8_t motor_id = find_id(module);
-        angular_position_from_msg((angular_position_t *)&servo[motor_id].angle, msg);
-        set_position(motor_id);
-        return;
+        if ((int)my_container == (int)container_serv[i])
+            return i;
     }
-    if (msg->header.cmd == PARAMETERS)
-    {
-        // set the servo parameters
-        uint8_t motor_id = find_id(module);
-        memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
-        set_position(motor_id);
-        return;
-    }
-}
-
-void servo_init(void)
-{
-    module_serv[0] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo1_mod", STRINGIFY(VERSION));
-    module_serv[1] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo2_mod", STRINGIFY(VERSION));
-    module_serv[2] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo3_mod", STRINGIFY(VERSION));
-    module_serv[3] = luos_module_create(rx_servo_cb, SERVO_MOD, "servo4_mod", STRINGIFY(VERSION));
-    luos_module_enable_rt(module_serv[0]);
-    luos_module_enable_rt(module_serv[1]);
-    luos_module_enable_rt(module_serv[2]);
-    luos_module_enable_rt(module_serv[3]);
-    servo_parameters_t param;
-    param.max_angle = 180.0;
-    param.max_pulse_time = 1.5 / 1000.0;
-    param.min_pulse_time = 0.5 / 1000.0;
-    servo[0].param = param;
-    servo[0].angle = 0.0;
-    servo[1].param = param;
-    servo[1].angle = 0.0;
-    servo[2].param = param;
-    servo[2].angle = 0.0;
-    servo[3].param = param;
-    servo[3].angle = 0.0;
-}
-
-void servo_loop(void)
-{
+    return i;
 }

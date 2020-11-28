@@ -1,8 +1,8 @@
 {
     "name": "Gate",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,module,ST,cJSON",
-    "description": "Luos turn your embedded system as modules like microservice do it in software.",
-    "version": "0.6.0",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST,cJSON",
+    "description": "Luos turn your embedded system as containers like microservice do it in software.",
+    "version": "0.7.0",
     "authors": {
         "name": "Luos",
         "url": "https://www.luos.io/us/"
@@ -13,7 +13,7 @@
             "-I cJSON",
             "-Wl,-u,_printf_float",
             "-D USE_SERIAL",
-            "-DVERSION=0.6.0"
+            "-DREV={0,7,0}"
         ],
         "src_filter": [
             "+<cJSON>"

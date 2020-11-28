@@ -37,9 +37,9 @@ extern TIM_HandleTypeDef htim3;
 /* USER CODE END Private defines */
 
 void MX_TIM3_Init(void);
-                        
+
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                    
+
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

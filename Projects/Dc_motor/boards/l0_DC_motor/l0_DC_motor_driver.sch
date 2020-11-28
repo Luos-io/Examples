@@ -1,6 +1,5 @@
 EESchema Schematic File Version 4
-LIBS:l0_DC_motor_driver-cache
-EELAYER 26 0
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -83,7 +82,7 @@ U 1 1 5A9DE2E6
 P 6900 2350
 F 0 "R2" H 6959 2396 50  0000 L CNN
 F 1 "300m" H 6959 2305 50  0000 L CNN
-F 2 "Resistors_SMD:R_0603" H 6900 2350 50  0001 C CNN
+F 2 "Common_Footprint:R_0603" H 6900 2350 50  0001 C CNN
 F 3 "~" H 6900 2350 50  0001 C CNN
 F 4 "Farnell" H 6900 2350 50  0001 C CNN "Fournisseur"
 F 5 "2328095" H 6900 2350 50  0001 C CNN "CodeCommande"
@@ -176,7 +175,7 @@ Text Label 5700 2200 2    50   ~ 0
 Text Label 2250 1850 2    50   ~ 0
 ~nSLEEP
 $Comp
-L l0_DC_motor_driver-rescue:Screw_Terminal_01x02-Connector_Specialized J2
+L Common_Lib:Screw_Terminal_01x02-Connector_Specialized J2
 U 1 1 5A9E07C2
 P 6950 1450
 F 0 "J2" H 7030 1442 50  0000 L CNN
@@ -189,7 +188,7 @@ F 5 "1098611" H 6950 1450 50  0001 C CNN "CodeCommande"
 	1    0    0    -1  
 $EndComp
 $Comp
-L l0_DC_motor_driver-rescue:Screw_Terminal_01x02-Connector_Specialized J3
+L Common_Lib:Screw_Terminal_01x02-Connector_Specialized J3
 U 1 1 5A9E0ACD
 P 6950 1700
 F 0 "J3" H 7030 1692 50  0000 L CNN
@@ -212,172 +211,6 @@ F 3 "" H 2250 1450 50  0001 C CNN
 	1    2250 1450
 	0    1    1    0   
 $EndComp
-$Comp
-L Common_Lib:LMV301 U2
-U 1 1 5A9E4134
-P 8250 5400
-F 0 "U2" H 8250 5600 50  0000 L CNN
-F 1 "LMV301" H 8250 5200 50  0000 L CNN
-F 2 "Common_Footprint:SC-70-5" H 8300 4750 50  0001 C CNN
-F 3 "" H 8350 5550 50  0001 C CNN
-F 4 "Farnell" H 8450 5650 50  0001 C CNN "Fournisseur"
-F 5 "2774604" H 8450 5750 50  0001 C CNN "CodeCommande"
-	1    8250 5400
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R_Small R7
-U 1 1 5A9E41BE
-P 7550 5850
-F 0 "R7" H 7609 5896 50  0000 L CNN
-F 1 "10K" H 7609 5805 50  0000 L CNN
-F 2 "Common_Footprint:R_0402_NoSilk" H 7550 5850 50  0001 C CNN
-F 3 "~" H 7550 5850 50  0001 C CNN
-F 4 "Farnell" H 7550 5850 50  0001 C CNN "Fournisseur"
-F 5 "2447096" H 7550 5850 50  0001 C CNN "CodeCommande"
-	1    7550 5850
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R_Small R6
-U 1 1 5A9E42EA
-P 7550 5650
-F 0 "R6" H 7609 5696 50  0000 L CNN
-F 1 "68K" H 7609 5605 50  0000 L CNN
-F 2 "Common_Footprint:R_0402_NoSilk" H 7550 5650 50  0001 C CNN
-F 3 "~" H 7550 5650 50  0001 C CNN
-F 4 "Farnell" H 7550 5650 50  0001 C CNN "Fournisseur"
-F 5 "2446524" H 7550 5650 50  0001 C CNN "CodeCommande"
-	1    7550 5650
-	1    0    0    -1  
-$EndComp
-Text Label 7550 5550 2    50   ~ 0
-Robus_PS
-$Comp
-L Device:R_Small R5
-U 1 1 5A9E472E
-P 7550 5150
-F 0 "R5" H 7609 5196 50  0000 L CNN
-F 1 "10K" H 7609 5105 50  0000 L CNN
-F 2 "Common_Footprint:R_0402_NoSilk" H 7550 5150 50  0001 C CNN
-F 3 "~" H 7550 5150 50  0001 C CNN
-F 4 "Farnell" H 7550 5150 50  0001 C CNN "Fournisseur"
-F 5 "2447096" H 7550 5150 50  0001 C CNN "CodeCommande"
-	1    7550 5150
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR02
-U 1 1 5A9E47A2
-P 7550 5250
-F 0 "#PWR02" H 7550 5000 50  0001 C CNN
-F 1 "GND" H 7555 5077 50  0000 C CNN
-F 2 "" H 7550 5250 50  0001 C CNN
-F 3 "" H 7550 5250 50  0001 C CNN
-	1    7550 5250
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	8000 5300 7800 5300
-Wire Wire Line
-	7800 5300 7800 5050
-Wire Wire Line
-	7800 5050 7550 5050
-Wire Wire Line
-	8000 5500 7800 5500
-Wire Wire Line
-	7800 5500 7800 5750
-Wire Wire Line
-	7800 5750 7550 5750
-Connection ~ 7550 5750
-$Comp
-L Device:R_Small R4
-U 1 1 5A9E4C17
-P 7550 4950
-F 0 "R4" H 7609 4996 50  0000 L CNN
-F 1 "11.8K" H 7609 4905 50  0000 L CNN
-F 2 "Common_Footprint:R_0402_NoSilk" H 7550 4950 50  0001 C CNN
-F 3 "~" H 7550 4950 50  0001 C CNN
-F 4 "Farnell" H 7550 4950 50  0001 C CNN "Fournisseur"
-F 5 "2694536" H 7550 4950 50  0001 C CNN "CodeCommande"
-	1    7550 4950
-	1    0    0    -1  
-$EndComp
-Connection ~ 7550 5050
-$Comp
-L power:+3.3V #PWR01
-U 1 1 5A9E4EAF
-P 7550 4850
-F 0 "#PWR01" H 7550 4700 50  0001 C CNN
-F 1 "+3.3V" H 7450 5000 50  0000 L CNN
-F 2 "" H 7550 4850 50  0001 C CNN
-F 3 "" H 7550 4850 50  0001 C CNN
-	1    7550 4850
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR03
-U 1 1 5A9E5134
-P 7550 5950
-F 0 "#PWR03" H 7550 5700 50  0001 C CNN
-F 1 "GND" H 7555 5777 50  0000 C CNN
-F 2 "" H 7550 5950 50  0001 C CNN
-F 3 "" H 7550 5950 50  0001 C CNN
-	1    7550 5950
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR05
-U 1 1 5A9E515D
-P 8200 5700
-F 0 "#PWR05" H 8200 5450 50  0001 C CNN
-F 1 "GND" H 8205 5527 50  0000 C CNN
-F 2 "" H 8200 5700 50  0001 C CNN
-F 3 "" H 8200 5700 50  0001 C CNN
-	1    8200 5700
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:+3.3V #PWR04
-U 1 1 5A9E5186
-P 8200 5100
-F 0 "#PWR04" H 8200 4950 50  0001 C CNN
-F 1 "+3.3V" H 8100 5250 50  0000 L CNN
-F 2 "" H 8200 5100 50  0001 C CNN
-F 3 "" H 8200 5100 50  0001 C CNN
-	1    8200 5100
-	1    0    0    -1  
-$EndComp
-Text Label 7800 5150 0    50   ~ 0
-Vmax
-Text Notes 7800 4800 0    50   ~ 0
-Vmax = 11,8 V -> R4 = 11,8K\nOvervoltage = 11,80734 V
-$Comp
-L Device:Q_NMOS_GSD Q1
-U 1 1 5A9E5DD0
-P 8800 5400
-F 0 "Q1" H 9005 5354 50  0000 L CNN
-F 1 "PMV25ENEA" H 9005 5445 50  0000 L CNN
-F 2 "TO_SOT_Packages_SMD:SOT-23" H 9000 5500 50  0001 C CNN
-F 3 "~" H 8800 5400 50  0001 C CNN
-F 4 "Farnell" H 8800 5400 50  0001 C CNN "Fournisseur"
-F 5 "2628088" H 8800 5400 50  0001 C CNN "CodeCommande"
-	1    8800 5400
-	1    0    0    1   
-$EndComp
-$Comp
-L power:GND #PWR0101
-U 1 1 5A9E619A
-P 8900 5600
-F 0 "#PWR0101" H 8900 5350 50  0001 C CNN
-F 1 "GND" H 8905 5427 50  0000 C CNN
-F 2 "" H 8900 5600 50  0001 C CNN
-F 3 "" H 8900 5600 50  0001 C CNN
-	1    8900 5600
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	6350 2600 6600 2600
 Wire Wire Line
 	6900 2600 6900 2450
 Wire Wire Line
@@ -393,48 +226,12 @@ Wire Wire Line
 	7700 2600 7700 2450
 Connection ~ 7200 2600
 $Comp
-L l0_DC_motor_driver-rescue:GNDPWR-power #PWR0102
-U 1 1 5A9E871B
-P 6600 2600
-F 0 "#PWR0102" H 6600 2400 50  0001 C CNN
-F 1 "GNDPWR" H 6600 2450 50  0000 C CNN
-F 2 "" H 6600 2550 50  0001 C CNN
-F 3 "" H 6600 2550 50  0001 C CNN
-	1    6600 2600
-	1    0    0    -1  
-$EndComp
-Connection ~ 6600 2600
-Wire Wire Line
-	6600 2600 6900 2600
-$Comp
-L l0_DC_motor_driver-rescue:GNDPWR-power #PWR0103
-U 1 1 5A9E87D0
-P 6550 1000
-F 0 "#PWR0103" H 6550 800 50  0001 C CNN
-F 1 "GNDPWR" H 6550 850 50  0000 C CNN
-F 2 "" H 6550 950 50  0001 C CNN
-F 3 "" H 6550 950 50  0001 C CNN
-	1    6550 1000
-	1    0    0    -1  
-$EndComp
-$Comp
-L l0_DC_motor_driver-rescue:GNDPWR-power #PWR0104
-U 1 1 5A9E89FD
-P 8900 5200
-F 0 "#PWR0104" H 8900 5000 50  0001 C CNN
-F 1 "GNDPWR" H 8900 5050 50  0000 C CNN
-F 2 "" H 8900 5150 50  0001 C CNN
-F 3 "" H 8900 5150 50  0001 C CNN
-	1    8900 5200
-	-1   0    0    1   
-$EndComp
-$Comp
 L Device:R_Small R3
 U 1 1 5A9FF4C1
 P 7200 2350
 F 0 "R3" H 7259 2396 50  0000 L CNN
 F 1 "300m" H 7259 2305 50  0000 L CNN
-F 2 "Resistors_SMD:R_0603" H 7200 2350 50  0001 C CNN
+F 2 "Common_Footprint:R_0603" H 7200 2350 50  0001 C CNN
 F 3 "~" H 7200 2350 50  0001 C CNN
 F 4 "Farnell" H 7200 2350 50  0001 C CNN "Fournisseur"
 F 5 "2328095" H 7200 2350 50  0001 C CNN "CodeCommande"
@@ -443,6 +240,54 @@ F 5 "2328095" H 7200 2350 50  0001 C CNN "CodeCommande"
 $EndComp
 Text Notes 10550 7650 0    50   ~ 0
 0.0.1
-Text Notes 7800 4600 0    50   ~ 0
-VCC * R4 / (R3 + R4) = +3.3V * R2 / (R1 + R2)\nR1 = -(-3.3V * R2 * (R3 + R4) + VCC * R4 * R2) / VCC * R4\nR1 = -(-2574 + 100 * VCC) / (10 * VCC)
+Wire Wire Line
+	6350 2600 6900 2600
+$Comp
+L power:GND #PWR0101
+U 1 1 5F98D186
+P 6900 2600
+F 0 "#PWR0101" H 6900 2350 50  0001 C CNN
+F 1 "GND" V 6900 2400 50  0000 C CNN
+F 2 "" H 6900 2600 50  0001 C CNN
+F 3 "" H 6900 2600 50  0001 C CNN
+	1    6900 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 5F98E3D8
+P 6550 1000
+F 0 "#PWR0102" H 6550 750 50  0001 C CNN
+F 1 "GND" V 6550 800 50  0000 C CNN
+F 2 "" H 6550 1000 50  0001 C CNN
+F 3 "" H 6550 1000 50  0001 C CNN
+	1    6550 1000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Common_Lib:D_Zener D1
+U 1 1 5F9922A6
+P 1200 1500
+F 0 "D1" V 1154 1579 50  0000 L CNN
+F 1 "D_Zener" V 1245 1579 50  0000 L CNN
+F 2 "Common_Footprint:D_SOD-323F" H 1100 1500 50  0001 C CNN
+F 3 "~" H 1200 1600 50  0001 C CNN
+F 4 "Farnell" H 1300 1700 50  0001 C CNN "Fournisseur"
+F 5 "2575197" H 1400 1800 50  0001 C CNN "CodeCommande"
+	1    1200 1500
+	0    1    1    0   
+$EndComp
+Text Label 1200 1350 0    50   ~ 0
+Robus_PS
+$Comp
+L power:GND #PWR0103
+U 1 1 5F9942C9
+P 1200 1650
+F 0 "#PWR0103" H 1200 1400 50  0001 C CNN
+F 1 "GND" V 1200 1450 50  0000 C CNN
+F 2 "" H 1200 1650 50  0001 C CNN
+F 3 "" H 1200 1650 50  0001 C CNN
+	1    1200 1650
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
