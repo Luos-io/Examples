@@ -15,7 +15,8 @@
     },
     "dependencies": [
         {
-            "name": "Luos"
+            "name": "luos/Luos",
+            "version": "^1.0.0"
         }
     ]
 }
