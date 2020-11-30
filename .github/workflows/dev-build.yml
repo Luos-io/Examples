@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches:
+    branches-ignore:
       - master
 
 jobs:
@@ -96,5 +96,3 @@ jobs:
         platformio run -d Projects/Stepper
         platformio run -d Projects/Bike_alarm/Alarm_controller
         platformio run -d Projects/Bike_alarm/Start_controller
-        
-    
