@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "json_mnger.h"
 #include "cmd.h"
 #include "convert.h"
+#include "gate.h"
 
 static unsigned int delayms = 0;
 
@@ -30,6 +32,7 @@ void collect_data(container_t *container)
 void format_data(container_t *container, char *json)
 {
     msg_t *json_msg = 0;
+    uint8_t json_ok = false;
     if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the json string
@@ -39,6 +42,17 @@ void format_data(container_t *container, char *json)
         // get the oldest message
         while (Luos_ReadMsg(container, &json_msg) == SUCCEED)
         {
+            // check if this is an assert
+            if (json_msg->header.cmd == ASSERT)
+            {
+                char error_json[256] = "\0";
+                luos_assert_t assertion;
+                memcpy(assertion.unmap, json_msg->data, json_msg->header.size);
+                assertion.unmap[json_msg->header.size] = '\0';
+                sprintf(error_json, "{\"assert\":{\"node_id\":%d,\"file\":\"%s\",\"line\":%d}}\n", json_msg->header.source, assertion.file, (unsigned int)assertion.line);
+                json_send(error_json);
+                continue;
+            }
             // get the source of this message
             i = json_msg->header.source;
             // Create container description
@@ -46,6 +60,7 @@ void format_data(container_t *container, char *json)
             alias = RoutingTB_AliasFromId(i);
             if (alias != 0)
             {
+                json_ok = true;
                 sprintf(json, "%s\"%s\":{", json, alias);
                 // now add json data from container
                 msg_to_json(json_msg, &json[strlen(json)]);
@@ -64,10 +79,18 @@ void format_data(container_t *container, char *json)
                 sprintf(json, "%s},", json);
             }
         }
-        // remove the last "," char
-        json[strlen(json) - 1] = '\0';
-        // End the Json message
-        sprintf(json, "%s}}\n", json);
+        if (json_ok)
+        {
+            // remove the last "," char
+            json[strlen(json) - 1] = '\0';
+            // End the Json message
+            sprintf(json, "%s}}\n", json);
+        }
+        else
+        {
+            //create a void string
+            *json = '\0';
+        }
     }
     else
     {

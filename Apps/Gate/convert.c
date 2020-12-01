@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "gate.h"
 
 // Create msg from a container json data
 void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
@@ -475,7 +476,7 @@ void msg_to_json(msg_t *msg, char *json)
         {
             msg->data[msg->header.size] = '\0';
             //create the Json content
-            sprintf(json,"\"revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
+            sprintf(json, "\"revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
         }
         break;
     case LUOS_REVISION:
@@ -484,7 +485,7 @@ void msg_to_json(msg_t *msg, char *json)
         {
             msg->data[msg->header.size] = '\0';
             //create the Json content
-            sprintf(json,"\"luos_revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
+            sprintf(json, "\"luos_revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
         }
         break;
     case LUOS_STATISTICS:
@@ -619,7 +620,7 @@ void routing_table_to_json(char *json)
         if (routing_table[i].mode == NODE)
         {
             sprintf(json, "%s{\"node_id\":%d", json, routing_table[i].node_id);
-            if (routing_table[i].node_id)
+            if (routing_table[i].certified)
             {
                 sprintf(json, "%s,\"certified\":true", json);
             }

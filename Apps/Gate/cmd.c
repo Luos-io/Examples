@@ -129,13 +129,9 @@ void send_cmds(container_t *container)
                         uint32_t end_systick = HAL_GetTick();
                         float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
                         float fail_rate = (float)failed_msg_nb * 100.0 / (float)repetition;
-#ifdef USE_SERIAL
                         char json[60] = {0};
                         sprintf(json, "{\"benchmark\":{\"data_rate\":%.2f,\"fail_rate\":%.2f}}\n", data_rate, fail_rate);
-                        serial_write(json, strlen(json));
-#else
-                        printf("{\"benchmark\":{\"data_rate\":%.2f,\"fail_rate\":%.2f}}\n", data_rate, fail_rate);
-#endif
+                        json_send(json);
                     }
                 }
             }

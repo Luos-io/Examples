@@ -7,11 +7,14 @@
 #include "main.h"
 #include "gate.h"
 #include "json_mnger.h"
+#include <stdio.h>
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#ifdef USE_SERIAL
+static int serial_write(char *data, int len);
+#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -46,6 +49,15 @@ void Gate_Init(void)
     LL_USART_EnableDMAReq_RX(USART3);
     container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
+
+void json_send(char *json)
+{
+#ifdef USE_SERIAL
+    serial_write(json, strlen(json));
+#else
+    printf(json);
+#endif
+}
 /******************************************************************************
  * @brief loop must be call in project loop
  * @param None
@@ -62,11 +74,7 @@ void Gate_Loop(void)
     {
         char json[JSON_BUFF_SIZE] = {0};
         exclude_container_to_json(container->ll_container->dead_container_spotted, json);
-#ifdef USE_SERIAL
-        serial_write(json, strlen(json));
-#else
-        printf(json);
-#endif
+        json_send(json);
         container->ll_container->dead_container_spotted = 0;
     }
     if (detection_done)
@@ -76,23 +84,15 @@ void Gate_Loop(void)
         format_data(container, json);
         if (json[0] != '\0')
         {
-#ifdef USE_SERIAL
-            serial_write(json, strlen(json));
-#else
-            printf(json);
-#endif
+            json_send(json);
             keepAlive = 0;
         }
         else
         {
             if (keepAlive > 200)
             {
-#ifdef USE_SERIAL
                 sprintf(json, "{}\n");
-                serial_write(json, strlen(json));
-#else
-                printf("{}\n");
-#endif
+                json_send(json);
             }
             else
             {
@@ -113,11 +113,7 @@ void Gate_Loop(void)
         char json[JSON_BUFF_SIZE * 2] = {0};
         RoutingTB_DetectContainers(container);
         routing_table_to_json(json);
-#ifdef USE_SERIAL
-        serial_write(json, strlen(json));
-#else
-        printf(json);
-#endif
+        json_send(json);
         detection_done = 1;
         detection_ask = 0;
     }
@@ -148,7 +144,7 @@ void USART3_4_IRQHandler(void)
 }
 
 #ifdef USE_SERIAL
-int serial_write(char *data, int len)
+static int serial_write(char *data, int len)
 {
     for (unsigned short i = 0; i < len; i++)
     {
