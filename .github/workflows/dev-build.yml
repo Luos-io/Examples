@@ -1,4 +1,4 @@
-name: Build
+name: Dev-Build
 
 on:
   push:
@@ -42,6 +42,8 @@ jobs:
         # Save branch name
         branch_name=$(git branch --show-current)
         origine_branch_name="origin/${branch_name}"
+        echo current branch name is ${branch_name}
+
         # Step back and get dependancies
         cd ..
 
@@ -72,7 +74,6 @@ jobs:
           cd ..
           rm -rf Luos
         fi
-        
 
     - name: Run PlatformIO
       env:
@@ -84,7 +85,7 @@ jobs:
         platformio run -d Projects/Distance
         platformio run -d Projects/Dxl
         platformio run -d Projects/Gate
-        platformio run -d Projects/Gpio  
+        platformio run -d Projects/Gpio
         platformio run -d Projects/Imu
         platformio run -d Projects/Led
         platformio run -d Projects/Led_strip
