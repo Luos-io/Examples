@@ -118,10 +118,10 @@ void Gate_Loop(void)
 #else
         printf(json);
 #endif
+        collect_data(container);
         detection_done = 1;
         detection_ask = 0;
     }
-    HAL_Delay(get_delay());
 }
 
 void USART3_4_IRQHandler(void)

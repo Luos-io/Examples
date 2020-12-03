@@ -2,26 +2,29 @@
 #include "json_mnger.h"
 #include "cmd.h"
 #include "convert.h"
+#include "gate.h"
+#include "luos.h"
 
-static unsigned int delayms = 0;
+static time_luos_t update_time = DEFAULT_REFRESH_MS;
 
 //******************* sensor update ****************************
 // This function will gather data from sensors and create a json string for you
 void collect_data(container_t *container)
 {
-    msg_t json_msg;
-    json_msg.header.target_mode = ID;
-    json_msg.header.cmd = ASK_PUB_CMD;
-    json_msg.header.size = 0;
+    msg_t update_msg;
+    update_msg.header.target_mode = IDACK;
+    update_msg.header.cmd = ASK_PUB_CMD;
     // ask containers to publish datas
     for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
     {
         // Check if this container is a sensor
         if (RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i)))
         {
-            // This container is a sensor so create a msg and send it
-            json_msg.header.target = i;
-            Luos_SendMsg(container, &json_msg);
+            // This contaiiner is a sensor so create a msg to enable auto update
+            update_msg.header.target = i;
+            time_to_msg(&update_time, &update_msg);
+            update_msg.header.cmd = UPDATE_PUB;
+            Luos_SendMsg(module, &update_msg);
         }
     }
 }
@@ -76,12 +79,7 @@ void format_data(container_t *container, char *json)
     }
 }
 
-unsigned int get_delay(void)
+void set_update_time(time_luos_t new_time)
 {
-    return delayms;
-}
-
-void set_delay(unsigned int new_delayms)
-{
-    delayms = new_delayms;
+    update_time = new_time;
 }

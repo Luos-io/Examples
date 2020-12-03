@@ -110,6 +110,9 @@ void send_cmds(container_t *container)
                     }
                     if (index < JSON_BUFF_SIZE - 1)
                     {
+                        // stop sensor polling
+                        set_update_time(0.0);
+                        collect_data(module);
                         // create a message from parameters
                         msg.header.cmd = REVISION;
                         msg.header.target_mode = IDACK;
@@ -136,6 +139,9 @@ void send_cmds(container_t *container)
 #else
                         printf("{\"benchmark\":{\"data_rate\":%.2f,\"fail_rate\":%.2f}}\n", data_rate, fail_rate);
 #endif
+                        // restart sensor polling
+                        set_update_time(DEFAULT_REFRESH_MS);
+                        collect_data(module);
                     }
                 }
             }

@@ -14,5 +14,6 @@ void collect_data(container_t *container);
 void format_data(container_t *container, char *json);
 unsigned int get_delay(void);
 void set_delay(unsigned int new_delayms);
+void set_update_time(time_luos_t new_time);
 
 #endif /* ROUTINGTABLE */
