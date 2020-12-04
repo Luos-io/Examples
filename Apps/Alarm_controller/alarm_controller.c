@@ -119,7 +119,7 @@ void AlarmController_Loop(void)
                 TimeOD_TimeToMsg(&time, &msg);
                 Luos_SendMsg(app, &msg);
             }
-            // try to find a gps and set parameters to disable quaternion and send back Gyro acceleration and euler.
+            // try to find an IMU and set parameters to disable quaternion and send back Gyro acceleration and euler.
             imu_report_t report;
             report.gyro = 1;
             report.euler = 1;
@@ -135,7 +135,7 @@ void AlarmController_Loop(void)
                 memcpy(msg.data, &report, sizeof(imu_report_t));
                 Luos_SendMsg(app, &msg);
 
-                // Setup auto update each UPDATE_PERIOD_MS on gps
+                // Setup auto update each UPDATE_PERIOD_MS on imu
                 // This value is resetted on all container at each detection
                 // It's important to setting it each time.
                 time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);

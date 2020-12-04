@@ -21,7 +21,5 @@
  ******************************************************************************/
 void Gate_Init(void);
 void Gate_Loop(void);
-#ifdef USE_SERIAL
-int serial_write(char *data, int len);
-#endif
+void json_send(char *json);
 #endif /* GATE_H */

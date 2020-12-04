@@ -3,6 +3,7 @@
 #include "invensense.h"
 #include "invensense_adv.h"
 #include "mpu.h"
+#include "main.h"
 
 /* The sensors can be mounted onto the board in any orientation. The mounting
  * matrix seen below tells the MPL how to rotate the raw data from the
