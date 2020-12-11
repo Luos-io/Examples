@@ -18,7 +18,7 @@ container_t *app;
 
 typedef enum
 {
-    MDL_APPDETECTION = LUOS_LAST_TYPE
+    DETECTION_APP = LUOS_LAST_TYPE
 } App_type_t;
 
 int8_t id_button;
@@ -43,15 +43,19 @@ static void Detection_LedState(msg_t *msg, uint8_t state);
  ******************************************************************************/
 void Detection_Init(void)
 {
+    uint32_t i = 0;
     revision_t revision = {.unmap = REV};
     
-    app = Luos_CreateContainerner(Detection_MsgHandler, MDL_APPDETECTION, "App_Detection", revision);
-    HAL_Delay(1000);
+    app = Luos_CreateContainer(Detection_MsgHandler, DETECTION_APP, "App_Detection", revision);
+    while(i<100000)
+    {
+        i++;
+    }
     // Detect all containers of your network and create a routing_table
     RoutingTB_DetectContainers(app);
 
     id_button = RoutingTB_IDFromAlias("button_mod");
-    id_led = RoutingTB_IDFromAlias("rgb_led_mod1");
+    id_led = RoutingTB_IDFromAlias("rgb_led_mod");
 
     /*button Configuration*/
     if (id_button > 0)

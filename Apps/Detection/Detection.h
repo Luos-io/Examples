@@ -7,7 +7,6 @@
 #ifndef _MOD_APPDETECTION_H
 #define _MOD_APPDETECTION_H
 
-#include <main.h>
 
 /*******************************************************************************
  * Definitions
