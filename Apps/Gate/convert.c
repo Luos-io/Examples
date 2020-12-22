@@ -73,6 +73,30 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         msg->header.size = 2 * sizeof(linear_position_t);
         Luos_SendMsg(container, msg);
     }
+    // Limit angular speed
+    if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "limit_rot_speed")))
+    {
+        angular_speed_t limits[2];
+        item = cJSON_GetObjectItem(jobj, "limit_rot_speed");
+        limits[0] = AngularOD_SpeedFrom_deg_s(cJSON_GetArrayItem(item, 0)->valuedouble);
+        limits[1] = AngularOD_SpeedFrom_deg_s(cJSON_GetArrayItem(item, 1)->valuedouble);
+        memcpy(&msg->data[0], limits, 2 * sizeof(float));
+        msg->header.cmd = ANGULAR_SPEED_LIMIT;
+        msg->header.size = 2 * sizeof(float);
+        Luos_SendMsg(container, msg);
+    }
+    // Limit linear speed
+    if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "limit_trans_speed")))
+    {
+        linear_speed_t limits[2];
+        item = cJSON_GetObjectItem(jobj, "limit_trans_speed");
+        limits[0] = LinearOD_Speedfrom_mm_s((float)cJSON_GetArrayItem(item, 0)->valuedouble);
+        limits[1] = LinearOD_Speedfrom_mm_s((float)cJSON_GetArrayItem(item, 1)->valuedouble);
+        memcpy(&msg->data[0], limits, 2 * sizeof(linear_speed_t));
+        msg->header.cmd = LINEAR_SPEED_LIMIT;
+        msg->header.size = 2 * sizeof(linear_speed_t);
+        Luos_SendMsg(container, msg);
+    }
     // Limit ratio
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "limit_power")))
     {
