@@ -67,6 +67,9 @@ typedef struct __attribute__((__packed__))
 
     // limits
     angular_position_t limit_angular_position[2];
+    angular_speed_t limit_angular_speed[2];
+    linear_position_t limit_linear_position[2];
+    linear_speed_t limit_linear_speed[2];
     ratio_t limit_ratio;
     current_t limit_current;
 
