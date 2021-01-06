@@ -319,6 +319,28 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         msg->header.size = 0;
         Luos_SendMsg(container, msg);
     }
+    if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters")))
+    {
+        uint32_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;
+        memcpy(msg->data, &val, sizeof(uint32_t));
+        msg->header.size = 4;
+        msg->header.cmd = PARAMETERS;
+        Luos_SendMsg(container, msg);
+    }
+    if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "parameters")))
+    {
+        item = cJSON_GetObjectItem(jobj, "parameters");
+        int size = cJSON_GetArraySize(item);
+        // find the first \r of the current buf
+        for (int i = 0; i < size; i++)
+        {
+            uint32_t val = (uint32_t)cJSON_GetArrayItem(item, 0)->valuedouble;
+            memcpy(&msg->data[i * sizeof(uint32_t)], &val, sizeof(uint32_t));
+        }
+        msg->header.cmd = PARAMETERS;
+        msg->header.size = size * sizeof(uint32_t);
+        Luos_SendMsg(container, msg);
+    }
     switch (type)
     {
     case VOID_MOD:
@@ -362,31 +384,6 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
             Luos_SendMsg(container, msg);
         }
         break;
-    case IMU_MOD:
-    case STEPPER_MOD:
-    case CONTROLLER_MOTOR_MOD:
-        if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters")))
-        {
-            uint16_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;
-            memcpy(msg->data, &val, sizeof(uint16_t));
-            msg->header.cmd = PARAMETERS;
-            msg->header.size = 2;
-            Luos_SendMsg(container, msg);
-        }
-        break;
-    case SERVO_MOD:
-        if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "parameters")))
-        {
-            servo_parameters_t servo_param;
-            item = cJSON_GetObjectItem(jobj, "parameters");
-            servo_param.max_angle = (float)cJSON_GetArrayItem(item, 0)->valuedouble;
-            servo_param.min_pulse_time = (float)cJSON_GetArrayItem(item, 1)->valuedouble;
-            servo_param.max_pulse_time = (float)cJSON_GetArrayItem(item, 2)->valuedouble;
-            memcpy(msg->data, servo_param.unmap, sizeof(servo_parameters_t));
-            msg->header.cmd = PARAMETERS;
-            msg->header.size = sizeof(servo_parameters_t);
-            Luos_SendMsg(container, msg);
-        }
         break;
     case GATE_MOD:
         if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "delay")))
