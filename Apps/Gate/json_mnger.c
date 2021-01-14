@@ -98,6 +98,7 @@ void format_data(container_t *container, char *json)
                 // End the container section
                 sprintf(json_ptr, "},");
                 json_ptr += strlen(json_ptr);
+                LUOS_ASSERT((json_ptr - json) < JSON_BUFF_SIZE);
             }
         }
         if (json_ok)
