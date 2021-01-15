@@ -319,6 +319,7 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         msg->header.size = 0;
         Luos_SendMsg(container, msg);
     }
+    // Parameters
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "parameters")))
     {
         uint32_t val = cJSON_GetObjectItem(jobj, "parameters")->valueint;
@@ -334,7 +335,7 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         // find the first \r of the current buf
         for (int i = 0; i < size; i++)
         {
-            uint32_t val = (uint32_t)cJSON_GetArrayItem(item, 0)->valuedouble;
+            uint32_t val = (uint32_t)cJSON_GetArrayItem(item, i)->valuedouble;
             memcpy(&msg->data[i * sizeof(uint32_t)], &val, sizeof(uint32_t));
         }
         msg->header.cmd = PARAMETERS;
