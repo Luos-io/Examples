@@ -19,7 +19,7 @@ void collect_data(container_t *container)
     for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
     {
         // Check if this container is a sensor
-        if (RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i)))
+        if ((RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i))) || (RoutingTB_TypeFromID(i) >= LUOS_LAST_TYPE))
         {
             // This container is a sensor so create a msg and send it
             json_msg.header.target = i;
