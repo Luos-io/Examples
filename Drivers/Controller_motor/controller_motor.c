@@ -540,19 +540,37 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == ANGULAR_POSITION_LIMIT)
     {
-        // set the motor limit anglular position
+        // set the motor angular position limit
         memcpy((angular_position_t *)motor.limit_angular_position, msg->data, 2 * sizeof(float));
+        return;
+    }
+    if (msg->header.cmd == ANGULAR_SPEED_LIMIT)
+    {
+        // set the motor angular speed limit
+        memcpy((angular_speed_t *)motor.limit_angular_speed, msg->data, 2 * sizeof(float));
         return;
     }
     if (msg->header.cmd == LINEAR_POSITION_LIMIT)
     {
-        // set the motor target linear position
+        // set the motor linear position limit
         if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
         {
             linear_position_t linear_position[2] = {0.0, 0.0};
             memcpy(linear_position, msg->data, 2 * sizeof(linear_position_t));
             motor.limit_angular_position[0] = (linear_position[0] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
             motor.limit_angular_position[1] = (linear_position[1] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+        }
+        return;
+    }
+    if (msg->header.cmd == LINEAR_SPEED_LIMIT)
+    {
+        // set the motor linear speed limit
+        if (motor.mode.mode_linear_position & (motor.wheel_diameter != 0))
+        {
+            linear_position_t linear_speed[2] = {0.0, 0.0};
+            memcpy(linear_speed, msg->data, 2 * sizeof(linear_position_t));
+            motor.limit_angular_speed[0] = (linear_speed[0] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
+            motor.limit_angular_speed[1] = (linear_speed[1] * 360.0) / (3.141592653589793 * motor.wheel_diameter);
         }
         return;
     }
