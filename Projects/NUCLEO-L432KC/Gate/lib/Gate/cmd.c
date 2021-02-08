@@ -120,9 +120,15 @@ void send_cmds(container_t *container)
                         int i = 0;
                         for (i = 0; i < repetition; i++)
                         {
-                            if (Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size) == FAILED)
+                            Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size);
+                            // Wait transmission end
+                            while (Luos_TxComplete() == FAILED)
+                                ;
+                            // Check if there is a failure on transmission
+                            if (container->ll_container->dead_container_spotted != 0)
                             {
                                 failed_msg_nb++;
+                                container->ll_container->dead_container_spotted = 0;
                             }
                         }
                         uint32_t end_systick = Luos_GetSystick();

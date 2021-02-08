@@ -698,8 +698,7 @@ void routing_table_to_json(char *json)
 
 void exclude_container_to_json(int id, char *json)
 {
-    sprintf(json, "%s", "{\"dead_container\": ");
-    sprintf(json, "%s\"%s\"", json, RoutingTB_AliasFromId(id));
+    sprintf(json, "{\"dead_container\":\"%s\"", RoutingTB_AliasFromId(id));
     sprintf(json, "%s}\n", json);
     RoutingTB_RemoveOnRoutingTable(id);
 }
