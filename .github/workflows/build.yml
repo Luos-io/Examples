@@ -31,23 +31,25 @@ jobs:
 
     - name: Run PlatformIO
       run: |
-        platformio run -d Projects/Button
-        platformio run -d Projects/Controller_motor
-        platformio run -d Projects/Dc_motor
-        platformio run -d Projects/Distance
-        platformio run -d Projects/Dxl
-        platformio run -d Projects/Gate
-        platformio run -d Projects/Gpio
-        platformio run -d Projects/Imu
-        platformio run -d Projects/Led
-        platformio run -d Projects/Led_strip
-        platformio run -d Projects/Light_sensor
-        platformio run -d Projects/Load
-        platformio run -d Projects/Potentiometer
-        platformio run -d Projects/Power_switch
-        platformio run -d Projects/Servo
-        platformio run -d Projects/Stepper
-        platformio run -d Projects/Bike_alarm/Alarm_controller
-        platformio run -d Projects/Bike_alarm/Start_controller
+        platformio run -d Projects/l0/Button
+        platformio run -d Projects/l0/Controller_motor
+        platformio run -d Projects/l0/Dc_motor
+        platformio run -d Projects/l0/Distance
+        platformio run -d Projects/l0/Dxl
+        platformio run -d Projects/l0/Gate
+        platformio run -d Projects/l0/Gpio
+        platformio run -d Projects/l0/Imu
+        platformio run -d Projects/l0/Led
+        platformio run -d Projects/l0/Led_strip
+        platformio run -d Projects/l0/Light_sensor
+        platformio run -d Projects/l0/Load
+        platformio run -d Projects/l0/Potentiometer
+        platformio run -d Projects/l0/Power_switch
+        platformio run -d Projects/l0/Servo
+        platformio run -d Projects/l0/Stepper
+        platformio run -d Projects/l0/Bike_alarm/Alarm_controller
+        platformio run -d Projects/l0/Bike_alarm/Start_controller
+        platformio run -d Projects/Arduino/Button
+        platformio run -d Projects/Arduino/Gate
 
 
