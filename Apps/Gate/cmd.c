@@ -1,7 +1,6 @@
 #include "cmd.h"
 #include "convert.h"
 #include <stdio.h>
-#include "main.h"
 #include "gate.h"
 
 // There is no stack here we use the latest command
@@ -115,7 +114,7 @@ void send_cmds(container_t *container)
                         msg.header.target_mode = IDACK;
                         msg.header.target = target_id;
                         // save current time
-                        uint32_t begin_systick = HAL_GetTick();
+                        uint32_t begin_systick = Luos_GetSystick();
                         uint32_t failed_msg_nb = 0;
                         // send this message multiple time
                         int i = 0;
@@ -126,7 +125,7 @@ void send_cmds(container_t *container)
                                 failed_msg_nb++;
                             }
                         }
-                        uint32_t end_systick = HAL_GetTick();
+                        uint32_t end_systick = Luos_GetSystick();
                         float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
                         float fail_rate = (float)failed_msg_nb * 100.0 / (float)repetition;
                         char json[60] = {0};

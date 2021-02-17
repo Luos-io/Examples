@@ -4,16 +4,23 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#include "main.h"
 #include "gate.h"
 #include "json_mnger.h"
 #include <stdio.h>
+
+#ifdef USE_SERIAL
+#include "main.h"
+#endif
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 #ifdef USE_SERIAL
 static int serial_write(char *data, int len);
+#endif
+
+#ifndef REV
+#define REV {1,0,0}
 #endif
 /*******************************************************************************
  * Variables
@@ -34,8 +41,9 @@ volatile int pub = LUOS_PROTOCOL_NB;
  ******************************************************************************/
 void Gate_Init(void)
 {
-    revision_t revision = {.unmap = REV};
 
+    revision_t revision = {.unmap = REV};
+#ifdef USE_SERIAL
     LL_USART_ClearFlag_IDLE(USART3);
     LL_USART_EnableIT_IDLE(USART3);
     NVIC_DisableIRQ(DMA1_Channel2_3_IRQn);
@@ -47,10 +55,11 @@ void Gate_Init(void)
     LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
     LL_USART_EnableDMAReq_RX(USART3);
+#endif
     container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 
-void json_send(char *json)
+__attribute__((weak)) void json_send(char *json)
 {
 #ifdef USE_SERIAL
     serial_write(json, strlen(json));
@@ -68,6 +77,7 @@ void Gate_Loop(void)
     static unsigned int keepAlive = 0;
     static volatile uint8_t detection_done = 0;
     static char state = 0;
+    uint32_t tickstart = 0;
 
     // Check if there is a dead container
     if (container->ll_container->dead_container_spotted)
@@ -117,9 +127,13 @@ void Gate_Loop(void)
         detection_done = 1;
         detection_ask = 0;
     }
-    HAL_Delay(get_delay());
+
+    tickstart = Luos_GetSystick();
+    while((Luos_GetSystick() - tickstart) < get_delay());
+
 }
 
+#ifdef USE_SERIAL
 void USART3_4_IRQHandler(void)
 {
     // check if we receive an IDLE on usart3
@@ -142,6 +156,8 @@ void USART3_4_IRQHandler(void)
         __enable_irq();
     }
 }
+#endif
+
 
 #ifdef USE_SERIAL
 static int serial_write(char *data, int len)
