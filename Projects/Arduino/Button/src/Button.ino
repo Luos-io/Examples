@@ -6,7 +6,7 @@ extern "C"
 #endif
 
 #include <luos.h>
-#include <button.h>
+#include "button.h"
 
 #ifdef __cplusplus
 }
