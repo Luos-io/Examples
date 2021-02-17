@@ -12,7 +12,6 @@
         "flags": [
             "-I cJSON",
             "-Wl,-u,_printf_float",
-            "-D USE_SERIAL",
             "-DREV={0,7,0}"
         ],
         "src_filter": [
