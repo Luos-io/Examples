@@ -11,6 +11,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 This folder contains hardwares librairies used by Luos to inspire you to create your own designs:
  - **L0**: The base board for using Luos [prototyping boards](https://docs.luos.io/pages/prototyping_boards/proto-boards.html).
+ - **l0-shields**: Different shields that can be used directly on the Luos L0 board for added functionality.
  - **STm32f0_disco_luos_shield**: a debugging shield equivalent to an L0 for STM32F072B-DISCO dev board.
  - **Breakout_board**: a small add-on board to make any board compatible with Luos.
  - **wiring_and_power**: a set of projects for Luos wires and power input boards.
