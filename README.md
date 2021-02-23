@@ -7,38 +7,35 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Luos examples
 
-This repository is a submodule of the Luos repository. It contains examples and libraries for using Luos. 
+This repository is a submodule of the [Luos library](https://github.com/Luos-io/Luos) repository. It contains examples of Containers and Apps for using Luos. This repository can be used on it's own, or as a submodule for the Luos Library directly.
 
-Feel free to produce and use all our design to create your own projects.
+Feel free to use these examples as a starting point for your own projects, and don't forget to share your creations on the [Luos forum](https://community.luos.io/)!
 
 ## Content
 
 ### Apps folder
 
-This folder contains the container's sources of each **app** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation).
-
-### Drivers folder
-
-This folder contains the container's sources of each **driver** project (see [Drivers section](https://docs.luos.io/pages/low/containers/create-containers.html?#drivers-guidelines) in documentation).
+This folder contains the container's sources of each **App** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
 
 ### Projects folder
 
-This folder contains the sources of every examples. 
+This folder contains the sources of every examples.  It is sorted into two folders; Arduino for SAM-D based Arduino boards, and L0, for the Luos evaluation and prototyping boards. Inside these folders are a collection of different **drivers** and **projects** for you to use as they are, or to use as a starting point for your own projects.
 
 #### Prototyping boards projects
 
 Most of the projects are Luos prototyping boards (see [Demonstration boards section](https://docs.luos.io/pages/demo_boards/demo-boards.html) in documentation).
 
-#### Electronics basis
+#### Hardware folder
 
-The folder `0_electronics_basis` contains hardwares librairies used by Luos to inspire you to create your own designs:
- - **L0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/demo_boards/demo-boards.html).
- - **STm32f0_disco_luos_shield**: a debugging shield equivalent to an L0 for STM32F072B-DISCO dev board.
+This contains hardwares librairies used by Luos to inspire you to create your own designs:
+ - **l0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/demo_boards/demo-boards.html).
+ - **l0-shields**: Different shields that can be used directly on the Luos L0 board for added functionality.
+ - **stm32f0_disco_luos_shield**: a debugging shield equivalent to a Luos L0 for STM32F072B-DISCO dev board.
  - **Breakout_board**: a small add-on board to make any board compatible with Luos.
  - **wiring_and_power**: a set of projects for Luos wires and power input boards.
  - **00_Common_Libraries**: a set of Kicad libraries commonly used.
 
-## How to start
+##### How to start
 
 1. install KiCad: https://www.kicad-pcb.org/
 

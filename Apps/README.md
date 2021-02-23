@@ -9,7 +9,11 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Apps
 
-This folder contains the container's sources of each **app** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation).
+This folder contains the container's sources of each **app** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation). There are three folders:
+
+ - **Alarm_controller** - Part of the bike alarm App. This App communicates with an accelerometer container, and monitors for movement. If movement is detected, it will look for a Container to issue an alarm.
+ - **Gate** - A special App used in conjunction with the [Pyluos](https://github.com/Luos-io/Pyluos) library, this App allows Python to taeke control of the Luos network, and to communicate with the different Containers located on the network.
+ - **Start_controller** - Part of the bike alarm App. This App looks for the bike lock. If the lock has been activated, then it will inform the Alarm Controller, and set detection in motion.
 
 
 [![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)
