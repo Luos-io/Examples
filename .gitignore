@@ -5,3 +5,15 @@
 **/.pio/*
 **/*.icloud
 *.icloud
+/Projects/NUCLEO-G431KB/Button/.mxproject
+/Projects/NUCLEO-G431KB/Button/Button.gpdsc
+/Projects/NUCLEO-L432KC/Button/Button.gpdsc
+/Projects/NUCLEO-L432KC/Button/.mxproject
+/Projects/NUCLEO-L432KC/Gate/.mxproject
+/Projects/NUCLEO-L432KC/Gate/Gate.gpdsc
+/Projects/NUCLEO-L432KC/Led/Led.gpdsc
+/Projects/NUCLEO-L432KC/Led/.mxproject
+/Projects/STM32F4-discovery/Button/.mxproject
+/Projects/STM32F4-discovery/Button/Button.gpdsc
+/Projects/STM32F4-discovery/Gate/.mxproject
+/Projects/STM32F4-discovery/Gate/Gate.gpdsc
