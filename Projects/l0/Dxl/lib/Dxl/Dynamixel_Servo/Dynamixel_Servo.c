@@ -784,9 +784,9 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
     {
         //ERROR
         dxl_msg_complete = 0;
-        HAL_UART_AbortReceive_IT(&huart3);
+        HAL_UART_DMAStop(&huart3);
     }
-    HAL_UART_Receive_IT(&huart3, data, data_size);
+    HAL_UART_Receive_DMA(&huart3, data, data_size);
     unsigned long timeout_rx = HAL_GetTick();
     while ((dxl_msg_complete == 0))
     {
@@ -794,7 +794,7 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
         if ((HAL_GetTick() - timeout_rx) == timeout_ms)
         {
             // reset reception
-            HAL_UART_AbortReceive_IT(&huart3);
+            HAL_UART_DMAStop(&huart3);
             return SERVO_ERROR_TIMEOUT;
         }
     }
