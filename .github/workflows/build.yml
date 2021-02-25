@@ -31,6 +31,7 @@ jobs:
 
     - name: Run PlatformIO
       run: |
+        # L0
         platformio run -d Projects/l0/Button
         platformio run -d Projects/l0/Controller_motor
         platformio run -d Projects/l0/Dc_motor
@@ -49,7 +50,17 @@ jobs:
         platformio run -d Projects/l0/Stepper
         platformio run -d Projects/l0/Bike_alarm/Alarm_controller
         platformio run -d Projects/l0/Bike_alarm/Start_controller
+        # arduino
         platformio run -d Projects/Arduino/Button
         platformio run -d Projects/Arduino/Gate
+        # NUCLEO-G431KB
+        platformio run -d Projects/NUCLEO-G431KB/Button
+        # NUCLEO-L432KC
+        platformio run -d Projects/NUCLEO-L432KC/Button
+        platformio run -d Projects/NUCLEO-L432KC/Gate
+        platformio run -d Projects/NUCLEO-L432KC/Led
+        # STM32F4-discovery
+        platformio run -d Projects/STM32F4-discovery/Button
+        platformio run -d Projects/STM32F4-discovery/Gate
 
 
