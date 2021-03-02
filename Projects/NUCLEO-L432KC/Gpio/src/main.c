@@ -24,7 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "luos.h"
-#include "led.h"
+#include "gpio_dev.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,7 +88,7 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
   Luos_Init();
-  Led_Init();
+  GpioDev_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,7 +99,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     Luos_Loop();
-    Led_Loop();
+    GpioDev_Loop();
   }
   /* USER CODE END 3 */
 }
