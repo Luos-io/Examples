@@ -24,6 +24,17 @@ void collect_data(container_t *container)
             // This container is a sensor so create a msg and send it
             json_msg.header.target = i;
             Luos_SendMsg(container, &json_msg);
+#ifdef GATE_TIMEOUT
+            // Get the current number of message available
+            int back_nbr_msg = Luos_NbrAvailableMsg();
+            // Get the current time
+            uint32_t send_time = Luos_GetSystick();
+            // Wait for a reply before continuing
+            while ((back_nbr_msg == Luos_NbrAvailableMsg()) & (send_time == Luos_GetSystick()))
+            {
+                Luos_Loop();
+            }
+#endif
         }
     }
 }
