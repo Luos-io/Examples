@@ -515,14 +515,14 @@ void msg_to_json(msg_t *msg, char *json)
         {
             general_stats_t *stat = (general_stats_t *)msg->data;
             // create the Json content
-            sprintf(json, "\"luos_statistics\":{\"msg_stack\":%d,\"luos_stack\":%d,\"msg_drop\":%d,\"loop_ms\":%d,\"fail_ratio\":%d,\"collision_max\":%d,\"nak_max\":%d},",
-                    stat->node_stat.memory.msg_stack_ratio,
+            sprintf(json, "\"luos_statistics\":{\"rx_msg_stack\":%d,\"luos_stack\":%d,\"tx_msg_stack\":%d,\"buffer_occupation\":%d,\"msg_drop\":%d,\"loop_ms\":%d,\"max_retry\":%d},",
+                    stat->node_stat.memory.rx_msg_stack_ratio,
                     stat->node_stat.memory.luos_stack_ratio,
+                    stat->node_stat.memory.tx_msg_stack_ratio,
+                    stat->node_stat.memory.buffer_occupation_ratio,
                     stat->node_stat.memory.msg_drop_number,
                     stat->node_stat.max_loop_time_ms,
-                    stat->container_stat.msg_fail_ratio,
-                    stat->container_stat.max_collision_retry,
-                    stat->container_stat.max_nak_retry);
+                    stat->container_stat.max_retry);
         }
         break;
     case IO_STATE:
