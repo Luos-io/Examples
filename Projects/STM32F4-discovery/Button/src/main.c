@@ -98,8 +98,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    Luos_Init();
-    Button_Init();
+    Luos_Loop();
+    Button_Loop();
   }
   /* USER CODE END 3 */
 }
