@@ -63,29 +63,33 @@ void Error_Handler(void);
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOB
 
-#define P2_Pin GPIO_PIN_2
+/* USER CODE BEGIN Private defines */
+#define P1_Pin GPIO_PIN_0
+#define P1_GPIO_Port GPIOA
+
+#define P2_Pin GPIO_PIN_1
 #define P2_GPIO_Port GPIOA
 
-#define P3_Pin GPIO_PIN_3
+#define P3_Pin GPIO_PIN_4
 #define P3_GPIO_Port GPIOA
 
-#define P4_Pin GPIO_PIN_4
+#define P4_Pin GPIO_PIN_5
 #define P4_GPIO_Port GPIOA
 
-#define P5_Pin GPIO_PIN_5
+#define P5_Pin GPIO_PIN_6
 #define P5_GPIO_Port GPIOA
 
-#define P6_Pin GPIO_PIN_6
+#define P6_Pin GPIO_PIN_7
 #define P6_GPIO_Port GPIOA
 
+#define P7_Pin GPIO_PIN_8
+#define P7_GPIO_Port GPIOA
 
+#define P8_Pin GPIO_PIN_11
+#define P8_GPIO_Port GPIOA
 
-
-
-
-
-/* USER CODE BEGIN Private defines */
-
+#define P9_Pin GPIO_PIN_12
+#define P9_GPIO_Port GPIOA
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
