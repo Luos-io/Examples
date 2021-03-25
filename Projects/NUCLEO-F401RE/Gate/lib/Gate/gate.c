@@ -126,7 +126,7 @@ void Gate_Loop(void)
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < get_delay());
+    while((Luos_GetSystick() - tickstart) < 1);
 }
 
 #ifdef USE_SERIAL
