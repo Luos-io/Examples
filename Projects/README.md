@@ -1,4 +1,4 @@
-<a href="https://luos.io"><img src="https://www.luos.io/wp-content/uploads/2020/03/Luos-color.png" alt="Luos logo" title="Luos" align="right" height="60" /></a>
+<a href="https://luos.io"><img src="https://uploads-ssl.webflow.com/601a78a2b5d030260a40b7ad/602f8d74abdf72db7f5e3ed9_Luos_Logo_animation_Black.gif" alt="Luos logo" title="Luos" align="right" height="60" /></a>
 
 [![](http://certified.luos.io)](https://luos.io)
 [![](https://img.shields.io/github/license/Luos-io/Examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
@@ -12,12 +12,12 @@ This folder contains the sources of every examples.
 
 ## Prototyping boards projects
 
-Most of these projects are Luos prototyping boards (see [Protyping boards section](https://docs.luos.io/pages/prototyping_boards/proto-boards.html) in documentation).
+Most of these projects are Luos prototyping boards (see [Demontration boards section](https://docs.luos.io/pages/demo_boards/demo-boards.html) in documentation).
 
 ## Electronics basis
 
 The folder `0_electronics_basis` contains hardwares librairies used by Luos to inspire you to create your own designs:
- - **L0**: The base board for using Luos [prototyping boards](https://docs.luos.io/pages/prototyping_boards/proto-boards.html).
+ - **L0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/demo_boards/demo-boards.html).
  - **STm32f0_disco_luos_shield**: a debugging shield equivalent to an L0 for STM32F072B-DISCO dev board.
  - **Breakout_board**: a small add-on board to make any board compatible with Luos.
  - **wiring_and_power**: a set of projects for Luos wires and power input boards.
