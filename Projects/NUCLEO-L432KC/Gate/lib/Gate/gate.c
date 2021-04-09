@@ -29,7 +29,7 @@ static void Usart_Init(void);
  ******************************************************************************/
 container_t *container;
 msg_t msg;
-char* RxData;
+volatile char* RxData;
 uint16_t RxDataCtn;
 container_t *container_pointer;
 volatile msg_t pub_msg;
@@ -125,7 +125,7 @@ void Gate_Loop(void)
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < get_delay());
+    while((Luos_GetSystick() - tickstart) < 1);
 
 }
 
@@ -207,6 +207,7 @@ void USART2_IRQHandler(void)
 		  RxData++;
 		}
 	}
+	USART2->ICR = 0xFFFFFFFF;
 }
 /******************************************************************************
  * @brief loop must be call in project loop

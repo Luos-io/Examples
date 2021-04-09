@@ -126,7 +126,7 @@ void Gate_Loop(void)
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < get_delay());
+    while((Luos_GetSystick() - tickstart) < 1);
 }
 
 #ifdef USE_SERIAL
@@ -137,23 +137,23 @@ void Gate_Loop(void)
  ******************************************************************************/
 static void Gpio_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	__HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
 
-	GPIO_InitStruct.Pin = GPIO_PIN_2;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = GPIO_PIN_3;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 /******************************************************************************
  * @brief
@@ -162,29 +162,29 @@ static void Gpio_Init(void)
  ******************************************************************************/
 static void Usart_Init(void)
 {
-	__HAL_RCC_USART2_CLK_ENABLE();
+    __HAL_RCC_USART2_CLK_ENABLE();
 
-	LL_USART_InitTypeDef USART_InitStruct;
+    LL_USART_InitTypeDef USART_InitStruct;
 
-	LL_USART_Disable(USART2);
-	USART_InitStruct.BaudRate = 1000000;
-	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
-	USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
-	USART_InitStruct.Parity = LL_USART_PARITY_NONE;
-	USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-	USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
-	USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
-	LL_USART_Init(USART2, &USART_InitStruct);
-	LL_USART_ConfigAsyncMode(USART2);
-	LL_USART_Enable(USART2);
+    LL_USART_Disable(USART2);
+    USART_InitStruct.BaudRate = 1000000;
+    USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
+    USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
+    USART_InitStruct.Parity = LL_USART_PARITY_NONE;
+    USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+    USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+    USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
+    LL_USART_Init(USART2, &USART_InitStruct);
+    LL_USART_ConfigAsyncMode(USART2);
+    LL_USART_Enable(USART2);
 
-	LL_USART_Enable(USART2);
+    LL_USART_Enable(USART2);
 
-	// Enable Reception interrupt
-	LL_USART_EnableIT_RXNE(USART2);
+    // Enable Reception interrupt
+    LL_USART_EnableIT_RXNE(USART2);
 
-	HAL_NVIC_EnableIRQ(USART2_IRQn);
-	HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
 }
 
 /******************************************************************************
@@ -194,21 +194,22 @@ static void Usart_Init(void)
  ******************************************************************************/
 void USART2_IRQHandler(void)
 {
-	if ((LL_USART_IsActiveFlag_RXNE(USART2) != RESET) && (LL_USART_IsEnabledIT_RXNE(USART2) != RESET))
-	{
-		*RxData = LL_USART_ReceiveData8(USART2);
-		RxDataCtn++;
-		if(*RxData == '\r')
-		{
-		  check_json(RxDataCtn-1);
-		  RxData = get_json_buf();
-		  RxDataCtn = 0;
-		}
-		else
-		{
-		  RxData++;
-		}
-	}
+    if ((LL_USART_IsActiveFlag_RXNE(USART2) != RESET) && (LL_USART_IsEnabledIT_RXNE(USART2) != RESET))
+    {
+        *RxData = LL_USART_ReceiveData8(USART2);
+        RxDataCtn++;
+        if(*RxData == '\r')
+        {
+          check_json(RxDataCtn-1);
+          RxData = get_json_buf();
+          RxDataCtn = 0;
+        }
+        else
+        {
+          RxData++;
+        }
+    }
+    USART2->SR = 0xFFFFFFFF;
 }
 /******************************************************************************
  * @brief loop must be call in project loop

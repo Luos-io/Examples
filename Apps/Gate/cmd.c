@@ -116,15 +116,41 @@ void send_cmds(container_t *container)
                         // save current time
                         uint32_t begin_systick = Luos_GetSystick();
                         uint32_t failed_msg_nb = 0;
+                        // Before trying to send anything make sure to finish any transmission
+                        while (Luos_TxComplete() == FAILED)
+                            ;
+                        // Wait 10ms allowing receiving messages to finish
+                        uint32_t tickstart = Luos_GetSystick();
+                        while ((Luos_GetSystick() - tickstart) < 10)
+                            ;
+                        // Flush every messages pending
+                        Luos_Flush();
+                        // To get the number of message failed we will use statistics
+                        // We have to reinit the number of dropped message before start
+                        uint8_t drop_back = container->node_statistics->memory.msg_drop_number;
+                        container->node_statistics->memory.msg_drop_number = 0;
+                        uint8_t retry_back = *container->ll_container->ll_stat.max_retry;
+                        *container->ll_container->ll_stat.max_retry = 0;
                         // send this message multiple time
                         int i = 0;
                         for (i = 0; i < repetition; i++)
                         {
-                            if (Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size) == FAILED)
-                            {
-                                failed_msg_nb++;
-                            }
+                            Luos_SendData(container, &msg, &bin_data[index], (unsigned int)size);
                         }
+                        // Wait transmission end
+                        while (Luos_TxComplete() == FAILED)
+                            ;
+                        // Get the number of failures on transmission
+                        failed_msg_nb = container->node_statistics->memory.msg_drop_number;
+                        // Get the number of retry
+                        // If retry == max retry number consider all messages as lost
+                        if (*container->ll_container->ll_stat.max_retry >= NBR_RETRY)
+                        {
+                            // We failed to transmit this message count all as failed
+                            failed_msg_nb = repetition;
+                        }
+                        container->node_statistics->memory.msg_drop_number = drop_back;
+                        *container->ll_container->ll_stat.max_retry = retry_back;
                         uint32_t end_systick = Luos_GetSystick();
                         float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
                         float fail_rate = (float)failed_msg_nb * 100.0 / (float)repetition;
