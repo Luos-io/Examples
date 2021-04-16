@@ -161,6 +161,31 @@ void send_cmds(container_t *container)
                 }
             }
         }
+        // bootloader commands
+        if (cJSON_GetObjectItem(root, "bootloader") != NULL)
+        {
+            // change color led
+            uint8_t red_value = 40;
+            uint8_t green_value = 0;
+            uint8_t blue_value = 0;
+            
+            //Now send a message
+    	    msg_t color_msg;
+
+		    //Get the ID of our LED from the routing table
+		    uint8_t id_color_led = RoutingTB_IDFromAlias("rgb_led_mod");
+
+    	    color_msg.header.target = id_color_led; //We are sending this to the LED
+    	    color_msg.header.cmd = COLOR; //We are specifying a COLOR (R, G, B)
+    	    color_msg.header.target_mode = IDACK; //We are asking for an acknowledgement
+           	 
+    	    color_msg.header.size = 3*sizeof(char); //Our message only contains three characters, respectively R / G / B
+    	    color_msg.data[0] = red_value;
+		    color_msg.data[1] = green_value;
+		    color_msg.data[2] = blue_value;
+    	    Luos_SendMsg(container, &color_msg); //Now that we have the elements, send the message
+        }
+
         cJSON *containers = cJSON_GetObjectItem(root, "containers");
         // Get containers
         if (cJSON_IsObject(containers))
