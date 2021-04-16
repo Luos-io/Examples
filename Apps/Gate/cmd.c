@@ -162,12 +162,55 @@ void send_cmds(container_t *container)
             }
         }
         // bootloader commands
-        if (cJSON_GetObjectItem(root, "bootloader") != NULL)
+        cJSON *bootloader_json = cJSON_GetObjectItem(root, "bootloader");
+        if (cJSON_IsObject(bootloader_json))
         {
-            // change color led
-            uint8_t red_value = 40;
+            uint8_t red_value = 10;
             uint8_t green_value = 0;
             uint8_t blue_value = 0;
+
+            char* type = NULL;
+            uint8_t nb_node = 0;
+            uint8_t nb_target = 0;
+
+            if(cJSON_IsObject(cJSON_GetObjectItem(bootloader_json, "command")))
+            {
+                cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
+
+                char* type = cJSON_GetObjectItem(command_item, "type")->valuestring;
+                uint8_t nb_node = cJSON_GetObjectItem(command_item, "nb_node")->valueint;
+                cJSON* node_list = cJSON_GetObjectItem(command_item, "node_list");
+                uint8_t nb_target = cJSON_GetObjectItem(command_item, "nb_target")->valueint;
+                cJSON* target_list = cJSON_GetObjectItem(command_item, "target_list");
+
+                if(strcmp(type, 'start') == 0)
+                {
+                    // change color led
+                red_value = 0;
+                green_value = 10;
+                blue_value = 10;
+                }
+                
+                if(strcmp(type, 'stop') == 0)
+                {
+                    // change color led
+                red_value = 10;
+                green_value = 10;
+                blue_value = 0;
+                }
+                
+            }
+
+            if(cJSON_IsArray(cJSON_GetObjectItem(bootloader_json, "binary")))
+            {
+                 cJSON *binary_item = cJSON_GetObjectItem(bootloader_json, "binary");
+
+                // change color led
+                red_value = 0;
+                green_value = 0;
+                blue_value = 10;
+            }
+           
             
             //Now send a message
     	    msg_t color_msg;
