@@ -165,68 +165,53 @@ void send_cmds(container_t *container)
         cJSON *bootloader_json = cJSON_GetObjectItem(root, "bootloader");
         if (cJSON_IsObject(bootloader_json))
         {
-            uint8_t red_value = 10;
-            uint8_t green_value = 0;
-            uint8_t blue_value = 0;
-
-            char* type = NULL;
-            uint8_t nb_node = 0;
-            uint8_t nb_target = 0;
-
             if(cJSON_IsObject(cJSON_GetObjectItem(bootloader_json, "command")))
             {
-                cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
+                // command type
+                char* start_cmd = "start";
+                char* stop_cmd = "stop";
 
-                char* type = cJSON_GetObjectItem(command_item, "type")->valuestring;
-                uint8_t nb_node = cJSON_GetObjectItem(command_item, "nb_node")->valueint;
+                // get "command" json object
+                cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
+                // parse all relevant values in json object
+                char* type = cJSON_GetStringValue(cJSON_GetObjectItem(command_item, "type"));
+                uint8_t nb_node = cJSON_GetObjectItem(command_item, "nb_node")->valueint ;
                 cJSON* node_list = cJSON_GetObjectItem(command_item, "node_list");
                 uint8_t nb_target = cJSON_GetObjectItem(command_item, "nb_target")->valueint;
                 cJSON* target_list = cJSON_GetObjectItem(command_item, "target_list");
 
-                if(strcmp(type, 'start') == 0)
+                // create a message to send to nodes
+    	        msg_t boot_msg;
+		        uint8_t id_boot_app = RoutingTB_IDFromAlias("boot_app");        // find node ID
+    	        boot_msg.header.target = id_boot_app;                           // init target header
+    	        boot_msg.header.cmd = BOOTLOADER;                               // bootloader cmd
+    	        boot_msg.header.target_mode = IDACK; 
+
+                if(strcmp(type, start_cmd) == 0)
                 {
-                    // change color led
-                red_value = 0;
-                green_value = 10;
-                blue_value = 10;
+                    // send start command to bootloader app
+                    boot_msg.header.size = sizeof(char); //Our message only contains one character
+                    boot_msg.data[0] = 0x01;
+                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
                 
-                if(strcmp(type, 'stop') == 0)
+                if(strcmp(type, stop_cmd) == 0)
                 {
-                    // change color led
-                red_value = 10;
-                green_value = 10;
-                blue_value = 0;
+                    // send stop command to bootloader app
+                    boot_msg.header.size = sizeof(char); //Our message only contains one character
+                    boot_msg.data[0] = 0x02;
+                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
-                
             }
 
             if(cJSON_IsArray(cJSON_GetObjectItem(bootloader_json, "binary")))
             {
-                 cJSON *binary_item = cJSON_GetObjectItem(bootloader_json, "binary");
+                cJSON *binary_item = cJSON_GetObjectItem(bootloader_json, "binary");
 
-                // change color led
-                red_value = 0;
-                green_value = 0;
-                blue_value = 10;
+                // prepare to receive binary
             }
-           
             
-            //Now send a message
-    	    msg_t color_msg;
-
-		    //Get the ID of our LED from the routing table
-		    uint8_t id_color_led = RoutingTB_IDFromAlias("rgb_led_mod");
-
-    	    color_msg.header.target = id_color_led; //We are sending this to the LED
-    	    color_msg.header.cmd = COLOR; //We are specifying a COLOR (R, G, B)
-    	    color_msg.header.target_mode = IDACK; //We are asking for an acknowledgement
-           	 
-    	    color_msg.header.size = 3*sizeof(char); //Our message only contains three characters, respectively R / G / B
-    	    color_msg.data[0] = red_value;
-		    color_msg.data[1] = green_value;
-		    color_msg.data[2] = blue_value;
-    	    Luos_SendMsg(container, &color_msg); //Now that we have the elements, send the message
+            
         }
 
         cJSON *containers = cJSON_GetObjectItem(root, "containers");
