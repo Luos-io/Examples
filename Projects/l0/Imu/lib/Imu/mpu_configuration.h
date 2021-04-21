@@ -6,22 +6,22 @@
 #include <inv_mpu_dmp_motion_driver.h>
 #include <inv_mpu.h>
 
-#define SEND_ACCEL (0x01)
-#define SEND_GYRO (0x02)
-#define SEND_QUAT (0x04)
-#define SEND_COMPASS (0x08)
-#define SEND_EULER (0x10)
-#define SEND_ROT_MAT (0x20)
-#define SEND_HEADING (0x40)
-#define SEND_PEDO (0x80)
-#define SEND_LINEAR_ACCEL (0x100)
+#define SEND_ACCEL          (0x01)
+#define SEND_GYRO           (0x02)
+#define SEND_QUAT           (0x04)
+#define SEND_COMPASS        (0x08)
+#define SEND_EULER          (0x10)
+#define SEND_ROT_MAT        (0x20)
+#define SEND_HEADING        (0x40)
+#define SEND_PEDO           (0x80)
+#define SEND_LINEAR_ACCEL   (0x100)
 #define SEND_GRAVITY_VECTOR (0x200)
 
-#define ACCEL_ON (0x01)
-#define GYRO_ON (0x02)
+#define ACCEL_ON   (0x01)
+#define GYRO_ON    (0x02)
 #define COMPASS_ON (0x04)
 
-#define MOTION (0)
+#define MOTION    (0)
 #define NO_MOTION (1)
 
 /* Starting sampling rate. (default 20) */
@@ -30,8 +30,8 @@
 //#define FLASH_SIZE      (512)
 //#define FLASH_MEM_START ((void*)0x1800)
 
-#define PEDO_READ_MS (1000)
-#define TEMP_READ_MS (500)
+#define PEDO_READ_MS    (1000)
+#define TEMP_READ_MS    (500)
 #define COMPASS_READ_MS (100)
 
 // Imu report struct

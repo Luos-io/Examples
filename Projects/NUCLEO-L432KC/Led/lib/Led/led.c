@@ -7,11 +7,9 @@
 #include "gpio.h"
 #include "led.h"
 
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
 
 /*******************************************************************************
  * Variables
@@ -29,7 +27,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Led_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     Luos_CreateContainer(Led_MsgHandler, STATE_MOD, "led_mod", revision);
 }
 /******************************************************************************
@@ -52,11 +50,11 @@ static void Led_MsgHandler(container_t *container, msg_t *msg)
     {
         // fill the message infos
         msg_t pub_msg;
-        pub_msg.header.cmd = IO_STATE;
+        pub_msg.header.cmd         = IO_STATE;
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
-        pub_msg.header.size = sizeof(char);
-        pub_msg.data[0] = HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin);
+        pub_msg.header.target      = msg->header.source;
+        pub_msg.header.size        = sizeof(char);
+        pub_msg.data[0]            = HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin);
         Luos_SendMsg(container, &pub_msg);
         return;
     }

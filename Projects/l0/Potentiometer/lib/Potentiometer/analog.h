@@ -15,12 +15,12 @@
 ADC_HandleTypeDef Potentiometer_adc;
 DMA_HandleTypeDef Potentiometer_dma_adc;
 
-
 // This structure need to list all ADC configured in the good order determined by the
 // ADC_CHANEL number in increasing order
 typedef struct __attribute__((__packed__))
 {
-    union {
+    union
+    {
         struct __attribute__((__packed__))
         {
             uint32_t pos;

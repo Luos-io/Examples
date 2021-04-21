@@ -8,7 +8,8 @@ DMA_HandleTypeDef LightSensor_dma_adc;
 // ADC_CHANEL number in increasing order
 typedef struct __attribute__((__packed__))
 {
-    union {
+    union
+    {
         struct __attribute__((__packed__))
         {
             uint32_t light;

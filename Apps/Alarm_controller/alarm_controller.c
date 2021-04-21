@@ -12,9 +12,9 @@
  ******************************************************************************/
 
 #define UPDATE_PERIOD_MS 10
-#define BLINK_NUMBER 3
+#define BLINK_NUMBER     3
 
-#define LIGHT_INTENSITY 255
+#define LIGHT_INTENSITY      255
 #define MOVEMENT_SENSIBILITY 20
 
 // Imu report struct
@@ -63,7 +63,7 @@ static void AlarmController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void AlarmController_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
@@ -76,9 +76,9 @@ void AlarmController_Init(void)
  ******************************************************************************/
 void AlarmController_Loop(void)
 {
-    static short previous_id = -1;
-    static uint8_t blink = 0;
-    static uint8_t blink_nb = BLINK_NUMBER * 2;
+    static short previous_id   = -1;
+    static uint8_t blink       = 0;
+    static uint8_t blink_nb    = BLINK_NUMBER * 2;
     static uint32_t last_blink = 0;
 
     // ********** hot plug management ************
@@ -113,24 +113,24 @@ void AlarmController_Loop(void)
             if (id > 0)
             {
                 msg_t msg;
-                msg.header.target = id;
+                msg.header.target      = id;
                 msg.header.target_mode = IDACK;
-                time_luos_t time = TimeOD_TimeFrom_s(0.5f);
+                time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
                 TimeOD_TimeToMsg(&time, &msg);
                 Luos_SendMsg(app, &msg);
             }
             // try to find an IMU and set parameters to disable quaternion and send back Gyro acceleration and euler.
             imu_report_t report;
-            report.gyro = 1;
+            report.gyro  = 1;
             report.euler = 1;
-            report.quat = 0;
-            id = RoutingTB_IDFromType(IMU_MOD);
+            report.quat  = 0;
+            id           = RoutingTB_IDFromType(IMU_MOD);
             if (id > 0)
             {
                 msg_t msg;
-                msg.header.cmd = PARAMETERS;
-                msg.header.size = sizeof(imu_report_t);
-                msg.header.target = id;
+                msg.header.cmd         = PARAMETERS;
+                msg.header.size        = sizeof(imu_report_t);
+                msg.header.target      = id;
                 msg.header.target_mode = IDACK;
                 memcpy(msg.data, &report, sizeof(imu_report_t));
                 Luos_SendMsg(app, &msg);
@@ -153,18 +153,18 @@ void AlarmController_Loop(void)
         if (blink_state)
         {
             blink_state = 0;
-            blink_nb = 0;
-            blink = 0;
+            blink_nb    = 0;
+            blink       = 0;
             // try to reach a buzzer and drive it if there is
             int id = RoutingTB_IDFromAlias("buzzer_mod");
             if (id > 0)
             {
                 msg_t msg;
-                msg.header.target = id;
+                msg.header.target      = id;
                 msg.header.target_mode = IDACK;
-                msg.header.cmd = IO_STATE;
-                msg.header.size = 1;
-                msg.data[0] = 0;
+                msg.header.cmd         = IO_STATE;
+                msg.header.size        = 1;
+                msg.data[0]            = 0;
                 Luos_SendMsg(app, &msg);
             }
         }
@@ -187,7 +187,7 @@ void AlarmController_Loop(void)
                         color.r = LIGHT_INTENSITY;
                     }
                     msg_t msg;
-                    msg.header.target = id;
+                    msg.header.target      = id;
                     msg.header.target_mode = IDACK;
                     IlluminanceOD_ColorToMsg(&color, &msg);
                     Luos_SendMsg(app, &msg);
@@ -203,14 +203,14 @@ void AlarmController_Loop(void)
                         horn = 1;
                     }
                     msg_t msg;
-                    msg.header.target = id;
+                    msg.header.target      = id;
                     msg.header.target_mode = IDACK;
-                    msg.header.size = sizeof(uint8_t);
-                    msg.header.cmd = IO_STATE;
-                    msg.data[0] = horn;
+                    msg.header.size        = sizeof(uint8_t);
+                    msg.header.cmd         = IO_STATE;
+                    msg.data[0]            = horn;
                     Luos_SendMsg(app, &msg);
                 }
-                blink = (!blink);
+                blink      = (!blink);
                 last_blink = HAL_GetTick();
             }
         }
@@ -220,9 +220,9 @@ void AlarmController_Loop(void)
         if (blink_nb != BLINK_NUMBER * 2)
         {
             // reset alarm state
-            blink_nb = BLINK_NUMBER * 2;
+            blink_nb    = BLINK_NUMBER * 2;
             blink_state = 0;
-            blink = 0;
+            blink       = 0;
         }
     }
 }

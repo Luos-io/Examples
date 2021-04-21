@@ -38,24 +38,24 @@ static uint8_t find_id(container_t *my_container);
  ******************************************************************************/
 void Servo_Init(void)
 {
-	revision_t revision = {.unmap = REV};
-	
+    revision_t revision = {.unmap = REV};
+
     container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", revision);
     container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", revision);
     container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", revision);
     container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", revision);
     servo_parameters_t param;
-    param.max_angle = 180.0;
+    param.max_angle      = 180.0;
     param.max_pulse_time = 1.5 / 1000.0;
     param.min_pulse_time = 0.5 / 1000.0;
-    servo[0].param = param;
-    servo[0].angle = 0.0;
-    servo[1].param = param;
-    servo[1].angle = 0.0;
-    servo[2].param = param;
-    servo[2].angle = 0.0;
-    servo[3].param = param;
-    servo[3].angle = 0.0;
+    servo[0].param       = param;
+    servo[0].angle       = 0.0;
+    servo[1].param       = param;
+    servo[1].angle       = 0.0;
+    servo[2].param       = param;
+    servo[2].angle       = 0.0;
+    servo[3].param       = param;
+    servo[3].angle       = 0.0;
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -107,44 +107,44 @@ static void set_position(uint8_t motor_id)
     //const uint32_t max = 800; // max pulse to have 1,5ms
     uint32_t pulse_min = (uint32_t)(servo[motor_id].param.min_pulse_time * (float)(48000000 / htim2.Init.Prescaler));
     uint32_t pulse_max = (uint32_t)(servo[motor_id].param.max_pulse_time * (float)(48000000 / htim2.Init.Prescaler));
-    uint32_t pulse = pulse_min + (uint32_t)(servo[motor_id].angle / servo[motor_id].param.max_angle * (pulse_max - pulse_min));
+    uint32_t pulse     = pulse_min + (uint32_t)(servo[motor_id].angle / servo[motor_id].param.max_angle * (pulse_max - pulse_min));
 
     switch (motor_id)
     {
-    case 0:
-        if (!chan1)
-        {
-            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-            chan1 = 1;
-        }
-        TIM2->CCR1 = pulse;
-        break;
-    case 1:
-        if (!chan2)
-        {
-            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-            chan2 = 1;
-        }
-        TIM2->CCR2 = pulse;
-        break;
-    case 2:
-        if (!chan3)
-        {
-            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-            chan3 = 1;
-        }
-        TIM2->CCR3 = pulse;
-        break;
-    case 3:
-        if (!chan4)
-        {
-            HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-            chan4 = 1;
-        }
-        TIM2->CCR4 = pulse;
-        break;
-    default:
-        break;
+        case 0:
+            if (!chan1)
+            {
+                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+                chan1 = 1;
+            }
+            TIM2->CCR1 = pulse;
+            break;
+        case 1:
+            if (!chan2)
+            {
+                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+                chan2 = 1;
+            }
+            TIM2->CCR2 = pulse;
+            break;
+        case 2:
+            if (!chan3)
+            {
+                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+                chan3 = 1;
+            }
+            TIM2->CCR3 = pulse;
+            break;
+        case 3:
+            if (!chan4)
+            {
+                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+                chan4 = 1;
+            }
+            TIM2->CCR4 = pulse;
+            break;
+        default:
+            break;
     }
 }
 

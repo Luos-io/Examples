@@ -16,7 +16,7 @@
  * Variables
  ******************************************************************************/
 volatile uint32_t hal_timestamp = 0;
-unsigned char *mpl_key = (unsigned char *)"eMPL 5.1";
+unsigned char *mpl_key          = (unsigned char *)"eMPL 5.1";
 
 container_t *container_pointer;
 volatile msg_t pub_msg;
@@ -34,7 +34,7 @@ static void Imu_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Imu_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     mpu_setup();
     hal.report.quat = 1;
     Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", revision);
@@ -49,19 +49,18 @@ void Imu_Loop(void)
     // *********************IMU management*******************************
     unsigned long sensor_timestamp;
     unsigned long timestamp;
-    int new_data = 0;
-    timestamp = HAL_GetTick();
+    int new_data                  = 0;
+    timestamp                     = HAL_GetTick();
     static unsigned char new_temp = 0;
 #ifdef COMPASS_ENABLED
     static unsigned char new_compass = 0;
     /* We're not using a data ready interrupt for the compass, so we'll
      * make our compass reads timer-based instead.
      */
-    if ((timestamp > hal.next_compass_ms) && !hal.lp_accel_mode &&
-        hal.new_gyro && (hal.sensors & COMPASS_ON))
+    if ((timestamp > hal.next_compass_ms) && !hal.lp_accel_mode && hal.new_gyro && (hal.sensors & COMPASS_ON))
     {
         hal.next_compass_ms = timestamp + COMPASS_READ_MS;
-        new_compass = 1;
+        new_compass         = 1;
     }
 #endif
     /* Temperature data doesn't need to be read with every gyro sample.
@@ -70,7 +69,7 @@ void Imu_Loop(void)
     if (timestamp > hal.next_temp_ms)
     {
         hal.next_temp_ms = timestamp + TEMP_READ_MS;
-        new_temp = 1;
+        new_temp         = 1;
     }
     if (hal.motion_int_mode)
     {
@@ -103,7 +102,7 @@ void Imu_Loop(void)
         accel[1] = (long)accel_short[1];
         accel[2] = (long)accel_short[2];
         inv_build_accel(accel, 0, sensor_timestamp);
-        new_data = 1;
+        new_data     = 1;
         hal.new_gyro = 0;
     }
     else if (hal.new_gyro && hal.dmp_on)
@@ -245,9 +244,9 @@ static void Imu_MsgHandler(container_t *container, msg_t *msg)
     {
         // fill the message infos
         hal.update_request = 1;
-        container_pointer = container;
-        hal.source_id = msg->header.source;
-        pub = LUOS_PROTOCOL_NB;
+        container_pointer  = container;
+        hal.source_id      = msg->header.source;
+        pub                = LUOS_PROTOCOL_NB;
         return;
     }
     if (msg->header.cmd == PARAMETERS)

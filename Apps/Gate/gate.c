@@ -20,7 +20,10 @@ static int serial_write(char *data, int len);
 #endif
 
 #ifndef REV
-#define REV {1,0,0}
+#define REV     \
+    {           \
+        1, 0, 0 \
+    }
 #endif
 /*******************************************************************************
  * Variables
@@ -74,10 +77,10 @@ __attribute__((weak)) void json_send(char *json)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-    static unsigned int keepAlive = 0;
+    static unsigned int keepAlive          = 0;
     static volatile uint8_t detection_done = 0;
-    static char state = 0;
-    uint32_t tickstart = 0;
+    static char state                      = 0;
+    uint32_t tickstart                     = 0;
 
     // Check if there is a dead container
     if (container->ll_container->dead_container_spotted)
@@ -90,7 +93,7 @@ void Gate_Loop(void)
     if (detection_done)
     {
         char json[JSON_BUFF_SIZE] = {0};
-        state = !state;
+        state                     = !state;
         format_data(container, json);
         if (json[0] != '\0')
         {
@@ -125,12 +128,12 @@ void Gate_Loop(void)
         routing_table_to_json(json);
         json_send(json);
         detection_done = 1;
-        detection_ask = 0;
+        detection_ask  = 0;
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < get_delay());
-
+    while ((Luos_GetSystick() - tickstart) < get_delay())
+        ;
 }
 
 #ifdef USE_SERIAL
@@ -157,7 +160,6 @@ void USART3_4_IRQHandler(void)
     }
 }
 #endif
-
 
 #ifdef USE_SERIAL
 static int serial_write(char *data, int len)

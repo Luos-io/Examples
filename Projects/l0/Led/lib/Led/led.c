@@ -15,7 +15,6 @@
  * Definitions
  ******************************************************************************/
 
-
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -23,7 +22,7 @@ volatile time_luos_t time;
 volatile color_t target_rgb;
 volatile color_t last_rgb;
 volatile float coef[3] = {0.0};
-static int elapsed_ms = 0;
+static int elapsed_ms  = 0;
 
 /*******************************************************************************
  * Function
@@ -37,8 +36,8 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Led_Init(void)
 {
-	revision_t revision = {.unmap = REV};
-    time = TimeOD_TimeFrom_ms(0.0);
+    revision_t revision = {.unmap = REV};
+    time                = TimeOD_TimeFrom_ms(0.0);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
@@ -68,9 +67,9 @@ static void Led_MsgHandler(container_t *container, msg_t *msg)
         if (TimeOD_TimeTo_ms(time) > 0.0)
         {
             elapsed_ms = 0;
-            coef[0] = (float)(target_rgb.r - last_rgb.r) / TimeOD_TimeTo_ms(time);
-            coef[1] = (float)(target_rgb.g - last_rgb.g) / TimeOD_TimeTo_ms(time);
-            coef[2] = (float)(target_rgb.b - last_rgb.b) / TimeOD_TimeTo_ms(time);
+            coef[0]    = (float)(target_rgb.r - last_rgb.r) / TimeOD_TimeTo_ms(time);
+            coef[1]    = (float)(target_rgb.g - last_rgb.g) / TimeOD_TimeTo_ms(time);
+            coef[2]    = (float)(target_rgb.b - last_rgb.b) / TimeOD_TimeTo_ms(time);
         }
         return;
     }

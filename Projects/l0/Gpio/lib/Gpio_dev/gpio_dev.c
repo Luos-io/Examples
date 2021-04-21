@@ -13,13 +13,13 @@
  ******************************************************************************/
 
 // Pin configuration
-#define P1_Pin GPIO_PIN_0
+#define P1_Pin       GPIO_PIN_0
 #define P1_GPIO_Port GPIOA
-#define P9_Pin GPIO_PIN_1
+#define P9_Pin       GPIO_PIN_1
 #define P9_GPIO_Port GPIOA
-#define P8_Pin GPIO_PIN_0
+#define P8_Pin       GPIO_PIN_0
 #define P8_GPIO_Port GPIOB
-#define P7_Pin GPIO_PIN_1
+#define P7_Pin       GPIO_PIN_1
 #define P7_GPIO_Port GPIOB
 
 enum
@@ -53,70 +53,70 @@ static void rx_analog_read_cb(container_t *container, msg_t *msg);
  ******************************************************************************/
 void GpioDev_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
-    ADC_ChannelConfTypeDef sConfig = {0};
+    ADC_ChannelConfTypeDef sConfig   = {0};
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     // Enable  ADC Gpio clocks
     //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
     /**ADC GPIO Configuration
     */
     // Configure analog input pin channel
-    GPIO_InitStruct.Pin = P1_Pin | P9_Pin;
+    GPIO_InitStruct.Pin  = P1_Pin | P9_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = P8_Pin | P7_Pin;
+    GPIO_InitStruct.Pin  = P8_Pin | P7_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     // Enable  ADC clocks
     __HAL_RCC_ADC1_CLK_ENABLE();
     // Setup Adc to loop on DMA continuously
-    GpioDev_adc.Instance = ADC1;
-    GpioDev_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-    GpioDev_adc.Init.Resolution = ADC_RESOLUTION_12B;
-    GpioDev_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    GpioDev_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
-    GpioDev_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-    GpioDev_adc.Init.LowPowerAutoWait = DISABLE;
-    GpioDev_adc.Init.LowPowerAutoPowerOff = DISABLE;
-    GpioDev_adc.Init.ContinuousConvMode = ENABLE;
+    GpioDev_adc.Instance                   = ADC1;
+    GpioDev_adc.Init.ClockPrescaler        = ADC_CLOCK_ASYNC_DIV1;
+    GpioDev_adc.Init.Resolution            = ADC_RESOLUTION_12B;
+    GpioDev_adc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    GpioDev_adc.Init.ScanConvMode          = ADC_SCAN_ENABLE;
+    GpioDev_adc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
+    GpioDev_adc.Init.LowPowerAutoWait      = DISABLE;
+    GpioDev_adc.Init.LowPowerAutoPowerOff  = DISABLE;
+    GpioDev_adc.Init.ContinuousConvMode    = ENABLE;
     GpioDev_adc.Init.DiscontinuousConvMode = DISABLE;
-    GpioDev_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-    GpioDev_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    GpioDev_adc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    GpioDev_adc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
     GpioDev_adc.Init.DMAContinuousRequests = ENABLE;
-    GpioDev_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    GpioDev_adc.Init.Overrun               = ADC_OVR_DATA_PRESERVED;
     if (HAL_ADC_Init(&GpioDev_adc) != HAL_OK)
     {
         Error_Handler();
     }
 
-    sConfig.Channel = ADC_CHANNEL_0;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.Channel      = ADC_CHANNEL_0;
+    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         Error_Handler();
     }
-    sConfig.Channel = ADC_CHANNEL_9;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.Channel      = ADC_CHANNEL_9;
+    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         Error_Handler();
     }
-    sConfig.Channel = ADC_CHANNEL_8;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.Channel      = ADC_CHANNEL_8;
+    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         Error_Handler();
     }
-    sConfig.Channel = ADC_CHANNEL_1;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.Channel      = ADC_CHANNEL_1;
+    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
@@ -127,14 +127,14 @@ void GpioDev_Init(void)
     __HAL_RCC_DMA1_CLK_ENABLE();
     /* ADC1 DMA Init */
     /* ADC Init */
-    GpioDev_dma_adc.Instance = DMA1_Channel1;
-    GpioDev_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    GpioDev_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
-    GpioDev_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    GpioDev_dma_adc.Instance                 = DMA1_Channel1;
+    GpioDev_dma_adc.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    GpioDev_dma_adc.Init.PeriphInc           = DMA_PINC_DISABLE;
+    GpioDev_dma_adc.Init.MemInc              = DMA_MINC_ENABLE;
     GpioDev_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    GpioDev_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    GpioDev_dma_adc.Init.Mode = DMA_CIRCULAR;
-    GpioDev_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    GpioDev_dma_adc.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+    GpioDev_dma_adc.Init.Mode                = DMA_CIRCULAR;
+    GpioDev_dma_adc.Init.Priority            = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&GpioDev_dma_adc) != HAL_OK)
     {
         Error_Handler();
@@ -170,10 +170,10 @@ static void rx_digit_read_cb(container_t *container, msg_t *msg)
     {
         msg_t pub_msg;
         // fill the message infos
-        pub_msg.header.cmd = IO_STATE;
+        pub_msg.header.cmd         = IO_STATE;
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
-        pub_msg.header.size = sizeof(char);
+        pub_msg.header.target      = msg->header.source;
+        pub_msg.header.size        = sizeof(char);
 
         if (container == pin[P5])
         {
@@ -240,7 +240,7 @@ static void rx_analog_read_cb(container_t *container, msg_t *msg)
         }
         // fill the message infos
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
+        pub_msg.header.target      = msg->header.source;
         ElectricOD_VoltageToMsg(&volt, &pub_msg);
         Luos_SendMsg(container, &pub_msg);
         return;

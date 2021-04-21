@@ -40,7 +40,7 @@ static void rx_digit_read_cb(container_t *container, msg_t *msg);
  ******************************************************************************/
 void GpioDev_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // ************* containers creation *******************
     pin[P1] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P1", revision);
@@ -68,10 +68,10 @@ static void rx_digit_read_cb(container_t *container, msg_t *msg)
     {
         msg_t pub_msg;
         // fill the message infos
-        pub_msg.header.cmd = IO_STATE;
+        pub_msg.header.cmd         = IO_STATE;
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
-        pub_msg.header.size = sizeof(char);
+        pub_msg.header.target      = msg->header.source;
+        pub_msg.header.size        = sizeof(char);
 
         if (container == pin[P5])
         {
@@ -82,21 +82,21 @@ static void rx_digit_read_cb(container_t *container, msg_t *msg)
             pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
         }
         else if (container == pin[P7])
-		{
-			pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P7_GPIO_Port, P7_Pin) > 0);
-		}
+        {
+            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P7_GPIO_Port, P7_Pin) > 0);
+        }
         else if (container == pin[P8])
-		{
-			pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P8_GPIO_Port, P8_Pin) > 0);
-		}
+        {
+            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P8_GPIO_Port, P8_Pin) > 0);
+        }
         else if (container == pin[P9])
-		{
-			pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P9_GPIO_Port, P9_Pin) > 0);
-		}
+        {
+            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P9_GPIO_Port, P9_Pin) > 0);
+        }
         else if (container == pin[P1])
-		{
-			pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P1_GPIO_Port, P1_Pin) > 0);
-		}
+        {
+            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P1_GPIO_Port, P1_Pin) > 0);
+        }
         else
         {
             return;

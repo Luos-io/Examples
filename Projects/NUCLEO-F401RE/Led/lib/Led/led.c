@@ -7,11 +7,9 @@
 #include "gpio.h"
 #include "led.h"
 
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
 
 /*******************************************************************************
  * Variables
@@ -29,7 +27,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Led_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     Luos_CreateContainer(Led_MsgHandler, STATE_MOD, "led_mod", revision);
 }
 /******************************************************************************

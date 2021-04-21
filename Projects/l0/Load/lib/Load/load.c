@@ -17,8 +17,8 @@
  * Variables
  ******************************************************************************/
 uint8_t new_data_ready = 0;
-volatile force_t load = 0.0;
-char have_to_tare = 0;
+volatile force_t load  = 0.0;
+char have_to_tare      = 0;
 
 /*******************************************************************************
  * Function
@@ -33,7 +33,7 @@ static void Load_MsgHandler(container_t *container, msg_t *msg);
 void Load_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    
+
     hx711_init(128);
     Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", revision);
 }
@@ -46,7 +46,7 @@ void Load_Loop(void)
 {
     if (hx711_is_ready())
     {
-        load = hx711_get_units(1);
+        load           = hx711_get_units(1);
         new_data_ready = 1;
     }
     if (have_to_tare)
@@ -70,7 +70,7 @@ static void Load_MsgHandler(container_t *container, msg_t *msg)
             msg_t pub_msg;
             // fill the message infos
             pub_msg.header.target_mode = ID;
-            pub_msg.header.target = msg->header.source;
+            pub_msg.header.target      = msg->header.source;
             ForceOD_ForceToMsg((force_t *)&load, &pub_msg);
             Luos_SendMsg(container, &pub_msg);
             new_data_ready = 0;

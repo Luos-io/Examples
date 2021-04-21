@@ -26,9 +26,9 @@ container_t *container_pointer;
 uint16_t dxl_table[MAX_CONTAINER_NUMBER];
 uint8_t dxl_request_table[MAX_CONTAINER_NUMBER];
 dxl_models_t dxl_model[MAX_CONTAINER_NUMBER];
-uint16_t position[MAX_CONTAINER_NUMBER] = {0};
+uint16_t position[MAX_CONTAINER_NUMBER]    = {0};
 uint16_t temperature[MAX_CONTAINER_NUMBER] = {0};
-volatile char publish = 0;
+volatile char publish                      = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -55,7 +55,7 @@ void Dxl_Init(void)
  ******************************************************************************/
 void Dxl_Loop(void)
 {
-    static int id = 0;
+    static int id                                   = 0;
     static uint32_t last_temp[MAX_CONTAINER_NUMBER] = {0};
     //check motor values one by one
     // Get motor info
@@ -63,7 +63,7 @@ void Dxl_Loop(void)
         id = 0;
     if (dxl_table[id] != 0)
     {
-        uint16_t tmp_val = 0;
+        uint16_t tmp_val     = 0;
         servo_error_t errors = servo_get_raw_word(dxl_table[id], SERVO_REGISTER_PRESENT_ANGLE, &tmp_val, DXL_TIMEOUT);
         if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
         {
@@ -75,7 +75,7 @@ void Dxl_Loop(void)
             if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
             {
                 temperature[id] = tmp_val;
-                last_temp[id] = HAL_GetTick();
+                last_temp[id]   = HAL_GetTick();
             }
         }
     }
@@ -99,10 +99,10 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         memcpy(&reg, msg->data, sizeof(uint16_t));
         memcpy(&val, &msg->data[2], (msg->header.size - sizeof(uint16_t)));
 
-        dxl[last].val = (float)val;
-        dxl[last].reg = reg;
+        dxl[last].val               = (float)val;
+        dxl[last].reg               = reg;
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_REG;
+        dxl[last].mode              = MODE_REG;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -115,9 +115,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         char id;
         memcpy(&id, msg->data, sizeof(char));
-        dxl[last].val = id;
+        dxl[last].val               = id;
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_ID;
+        dxl[last].mode              = MODE_ID;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -129,7 +129,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == REINIT)
     {
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_DETECT;
+        dxl[last].mode              = MODE_DETECT;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -142,7 +142,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         AngularOD_PositionFromMsg((angular_position_t *)&dxl[last].val, msg);
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_ANGLE;
+        dxl[last].mode              = MODE_ANGLE;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -155,9 +155,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         float load;
         memcpy(&load, msg->data, sizeof(float));
-        dxl[last].val = load;
+        dxl[last].val               = load;
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_POWER_LIMIT;
+        dxl[last].mode              = MODE_POWER_LIMIT;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -181,7 +181,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
         }
         memcpy((void *)&dxl[last].val, pid, 3 * sizeof(char));
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_PID;
+        dxl[last].mode              = MODE_PID;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -194,10 +194,10 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         angular_position_t angle[2];
         memcpy(&angle, msg->data, 2 * sizeof(float));
-        dxl[last].val = angle[0];
-        dxl[last].val2 = angle[1];
+        dxl[last].val               = angle[0];
+        dxl[last].val2              = angle[1];
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_ANGLE_LIMIT;
+        dxl[last].mode              = MODE_ANGLE_LIMIT;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -210,7 +210,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         AngularOD_SpeedFromMsg((angular_speed_t *)&dxl[last].val, msg);
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_SPEED;
+        dxl[last].mode              = MODE_SPEED;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -221,9 +221,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == DXL_WHEELMODE)
     {
-        dxl[last].reg = (int)msg->data[0];
+        dxl[last].reg               = (int)msg->data[0];
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_WHEEL;
+        dxl[last].mode              = MODE_WHEEL;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
         {
@@ -234,9 +234,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == COMPLIANT)
     {
-        dxl[last].reg = (int)msg->data[0];
+        dxl[last].reg               = (int)msg->data[0];
         dxl[last].container_pointer = container;
-        dxl[last].mode = MODE_COMPLIANT;
+        dxl[last].mode              = MODE_COMPLIANT;
         request_nb++;
         last++;
         if (last == MAX_CONTAINER_NUMBER)
@@ -256,9 +256,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
             {
                 value = AngularOD_PositionFrom_deg(((360.0 * (float)position[i]) / (4096.0 - 1.0)) - (360.0 / 2));
             }
-            dxl[last].val = AngularOD_PositionTo_deg(value);
+            dxl[last].val               = AngularOD_PositionTo_deg(value);
             dxl[last].container_pointer = container;
-            dxl[last].mode = MODE_ANGLE;
+            dxl[last].mode              = MODE_ANGLE;
             last++;
             if (last == MAX_CONTAINER_NUMBER)
             {
@@ -272,9 +272,9 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
     {
         if (!publish)
         {
-            pub_msg.header.target = msg->header.source;
-            container_pointer = container;
-            pub = ASK_PUB_CMD;
+            pub_msg.header.target                 = msg->header.source;
+            container_pointer                     = container;
+            pub                                   = ASK_PUB_CMD;
             dxl_request_table[find_id(container)] = 1;
         }
         return;
@@ -284,7 +284,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
 static void discover_dxl(void)
 {
     revision_t revision = {.unmap = REV};
-    int y = 0;
+    int y               = 0;
     char my_string[15];
     // Clear container table
     Luos_ContainersClear();
@@ -305,7 +305,7 @@ static void discover_dxl(void)
             // no timeout occured, there is a servo here
             sprintf(my_string, "dxl_%d", i);
             my_container[y] = Luos_CreateContainer(Dxl_MsgHandler, DYNAMIXEL_MOD, my_string, revision);
-            dxl_table[y] = i;
+            dxl_table[y]    = i;
 
             servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl_model[y], DXL_TIMEOUT);
             // put a delay on motor response
@@ -328,7 +328,7 @@ static void discover_dxl(void)
 static void dxl_request_manager(void)
 {
     static unsigned char last = 0;
-    int i = 0;
+    int i                     = 0;
     while (request_nb != 0)
     {
         // Send something to a motor
@@ -358,32 +358,32 @@ static void dxl_request_manager(void)
                             baud = 1; // Default value for 1000000
                             switch ((uint32_t)dxl[last].val)
                             {
-                            case 9600:
-                                baud = 207;
-                                break;
-                            case 19200:
-                                baud = 103;
-                                break;
-                            case 57600:
-                                baud = 34;
-                                break;
-                            case 115200:
-                                baud = 16;
-                                break;
-                            case 200000:
-                                baud = 9;
-                                break;
-                            case 250000:
-                                baud = 7;
-                                break;
-                            case 400000:
-                                baud = 4;
-                                break;
-                            case 500000:
-                                baud = 3;
-                                break;
-                            default:
-                                break;
+                                case 9600:
+                                    baud = 207;
+                                    break;
+                                case 19200:
+                                    baud = 103;
+                                    break;
+                                case 57600:
+                                    baud = 34;
+                                    break;
+                                case 115200:
+                                    baud = 16;
+                                    break;
+                                case 200000:
+                                    baud = 9;
+                                    break;
+                                case 250000:
+                                    baud = 7;
+                                    break;
+                                case 400000:
+                                    baud = 4;
+                                    break;
+                                case 500000:
+                                    baud = 3;
+                                    break;
+                                default:
+                                    break;
                             }
                         }
                         else
@@ -391,17 +391,17 @@ static void dxl_request_manager(void)
                             // void container will use this mode
                             switch ((uint32_t)dxl[last].val)
                             {
-                            case 9600:
-                                baud = 0;
-                                break;
-                            case 57600:
-                                baud = 1;
-                                break;
-                            case 115200:
-                                baud = 2;
-                                break;
-                            default:
-                                break;
+                                case 9600:
+                                    baud = 0;
+                                    break;
+                                case 57600:
+                                    baud = 1;
+                                    break;
+                                case 115200:
+                                    baud = 2;
+                                    break;
+                                default:
+                                    break;
                             }
                         }
 
@@ -509,7 +509,7 @@ static void dxl_request_manager(void)
                 float speed_max = 1023.0 * speed_factor * 360.0 / 60.0;
                 // Maximisation
                 dxl[last].val = fminf(fmaxf(dxl[last].val, -speed_max), speed_max);
-                int speed = direction + (int)(fabs(dxl[last].val) / (speed_factor * 360.0 / 60.0));
+                int speed     = direction + (int)(fabs(dxl[last].val) / (speed_factor * 360.0 / 60.0));
                 servo_set_raw_word(dxl_table[i], SERVO_REGISTER_MOVING_SPEED, speed, DXL_TIMEOUT);
             }
             if (dxl[last].mode == MODE_WHEEL)
@@ -574,7 +574,7 @@ static void dxl_request_manager(void)
 void dxl_publish_manager(void)
 {
     publish = 1;
-    int i = 0;
+    int i   = 0;
     // Send information to the gate
     if (pub == ASK_PUB_CMD)
     {
@@ -583,7 +583,7 @@ void dxl_publish_manager(void)
         {
             if (dxl_request_table[i])
             {
-                dxl_request_table[i] = 0;
+                dxl_request_table[i]       = 0;
                 pub_msg.header.target_mode = ID;
                 angular_position_t value;
                 // convert data into deg

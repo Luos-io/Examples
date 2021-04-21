@@ -12,8 +12,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define MAX_LED_NUMBER 375
-#define OVERHEAD (9 * 24) // Number of data to add to create a reset between frames
+#define MAX_LED_NUMBER   375
+#define OVERHEAD         (9 * 24) // Number of data to add to create a reset between frames
 #define DECOMP_BUFF_SIZE (MAX_LED_NUMBER * 24 + OVERHEAD)
 
 /*******************************************************************************
@@ -21,7 +21,7 @@
  ******************************************************************************/
 volatile color_t matrix[MAX_LED_NUMBER];
 volatile char buf[DECOMP_BUFF_SIZE] = {0};
-volatile int imgsize = MAX_LED_NUMBER;
+volatile int imgsize                = MAX_LED_NUMBER;
 
 /*******************************************************************************
  * Function

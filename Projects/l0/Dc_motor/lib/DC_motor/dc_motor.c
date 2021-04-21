@@ -31,7 +31,7 @@ static void set_power(container_t *container, ratio_t power);
  ******************************************************************************/
 void MotorDC_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
@@ -95,31 +95,31 @@ static void set_power(container_t *container, ratio_t power)
     }
     switch (find_id(container))
     {
-    case 0:
-        if (power > 0.0)
-        {
-            TIM2->CCR1 = pulse;
-            TIM2->CCR2 = 0;
-        }
-        else
-        {
-            TIM2->CCR1 = 0;
-            TIM2->CCR2 = pulse;
-        }
-        break;
-    case 1:
-        if (power > 0.0)
-        {
-            TIM3->CCR1 = pulse;
-            TIM3->CCR2 = 0;
-        }
-        else
-        {
-            TIM3->CCR1 = 0;
-            TIM3->CCR2 = pulse;
-        }
-        break;
-    default:
-        break;
+        case 0:
+            if (power > 0.0)
+            {
+                TIM2->CCR1 = pulse;
+                TIM2->CCR2 = 0;
+            }
+            else
+            {
+                TIM2->CCR1 = 0;
+                TIM2->CCR2 = pulse;
+            }
+            break;
+        case 1:
+            if (power > 0.0)
+            {
+                TIM3->CCR1 = pulse;
+                TIM3->CCR2 = 0;
+            }
+            else
+            {
+                TIM3->CCR1 = 0;
+                TIM3->CCR2 = pulse;
+            }
+            break;
+        default:
+            break;
     }
 }
