@@ -2,6 +2,7 @@
 #include "convert.h"
 #include <stdio.h>
 #include "gate.h"
+#include "bootloader.h"
 
 // There is no stack here we use the latest command
 volatile char buf[JSON_BUF_NUM][JSON_BUFF_SIZE] = {0};
@@ -168,8 +169,15 @@ void send_cmds(container_t *container)
             if(cJSON_IsObject(cJSON_GetObjectItem(bootloader_json, "command")))
             {
                 // command type
-                char* start_cmd = "start";
-                char* stop_cmd = "stop";
+                char* cmd[8] = {
+                        "dummy", 
+                        "start",
+                        "stop",
+                        "ready",
+                        "bin_header",
+                        "bin_chunk",
+                        "bin_end",
+                        "crc_test"};
 
                 // get "command" json object
                 cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
@@ -186,19 +194,19 @@ void send_cmds(container_t *container)
     	        boot_msg.header.cmd = BOOTLOADER;                     // bootloader cmd
     	        boot_msg.header.target_mode = NODEIDACK;              // msg send to the node
 
-                if(strcmp(type, start_cmd) == 0)
+                if(strcmp(type, cmd[BOOTLOADER_START]) == 0)
                 {
                     // send start command to bootloader app
                     boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = 0x01;
+                    boot_msg.data[0] = BOOTLOADER_START;
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
                 
-                if(strcmp(type, stop_cmd) == 0)
+                if(strcmp(type, cmd[BOOTLOADER_STOP]) == 0)
                 {
                     // send stop command to bootloader app
                     boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = 0x02;
+                    boot_msg.data[0] = BOOTLOADER_STOP;
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
             }
@@ -208,9 +216,7 @@ void send_cmds(container_t *container)
                 cJSON *binary_item = cJSON_GetObjectItem(bootloader_json, "binary");
 
                 // prepare to receive binary
-            }
-            
-            
+            }  
         }
 
         cJSON *containers = cJSON_GetObjectItem(root, "containers");
