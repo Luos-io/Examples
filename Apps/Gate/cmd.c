@@ -183,10 +183,6 @@ void send_cmds(container_t *container)
                 cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
                 // parse all relevant values in json object
                 char* type = cJSON_GetStringValue(cJSON_GetObjectItem(command_item, "type"));
-                uint8_t nb_node = cJSON_GetObjectItem(command_item, "nb_node")->valueint ;
-                cJSON* node_list = cJSON_GetObjectItem(command_item, "node_list");
-                uint8_t nb_target = cJSON_GetObjectItem(command_item, "nb_target")->valueint;
-                cJSON* target_list = cJSON_GetObjectItem(command_item, "target_list");
 
                 // create a message to send to nodes
     	        msg_t boot_msg;
@@ -210,13 +206,6 @@ void send_cmds(container_t *container)
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
             }
-
-            if(cJSON_IsArray(cJSON_GetObjectItem(bootloader_json, "binary")))
-            {
-                cJSON *binary_item = cJSON_GetObjectItem(bootloader_json, "binary");
-
-                // prepare to receive binary
-            }  
         }
 
         cJSON *containers = cJSON_GetObjectItem(root, "containers");
