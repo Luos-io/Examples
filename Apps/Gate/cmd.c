@@ -183,10 +183,11 @@ void send_cmds(container_t *container)
                 cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
                 // parse all relevant values in json object
                 char* type = cJSON_GetStringValue(cJSON_GetObjectItem(command_item, "type"));
+                uint8_t node_target = cJSON_GetObjectItem(command_item, "node")->valueint;
 
                 // create a message to send to nodes
     	        msg_t boot_msg;
-    	        boot_msg.header.target = 2;                           // first node of the network
+    	        boot_msg.header.target = node_target;                           // first node of the network
     	        boot_msg.header.cmd = BOOTLOADER;                     // bootloader cmd
     	        boot_msg.header.target_mode = NODEIDACK;              // msg send to the node
 
