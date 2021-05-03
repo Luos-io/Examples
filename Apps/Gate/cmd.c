@@ -31,6 +31,9 @@ void send_cmds(container_t *container)
             detection_ask++;
             cJSON_Delete(root);
             json = json_alloc_pull_rx_task();
+            // Remove all transmit tasks
+            while (json_alloc_pull_tx_task())
+                ;
             continue;
         }
         if (cJSON_GetObjectItem(root, "baudrate") != NULL)

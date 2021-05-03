@@ -13,6 +13,22 @@ volatile char tx_buf[JSON_TX_BUF_NUM][JSON_BUFF_SIZE] = {0};
 volatile uint8_t current_tx                           = 0;
 volatile char *tx_json_task[JSON_TX_BUF_NUM];
 
+void json_alloc_reinit(void)
+{
+    // Reinit RX
+    for (int i = 0; i < JSON_RX_BUF_NUM; i++)
+    {
+        rx_json_task[i] = 0;
+    }
+    // Do not reset current_rx to 0 because DMA is already listening into the current_rx buffer.
+    // Reinit TX
+    for (int i = 0; i < JSON_TX_BUF_NUM; i++)
+    {
+        tx_json_task[i] = 0;
+    }
+    current_tx = 0;
+}
+
 //*************** RX buffer management **************
 
 char *json_alloc_get_rx_buf(void)
@@ -97,9 +113,7 @@ char *json_alloc_pull_tx_task(void)
 // set a Tx task on the current TX buffer and send back the next buffer available
 char *json_alloc_set_tx_task(uint16_t carac_nbr)
 {
-    LUOS_ASSERT(
-        (current_tx < JSON_TX_BUF_NUM) || (current_tx >= 0) || (carac_nbr < JSON_BUFF_SIZE));
-    tx_buf[current_tx][carac_nbr] = '\0';
+    LUOS_ASSERT((current_tx < JSON_TX_BUF_NUM) || (current_tx >= 0) || (carac_nbr < JSON_BUFF_SIZE));
     for (int i = 0; i < JSON_TX_BUF_NUM; i++)
     {
         if (tx_json_task[i] == 0)

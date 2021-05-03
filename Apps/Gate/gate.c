@@ -45,7 +45,10 @@ void Gate_Loop(void)
     static volatile uint8_t detection_done = 0;
     static char state                      = 0;
     char *tx_json                          = json_alloc_get_tx_buf();
-
+    if (detection_ask)
+    {
+        detection_done = 0;
+    }
     // Check if there is a dead container
     if (container->ll_container->dead_container_spotted)
     {
@@ -81,7 +84,12 @@ void Gate_Loop(void)
     }
     if (detection_ask)
     {
+        // reinit Json buffer.
+        json_alloc_reinit();
+        tx_json = json_alloc_get_tx_buf();
+        // Run detection
         RoutingTB_DetectContainers(container);
+        // Create Json from container
         routing_table_to_json(tx_json);
         detection_done = 1;
         detection_ask  = 0;

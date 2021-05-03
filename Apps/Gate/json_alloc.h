@@ -5,6 +5,8 @@
 #define JSON_RX_BUF_NUM 3
 #define JSON_TX_BUF_NUM 3
 
+void json_alloc_reinit(void);
+
 char *json_alloc_get_rx_buf(void);
 char *json_alloc_get_rx_task(void);
 char *json_alloc_pull_rx_task(void);

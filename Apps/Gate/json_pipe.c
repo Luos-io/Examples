@@ -31,7 +31,12 @@ void json_pipe_send(void)
         char *ready_json = json_alloc_get_tx_task();
         if (ready_json != 0)
         {
-            HAL_UART_Transmit_DMA(&huart3, (void *)ready_json, strlen(ready_json));
+            uint32_t size = strlen(ready_json);
+            if (size > JSON_BUFF_SIZE)
+            {
+                size = JSON_BUFF_SIZE;
+            }
+            HAL_UART_Transmit_DMA(&huart3, (void *)ready_json, size);
             is_sending = 1;
         }
     }
@@ -50,7 +55,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
         }
         else
         {
-            HAL_UART_Transmit_DMA(&huart3, (void *)ready_json, strlen(ready_json));
+
+            uint32_t size = strlen(ready_json);
+            if (size > JSON_BUFF_SIZE)
+            {
+                size = JSON_BUFF_SIZE;
+            }
+            HAL_UART_Transmit_DMA(&huart3, (void *)ready_json, size);
         }
     }
 }
