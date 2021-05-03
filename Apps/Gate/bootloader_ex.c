@@ -11,6 +11,8 @@
 
 #include "gate.h"
 
+#include "stm32f0xx_hal.h"
+
 
 /*******************************************************************************
  * Definitions
@@ -26,6 +28,7 @@
 void LuosBootloader_GateRcv(void)
 {
     char boot_json[256] = "\0";
-    sprintf(boot_json, "{\"bootloader\":{}}\n");
+    sprintf(boot_json, "{\"bootloader\":{\"node_id\":{}}}\n");
+    HAL_Delay(100);
     json_send(boot_json);
 }
