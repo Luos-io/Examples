@@ -445,45 +445,42 @@ void msg_to_json(msg_t *msg, char *json)
                 // Size ok, now fill the struct from msg data
                 float data;
                 memcpy(&data, msg->data, msg->header.size);
-                char name[20] = {0};
                 switch (msg->header.cmd)
                 {
                     case LINEAR_POSITION:
-                        strcpy(name, "trans_position");
+                        sprintf(json, "\"trans_position\":%.3f,", data);
                         break;
                     case LINEAR_SPEED:
-                        strcpy(name, "trans_speed");
+                        sprintf(json, "\"trans_speed\":%.3f,", data);
                         break;
                     case ANGULAR_POSITION:
-                        strcpy(name, "rot_position");
+                        sprintf(json, "\"rot_position\":%.3f,", data);
                         break;
                     case ANGULAR_SPEED:
-                        strcpy(name, "rot_speed");
+                        sprintf(json, "\"rot_speed\":%.3f,", data);
                         break;
                     case CURRENT:
-                        strcpy(name, "current");
+                        sprintf(json, "\"current\":%.3f,", data);
                         break;
                     case ILLUMINANCE:
-                        strcpy(name, "lux");
+                        sprintf(json, "\"lux\":%.3f,", data);
                         break;
                     case TEMPERATURE:
-                        strcpy(name, "temperature");
+                        sprintf(json, "\"temperature\":%.3f,", data);
                         break;
                     case FORCE:
-                        strcpy(name, "force");
+                        sprintf(json, "\"force\":%.3f,", data);
                         break;
                     case MOMENT:
-                        strcpy(name, "moment");
+                        sprintf(json, "\"moment\":%.3f,", data);
                         break;
                     case VOLTAGE:
-                        strcpy(name, "volt");
+                        sprintf(json, "\"volt\":%.3f,", data);
                         break;
                     case POWER:
-                        strcpy(name, "power");
+                        sprintf(json, "\"power\":%.3f,", data);
                         break;
                 }
-                //create the Json content
-                sprintf(json, "\"%s\":%.3f,", name, data);
             }
             break;
         case NODE_UUID:
@@ -633,7 +630,9 @@ void msg_to_json(msg_t *msg, char *json)
 void routing_table_to_json(char *json)
 {
     // Init the json string
-    sprintf(json, "{\"routing_table\":[");
+    char *json_ptr = json;
+    sprintf(json_ptr, "{\"routing_table\":[");
+    json_ptr += strlen(json_ptr);
     // loop into containers.
     routing_table_t *routing_table = RoutingTB_Get();
     int last_entry                 = RoutingTB_GetLastEntry();
@@ -643,31 +642,37 @@ void routing_table_to_json(char *json)
     {
         if (routing_table[i].mode == NODE)
         {
-            sprintf(json, "%s{\"node_id\":%d", json, routing_table[i].node_id);
+            sprintf(json_ptr, "{\"node_id\":%d", routing_table[i].node_id);
+            json_ptr += strlen(json_ptr);
             if (routing_table[i].certified)
             {
-                sprintf(json, "%s,\"certified\":true", json);
+                sprintf(json_ptr, ",\"certified\":true");
+                json_ptr += strlen(json_ptr);
             }
             else
             {
-                sprintf(json, "%s,\"certified\":false", json);
+                sprintf(json_ptr, ",\"certified\":false");
+                json_ptr += strlen(json_ptr);
             }
-            sprintf(json, "%s,\"port_table\":[", json);
+            sprintf(json_ptr, ",\"port_table\":[");
+            json_ptr += strlen(json_ptr);
             // Port loop
             for (int port = 0; port < 4; port++)
             {
                 if (routing_table[i].port_table[port])
                 {
-                    sprintf(json, "%s%d,", json, routing_table[i].port_table[port]);
+                    sprintf(json_ptr, "%d,", routing_table[i].port_table[port]);
+                    json_ptr += strlen(json_ptr);
                 }
                 else
                 {
                     // remove the last "," char
-                    json[strlen(json) - 1] = '\0';
+                    *(--json_ptr) = '\0';
                     break;
                 }
             }
-            sprintf(json, "%s],\"containers\":[", json);
+            sprintf(json_ptr, "],\"containers\":[");
+            json_ptr += strlen(json_ptr);
             i++;
             // Containers loop
             while (i < last_entry)
@@ -675,17 +680,24 @@ void routing_table_to_json(char *json)
                 if (routing_table[i].mode == CONTAINER)
                 {
                     // Create container description
-                    sprintf(json, "%s{\"type\":\"%s", json, RoutingTB_StringFromType(routing_table[i].type));
-                    sprintf(json, "%s\",\"id\":%d", json, routing_table[i].id);
-                    sprintf(json, "%s,\"alias\":\"%s\"},", json, routing_table[i].alias);
+                    sprintf(json_ptr, "{\"type\":\"%s\",\"id\":%d,\"alias\":\"%s\"},", RoutingTB_StringFromType(routing_table[i].type), routing_table[i].id, routing_table[i].alias);
+                    json_ptr += strlen(json_ptr);
                     i++;
                 }
                 else
                     break;
             }
             // remove the last "," char
-            json[strlen(json) - 1] = '\0';
-            sprintf(json, "%s]},", json);
+            *(--json_ptr) = '\0';
+            sprintf(json_ptr, "]},");
+            json_ptr += strlen(json_ptr);
+            // Check if we overflow the Json buffer
+            // We can do it because we know that we are at the begining off buffer bank
+            if ((json_ptr - json) >= JSON_BUFF_SIZE)
+            {
+                // we override it, start sending the first part
+                json = json_alloc_set_tx_task(JSON_BUFF_SIZE - 1);
+            }
         }
         else
         {
@@ -693,9 +705,9 @@ void routing_table_to_json(char *json)
         }
     }
     // remove the last "," char
-    json[strlen(json) - 1] = '\0';
+    *(--json_ptr) = '\0';
     // End the Json message
-    sprintf(json, "%s]}\n", json);
+    sprintf(json_ptr, "]}\n");
     json = json_alloc_set_tx_task(strlen(json));
 }
 

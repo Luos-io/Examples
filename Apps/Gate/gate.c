@@ -86,5 +86,4 @@ void Gate_Loop(void)
         detection_done = 1;
         detection_ask  = 0;
     }
-    //HAL_Delay(get_delay());
 }

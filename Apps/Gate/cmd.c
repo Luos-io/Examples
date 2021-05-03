@@ -36,9 +36,10 @@ void send_cmds(container_t *container)
         if (cJSON_GetObjectItem(root, "baudrate") != NULL)
         {
             //create a message to setup the new baudrate
-            if (cJSON_IsNumber(cJSON_GetObjectItem(root, "baudrate")))
+            cJSON *object = cJSON_GetObjectItem(root, "baudrate");
+            if (cJSON_IsNumber(object))
             {
-                uint32_t baudrate = (float)cJSON_GetObjectItem(root, "baudrate")->valueint;
+                uint32_t baudrate = (float)object->valueint;
                 Luos_SendBaudrate(container, baudrate);
             }
             cJSON_Delete(root);

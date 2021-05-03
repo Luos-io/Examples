@@ -46,14 +46,15 @@ void collect_data(container_t *container)
 // This function will create a json string for containers datas
 void format_data(container_t *container, char *json)
 {
+    char *json_ptr  = json;
     msg_t *json_msg = 0;
     uint8_t json_ok = false;
     if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the json string
         sprintf(json, "{\"containers\":{");
+        json_ptr += strlen(json_ptr);
         // loop into containers.
-        uint16_t i = 1;
         // get the oldest message
         while (Luos_ReadMsg(container, &json_msg) == SUCCEED)
         {
@@ -71,37 +72,40 @@ void format_data(container_t *container, char *json)
                 continue;
             }
             // get the source of this message
-            i = json_msg->header.source;
             // Create container description
             char *alias;
-            alias = RoutingTB_AliasFromId(i);
+            alias = RoutingTB_AliasFromId(json_msg->header.source);
             if (alias != 0)
             {
                 json_ok = true;
-                sprintf(json, "%s\"%s\":{", json, alias);
+                sprintf(json_ptr, "\"%s\":{", alias);
+                json_ptr += strlen(json_ptr);
                 // now add json data from container
-                msg_to_json(json_msg, &json[strlen(json)]);
+                msg_to_json(json_msg, json_ptr);
+                json_ptr += strlen(json_ptr);
                 // Check if we receive other messages from this container
-                while (Luos_ReadFromContainer(container, i, &json_msg) == SUCCEED)
+                while (Luos_ReadFromContainer(container, json_msg->header.source, &json_msg) == SUCCEED)
                 {
                     // we receive some, add it to the Json
-                    msg_to_json(json_msg, &json[strlen(json)]);
+                    msg_to_json(json_msg, json_ptr);
+                    json_ptr += strlen(json_ptr);
                 }
-                if (json[strlen(json) - 1] != '{')
+                if (*json_ptr != '{')
                 {
                     // remove the last "," char
-                    json[strlen(json) - 1] = '\0';
+                    *(--json_ptr) = '\0';
                 }
                 // End the container section
-                sprintf(json, "%s},", json);
+                sprintf(json_ptr, "},");
+                json_ptr += strlen(json_ptr);
             }
         }
         if (json_ok)
         {
             // remove the last "," char
-            json[strlen(json) - 1] = '\0';
+            *(--json_ptr) = '\0';
             // End the Json message
-            sprintf(json, "%s}}\n", json);
+            sprintf(json_ptr, "}}\n");
             json = json_alloc_set_tx_task(strlen(json));
         }
         else
