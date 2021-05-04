@@ -29,6 +29,6 @@ void LuosBootloader_GateRcv(void)
 {
     char boot_json[256] = "\0";
     sprintf(boot_json, "{\"bootloader\":{\"node_id\":{}}}\n");
-    HAL_Delay(100);
+    HAL_Delay(1000);
     json_send(boot_json);
 }
