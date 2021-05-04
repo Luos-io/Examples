@@ -34,6 +34,10 @@ void LuosBootloader_GateRcv(msg_t *msg)
         case BOOTLOADER_READY_RESP:
             sprintf(boot_json, "{\"bootloader\":{\"response\":16}}\n");
             break;
+
+        case BOOTLOADER_BIN_HEADER_RESP:
+            sprintf(boot_json, "{\"bootloader\":{\"response\":17}}\n");
+            break;
         
         default:
             break;
