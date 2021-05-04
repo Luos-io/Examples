@@ -4,6 +4,7 @@
 #include "cmd.h"
 #include "convert.h"
 #include "gate.h"
+#include "bootloader_ex.h"
 
 static unsigned int delayms = 1;
 
@@ -62,6 +63,12 @@ void format_data(container_t *container, char *json)
                 assertion.unmap[json_msg->header.size] = '\0';
                 sprintf(error_json, "{\"assert\":{\"node_id\":%d,\"file\":\"%s\",\"line\":%d}}\n", json_msg->header.source, assertion.file, (unsigned int)assertion.line);
                 json_send(error_json);
+                continue;
+            }
+            // we receive a message from a bootloader node
+            if (json_msg->header.cmd == BOOTLOADER_RESP)
+            {
+                LuosBootloader_GateRcv();
                 continue;
             }
             // get the source of this message

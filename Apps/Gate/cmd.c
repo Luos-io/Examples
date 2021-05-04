@@ -187,8 +187,8 @@ void send_cmds(container_t *container)
 
                 // create a message to send to nodes
     	        msg_t boot_msg;
-    	        boot_msg.header.target = node_target;                           // first node of the network
-    	        boot_msg.header.cmd = BOOTLOADER;                     // bootloader cmd
+    	        boot_msg.header.target = node_target;                 // first node of the network
+    	        boot_msg.header.cmd = BOOTLOADER_CMD;                 // bootloader cmd
     	        boot_msg.header.target_mode = NODEIDACK;              // msg send to the node
 
                 if(strcmp(type, cmd[BOOTLOADER_START]) == 0)
