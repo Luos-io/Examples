@@ -8,11 +8,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "bootloader_ex.h"
+#include "bootloader.h"
 
 #include "gate.h"
-
 #include "stm32f0xx_hal.h"
-
 
 /*******************************************************************************
  * Definitions
@@ -25,10 +24,21 @@
 /*******************************************************************************
  * Function
  ******************************************************************************/
-void LuosBootloader_GateRcv(void)
+void LuosBootloader_GateRcv(msg_t *msg)
 {
     char boot_json[256] = "\0";
-    sprintf(boot_json, "{\"bootloader\":{\"node_id\":{}}}\n");
+    uint8_t response_cmd = msg->data[0];
+
+    switch(response_cmd)
+    {
+        case BOOTLOADER_READY_RESP:
+            sprintf(boot_json, "{\"bootloader\":{\"response\":16}}\n");
+            break;
+        
+        default:
+            break;
+    }
+
     HAL_Delay(1000);
     json_send(boot_json);
 }

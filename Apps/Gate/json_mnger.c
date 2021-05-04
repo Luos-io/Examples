@@ -68,7 +68,7 @@ void format_data(container_t *container, char *json)
             // we receive a message from a bootloader node
             if (json_msg->header.cmd == BOOTLOADER_RESP)
             {
-                LuosBootloader_GateRcv();
+                LuosBootloader_GateRcv(json_msg);
                 continue;
             }
             // get the source of this message
