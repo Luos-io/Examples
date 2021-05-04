@@ -222,6 +222,14 @@ void send_cmds(container_t *container)
                     boot_msg.data[0] = BOOTLOADER_BIN_HEADER;
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
                 }
+
+                if(strcmp(type, cmd[BOOTLOADER_BIN_CHUNK]) == 0)
+                {
+                    // send stop command to bootloader app
+                    boot_msg.header.size = sizeof(char); //Our message only contains one character
+                    boot_msg.data[0] = BOOTLOADER_BIN_CHUNK;
+                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+                }
             }
         }
 
