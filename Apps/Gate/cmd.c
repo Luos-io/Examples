@@ -209,7 +209,7 @@ void send_cmds(container_t *container)
 
                 if(strcmp(type, cmd[BOOTLOADER_READY]) == 0)
                 {
-                    // send stop command to bootloader app
+                    // send ready command to bootloader app
                     boot_msg.header.size = sizeof(char); //Our message only contains one character
                     boot_msg.data[0] = BOOTLOADER_READY;
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
@@ -217,7 +217,7 @@ void send_cmds(container_t *container)
 
                 if(strcmp(type, cmd[BOOTLOADER_BIN_HEADER]) == 0)
                 {
-                    // send stop command to bootloader app
+                    // send bin header command to bootloader app
                     boot_msg.header.size = sizeof(char); //Our message only contains one character
                     boot_msg.data[0] = BOOTLOADER_BIN_HEADER;
                     Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
@@ -225,10 +225,28 @@ void send_cmds(container_t *container)
 
                 if(strcmp(type, cmd[BOOTLOADER_BIN_CHUNK]) == 0)
                 {
-                    // send stop command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
+                    // find binary size in json header
+                    uint8_t binary_size = cJSON_GetObjectItem(command_item, "size")->valueint;
+                    char *bin_data = (char *)buf[concerned_table];
+
+                    // send bin chunk command to bootloader app
                     boot_msg.data[0] = BOOTLOADER_BIN_CHUNK;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+                    int i = 0;
+                    // find the first \r of the current buf
+                    for (i = 0; i < JSON_BUFF_SIZE; i++)
+                    {
+                        if (bin_data[i] == '\r')
+                        {
+                            i++;
+                            break;
+                        }
+                    }
+                    if (i < JSON_BUFF_SIZE - 1)
+                    {
+                        boot_msg.header.size = binary_size + sizeof(char);
+                        memcpy(&(boot_msg.data[1]), &bin_data[i], binary_size);
+                        Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+                    }                        
                 }
             }
         }
