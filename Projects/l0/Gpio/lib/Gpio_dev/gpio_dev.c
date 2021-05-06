@@ -7,6 +7,8 @@
 #include <gpio_dev.h>
 #include "main.h"
 #include "analog.h"
+#include "template_state.h"
+#include "template_voltage.h"
 
 /*******************************************************************************
  * Definitions
@@ -24,27 +26,35 @@
 
 enum
 {
-    P1,
     P2,
     P3,
     P4,
     P5,
     P6,
+    GPIO_NB
+} gpio_enum_t;
+
+enum
+{
+    P1,
     P7,
     P8,
-    P9
-};
+    P9,
+    ANALOG_NB
+} analog_enum_t;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *pin[9];
+template_state_t gpio_template[GPIO_NB];
+profile_state_t *gpio[GPIO_NB];
+
+template_voltage_t analog_template[ANALOG_NB];
+profile_voltage_t *analog[ANALOG_NB];
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
 static void rx_digit_write_cb(container_t *container, msg_t *msg);
-static void rx_digit_read_cb(container_t *container, msg_t *msg);
-static void rx_analog_read_cb(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -144,16 +154,44 @@ void GpioDev_Init(void)
     HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
     // Start infinite ADC measurement
     HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
-    // ************* containers creation *******************
-    pin[P1] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P1", revision);
-    pin[P7] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P7", revision);
-    pin[P8] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P8", revision);
-    pin[P9] = Luos_CreateContainer(rx_analog_read_cb, VOLTAGE_MOD, "analog_read_P9", revision);
-    pin[P5] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P5", revision);
-    pin[P6] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P6", revision);
-    pin[P2] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P2", revision);
-    pin[P3] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P3", revision);
-    pin[P4] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P4", revision);
+    // ************* Analog containers creation *******************
+    // Link user varaibles to template profile.
+    for (uint8_t i = 0; i < ANALOG_NB; i++)
+    {
+        analog[i] = &analog_template[i].profile;
+    }
+    // Profile configuration
+    analog[P1]->access = READ_ONLY_ACCESS;
+    analog[P7]->access = READ_ONLY_ACCESS;
+    analog[P8]->access = READ_ONLY_ACCESS;
+    analog[P9]->access = READ_ONLY_ACCESS;
+    // Container creation following template
+    TemplateVoltage_CreateContainer(0, &analog_template[P1], "analog_read_P1", revision);
+    TemplateVoltage_CreateContainer(0, &analog_template[P7], "analog_read_P7", revision);
+    TemplateVoltage_CreateContainer(0, &analog_template[P8], "analog_read_P8", revision);
+    TemplateVoltage_CreateContainer(0, &analog_template[P9], "analog_read_P9", revision);
+
+    // ************* Digital containers creation *******************
+    // Link user varaibles to template profile.
+    for (uint8_t i = 0; i < GPIO_NB; i++)
+    {
+        gpio[i] = &gpio_template[i].profile;
+    }
+    // Input profile configuration
+    gpio[P5]->access = READ_ONLY_ACCESS;
+    gpio[P6]->access = READ_ONLY_ACCESS;
+    // Container creation following template
+    TemplateState_CreateContainer(0, &gpio_template[P5], "digit_read_P5", revision);
+    TemplateState_CreateContainer(0, &gpio_template[P6], "digit_read_P6", revision);
+
+    // Output profile configuration
+    gpio[P2]->access = WRITE_ONLY_ACCESS;
+    gpio[P3]->access = WRITE_ONLY_ACCESS;
+    gpio[P4]->access = WRITE_ONLY_ACCESS;
+    // Container creation following template, for this one we one to use a target evnet using callback
+    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P2], "digit_write_P2", revision);
+    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P3], "digit_write_P3", revision);
+    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P4], "digit_write_P4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -162,87 +200,24 @@ void GpioDev_Init(void)
  ******************************************************************************/
 void GpioDev_Loop(void)
 {
-}
+    // update gpio input
+    gpio[P5]->state = (bool)(HAL_GPIO_ReadPin(P5_GPIO_Port, P5_Pin) > 0);
+    gpio[P6]->state = (bool)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
 
-static void rx_digit_read_cb(container_t *container, msg_t *msg)
-{
-    if (msg->header.cmd == ASK_PUB_CMD)
-    {
-        msg_t pub_msg;
-        // fill the message infos
-        pub_msg.header.cmd         = IO_STATE;
-        pub_msg.header.target_mode = ID;
-        pub_msg.header.target      = msg->header.source;
-        pub_msg.header.size        = sizeof(char);
-
-        if (container == pin[P5])
-        {
-            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P5_GPIO_Port, P5_Pin) > 0);
-        }
-        else if (container == pin[P6])
-        {
-            pub_msg.data[0] = (char)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
-        }
-        else
-        {
-            return;
-        }
-        Luos_SendMsg(container, &pub_msg);
-        return;
-    }
+    // update analog measurement
+    analog[P1]->voltage = ((float)analog_input.p1 / 4096.0f) * 3.3f;
+    analog[P7]->voltage = ((float)analog_input.p7 / 4096.0f) * 3.3f;
+    analog[P8]->voltage = ((float)analog_input.p8 / 4096.0f) * 3.3f;
+    analog[P9]->voltage = ((float)analog_input.p9 / 4096.0f) * 3.3f;
 }
 
 static void rx_digit_write_cb(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
-        // we have to update pin state
-        if (container == pin[P2])
-        {
-            HAL_GPIO_WritePin(P2_GPIO_Port, P2_Pin, msg->data[0]);
-        }
-        if (container == pin[P3])
-        {
-            HAL_GPIO_WritePin(P3_GPIO_Port, P3_Pin, msg->data[0]);
-        }
-        if (container == pin[P4])
-        {
-            HAL_GPIO_WritePin(P4_GPIO_Port, P4_Pin, msg->data[0]);
-        }
-    }
-}
-
-static void rx_analog_read_cb(container_t *container, msg_t *msg)
-{
-    if (msg->header.cmd == ASK_PUB_CMD)
-    {
-        msg_t pub_msg;
-        voltage_t volt;
-        if (container == pin[P1])
-        {
-            volt = ((float)analog_input.p1 / 4096.0f) * 3.3f;
-        }
-        else if (container == pin[P7])
-        {
-            volt = ((float)analog_input.p7 / 4096.0f) * 3.3f;
-        }
-        else if (container == pin[P8])
-        {
-            volt = ((float)analog_input.p8 / 4096.0f) * 3.3f;
-        }
-        else if (container == pin[P9])
-        {
-            volt = ((float)analog_input.p9 / 4096.0f) * 3.3f;
-        }
-        else
-        {
-            return;
-        }
-        // fill the message infos
-        pub_msg.header.target_mode = ID;
-        pub_msg.header.target      = msg->header.source;
-        ElectricOD_VoltageToMsg(&volt, &pub_msg);
-        Luos_SendMsg(container, &pub_msg);
-        return;
+        // update pin state on event
+        HAL_GPIO_WritePin(P2_GPIO_Port, P2_Pin, gpio[P2]->state);
+        HAL_GPIO_WritePin(P3_GPIO_Port, P3_Pin, gpio[P3]->state);
+        HAL_GPIO_WritePin(P4_GPIO_Port, P4_Pin, gpio[P4]->state);
     }
 }
