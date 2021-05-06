@@ -6,6 +6,7 @@
  ******************************************************************************/
 #include "main.h"
 #include "power_switch.h"
+#include "template_state.h"
 
 /*******************************************************************************
  * Definitions
@@ -14,11 +15,11 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-
+template_state_t power_switch_template;
+profile_state_t *power_switch = &power_switch_template.profile;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void PowerSwitch_MsgHandler(container_t *container, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -28,8 +29,9 @@ static void PowerSwitch_MsgHandler(container_t *container, msg_t *msg);
 void PowerSwitch_Init(void)
 {
     revision_t revision = {.unmap = REV};
-
-    Luos_CreateContainer(PowerSwitch_MsgHandler, STATE_MOD, "switch_mod", revision);
+    // Profile configuration
+    power_switch->access = WRITE_ONLY_ACCESS;
+    TemplateState_CreateContainer(0, &power_switch_template, "power_switch", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -38,18 +40,5 @@ void PowerSwitch_Init(void)
  ******************************************************************************/
 void PowerSwitch_Loop(void)
 {
-}
-/******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
- * @param Msg receive
- * @return None
- ******************************************************************************/
-static void PowerSwitch_MsgHandler(container_t *container, msg_t *msg)
-{
-    if (msg->header.cmd == IO_STATE)
-    {
-        HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, msg->data[0]);
-        return;
-    }
+    HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, power_switch->state);
 }
