@@ -95,7 +95,7 @@ static void Distance_MsgHandler(container_t *container, msg_t *msg)
         }
         // fill the message infos
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
+        pub_msg.header.target      = msg->header.source;
         LinearOD_PositionToMsg(&dist, &pub_msg);
         new_data_ready = 0;
         Luos_SendMsg(container, &pub_msg);

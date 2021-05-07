@@ -18,14 +18,14 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define ASSERV_PERIOD 1
-#define SPEED_PERIOD 50
+#define ASSERV_PERIOD        1
+#define SPEED_PERIOD         50
 #define SPEED_NB_INTEGRATION SPEED_PERIOD / ASSERV_PERIOD
-#define SAMPLING_PERIOD_MS 10.0
-#define BUFFER_SIZE 1000
+#define SAMPLING_PERIOD_MS   10.0
+#define BUFFER_SIZE          1000
 
 // Pin configuration
-#define FB_Pin GPIO_PIN_0
+#define FB_Pin       GPIO_PIN_0
 #define FB_GPIO_Port GPIOB
 
 #define MINI 0
@@ -38,12 +38,12 @@ volatile motor_config_t motor;
 
 asserv_pid_t position;
 asserv_pid_t speed;
-float errSpeedSum = 0.0;
+float errSpeedSum            = 0.0;
 float motion_target_position = 0.0;
 volatile time_luos_t time;
 
 // Position Asserv things
-volatile float errAngleSum = 0.0;
+volatile float errAngleSum  = 0.0;
 volatile float lastErrAngle = 0.0;
 
 // Speed Asserv things
@@ -80,40 +80,40 @@ void ControllerMotor_Init(void)
     revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
-    ADC_ChannelConfTypeDef sConfig = {0};
+    ADC_ChannelConfTypeDef sConfig   = {0};
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     // Enable  ADC Gpio clocks
     //__HAL_RCC_GPIOA_CLK_ENABLE(); => already enabled previously
     /**ADC GPIO Configuration
     */
-    GPIO_InitStruct.Pin = FB_Pin;
+    GPIO_InitStruct.Pin  = FB_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(FB_GPIO_Port, &GPIO_InitStruct);
     // Enable  ADC clocks
     __HAL_RCC_ADC1_CLK_ENABLE();
     // Setup Adc to loop on DMA continuously
-    ControllerMotor_adc.Instance = ADC1;
-    ControllerMotor_adc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-    ControllerMotor_adc.Init.Resolution = ADC_RESOLUTION_12B;
-    ControllerMotor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    ControllerMotor_adc.Init.ScanConvMode = ADC_SCAN_ENABLE;
-    ControllerMotor_adc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-    ControllerMotor_adc.Init.LowPowerAutoWait = DISABLE;
-    ControllerMotor_adc.Init.LowPowerAutoPowerOff = DISABLE;
-    ControllerMotor_adc.Init.ContinuousConvMode = ENABLE;
+    ControllerMotor_adc.Instance                   = ADC1;
+    ControllerMotor_adc.Init.ClockPrescaler        = ADC_CLOCK_ASYNC_DIV1;
+    ControllerMotor_adc.Init.Resolution            = ADC_RESOLUTION_12B;
+    ControllerMotor_adc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    ControllerMotor_adc.Init.ScanConvMode          = ADC_SCAN_ENABLE;
+    ControllerMotor_adc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
+    ControllerMotor_adc.Init.LowPowerAutoWait      = DISABLE;
+    ControllerMotor_adc.Init.LowPowerAutoPowerOff  = DISABLE;
+    ControllerMotor_adc.Init.ContinuousConvMode    = ENABLE;
     ControllerMotor_adc.Init.DiscontinuousConvMode = DISABLE;
-    ControllerMotor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-    ControllerMotor_adc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    ControllerMotor_adc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
+    ControllerMotor_adc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
     ControllerMotor_adc.Init.DMAContinuousRequests = ENABLE;
-    ControllerMotor_adc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+    ControllerMotor_adc.Init.Overrun               = ADC_OVR_DATA_PRESERVED;
     if (HAL_ADC_Init(&ControllerMotor_adc) != HAL_OK)
     {
         Error_Handler();
     }
     /** Configure voltage input channel. */
-    sConfig.Channel = ADC_CHANNEL_8;
-    sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+    sConfig.Channel      = ADC_CHANNEL_8;
+    sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
     if (HAL_ADC_ConfigChannel(&ControllerMotor_adc, &sConfig) != HAL_OK)
     {
@@ -123,14 +123,14 @@ void ControllerMotor_Init(void)
     __HAL_RCC_DMA1_CLK_ENABLE();
     /* ADC1 DMA Init */
     /* ADC Init */
-    ControllerMotor_dma_adc.Instance = DMA1_Channel1;
-    ControllerMotor_dma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    ControllerMotor_dma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
-    ControllerMotor_dma_adc.Init.MemInc = DMA_MINC_ENABLE;
+    ControllerMotor_dma_adc.Instance                 = DMA1_Channel1;
+    ControllerMotor_dma_adc.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    ControllerMotor_dma_adc.Init.PeriphInc           = DMA_PINC_DISABLE;
+    ControllerMotor_dma_adc.Init.MemInc              = DMA_MINC_ENABLE;
     ControllerMotor_dma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    ControllerMotor_dma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    ControllerMotor_dma_adc.Init.Mode = DMA_CIRCULAR;
-    ControllerMotor_dma_adc.Init.Priority = DMA_PRIORITY_LOW;
+    ControllerMotor_dma_adc.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+    ControllerMotor_dma_adc.Init.Mode                = DMA_CIRCULAR;
+    ControllerMotor_dma_adc.Init.Priority            = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&ControllerMotor_dma_adc) != HAL_OK)
     {
         Error_Handler();
@@ -149,28 +149,28 @@ void ControllerMotor_Init(void)
     // ************** Default configuration settings *****************
     // motor mode by default
     enable_motor(0);
-    motor.mode.mode_compliant = 1;
-    motor.mode.current = 0;
-    motor.mode.mode_ratio = 1;
+    motor.mode.mode_compliant        = 1;
+    motor.mode.current               = 0;
+    motor.mode.mode_ratio            = 1;
     motor.mode.mode_angular_position = 0;
-    motor.mode.mode_angular_speed = 0;
-    motor.mode.mode_linear_position = 0;
-    motor.mode.mode_linear_speed = 0;
-    motor.mode.angular_position = 1;
-    motor.mode.angular_speed = 0;
-    motor.mode.linear_position = 0;
-    motor.mode.linear_speed = 0;
+    motor.mode.mode_angular_speed    = 0;
+    motor.mode.mode_linear_position  = 0;
+    motor.mode.mode_linear_speed     = 0;
+    motor.mode.angular_position      = 1;
+    motor.mode.angular_speed         = 0;
+    motor.mode.linear_position       = 0;
+    motor.mode.linear_speed          = 0;
 
     // default motor configuration
     motor.motor_reduction = 131;
-    motor.resolution = 16;
-    motor.wheel_diameter = 0.100f;
+    motor.resolution      = 16;
+    motor.wheel_diameter  = 0.100f;
 
     // default motor limits
-    motor.limit_ratio = 100.0;
+    motor.limit_ratio                  = 100.0;
     motor.limit_angular_position[MINI] = -FLT_MAX;
     motor.limit_angular_position[MAXI] = FLT_MAX;
-    motor.limit_current = 6.0;
+    motor.limit_current                = 6.0;
 
     // Position PID default values
     position.p = 4.0;
@@ -186,7 +186,7 @@ void ControllerMotor_Init(void)
     control.unmap = 0; // PLAY and no REC
 
     // Init streaming channels
-    trajectory = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
+    trajectory  = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
     measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
     // ************** Container creation *****************
@@ -201,8 +201,8 @@ void ControllerMotor_Loop(void)
 {
     // Time management
     static uint32_t last_asserv_systick = 0;
-    uint32_t timestamp = HAL_GetTick();
-    uint32_t deltatime = timestamp - last_asserv_systick;
+    uint32_t timestamp                  = HAL_GetTick();
+    uint32_t deltatime                  = timestamp - last_asserv_systick;
 
     // Speed measurement
     static angular_position_t last_angular_positions[SPEED_NB_INTEGRATION];
@@ -210,7 +210,7 @@ void ControllerMotor_Loop(void)
     // ************* Values computation *************
     // angular_posistion => degree
     int32_t encoder_count = (int16_t)TIM2->CNT;
-    TIM2->CNT = 0;
+    TIM2->CNT             = 0;
     motor.angular_position += (angular_position_t)((double)encoder_count / (double)(motor.motor_reduction * motor.resolution * 4)) * 360.0;
     // linear_distance => m
     motor.linear_position = (motor.angular_position / 360.0) * M_PI * motor.wheel_diameter;
@@ -234,9 +234,9 @@ void ControllerMotor_Loop(void)
                 last_angular_positions[nbr] = last_angular_positions[nbr + 1];
             }
         }
-        speed_bootstrap = 1;
+        speed_bootstrap                                  = 1;
         last_angular_positions[SPEED_NB_INTEGRATION - 1] = motor.angular_position;
-        motor.angular_speed = (last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD;
+        motor.angular_speed                              = (last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD;
         // linear_speed => m/seconds
         motor.linear_speed = (motor.angular_speed / 360.0) * M_PI * motor.wheel_diameter;
         // ************* Limit clamping *************
@@ -248,10 +248,10 @@ void ControllerMotor_Loop(void)
         {
             motion_target_position = motor.limit_angular_position[MAXI];
         }
-        float currentfactor = 1.0f;
-        currentfactor = motor.limit_current / (motor.current * 2);
+        float currentfactor         = 1.0f;
+        currentfactor               = motor.limit_current / (motor.current * 2);
         static float surpCurrentSum = 0.0;
-        float surpCurrent = motor.current - motor.limit_current;
+        float surpCurrent           = motor.current - motor.limit_current;
         surpCurrentSum += surpCurrent;
         // If surpCurrentSum > 0 do a real coef
         if (surpCurrentSum > 0.0)
@@ -261,7 +261,7 @@ void ControllerMotor_Loop(void)
         else
         {
             surpCurrentSum = 0.0;
-            currentfactor = 1.0f;
+            currentfactor  = 1.0f;
         }
         if (motor.mode.mode_compliant)
         {
@@ -290,12 +290,12 @@ void ControllerMotor_Loop(void)
         {
             // ************* position asserv *************
             // Target Position is managed by the motion planning interrupt (systick interrupt)
-            float errAngle = 0.0;
-            float dErrAngle = 0.0;
+            float errAngle   = 0.0;
+            float dErrAngle  = 0.0;
             float anglePower = 0.0;
             if (motor.mode.mode_angular_position || motor.mode.mode_linear_position)
             {
-                errAngle = motion_target_position - motor.angular_position;
+                errAngle  = motion_target_position - motor.angular_position;
                 dErrAngle = (errAngle - lastErrAngle) / deltatime;
                 errAngleSum += (errAngle * (float)deltatime);
                 // Integral clamping
@@ -303,28 +303,27 @@ void ControllerMotor_Loop(void)
                     errAngleSum = -100.0;
                 if (errAngleSum > 100.0)
                     errAngleSum = 100;
-                anglePower = (errAngle * position.p) + (errAngleSum * position.i) + (dErrAngle * position.d); // raw PID command
+                anglePower   = (errAngle * position.p) + (errAngleSum * position.i) + (dErrAngle * position.d); // raw PID command
                 lastErrAngle = errAngle;
             }
             // ************* speed asserv *************
-            float errSpeed = 0.0;
-            float dErrSpeed = 0.0;
+            float errSpeed   = 0.0;
+            float dErrSpeed  = 0.0;
             float speedPower = 0.0;
             if (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed)
             {
-                errSpeed = motor.target_angular_speed - motor.angular_speed;
+                errSpeed  = motor.target_angular_speed - motor.angular_speed;
                 dErrSpeed = (errSpeed - lastErrSpeed) / deltatime;
                 errSpeedSum += (errSpeed * (float)deltatime);
                 if (errSpeedSum < -100.0)
                     errSpeedSum = -100.0;
                 if (errSpeedSum > 100.0)
                     errSpeedSum = 100;
-                speedPower = ((errSpeed * speed.p) + (errSpeedSum * speed.i) + (dErrSpeed * speed.d)); // raw PID command
+                speedPower   = ((errSpeed * speed.p) + (errSpeedSum * speed.i) + (dErrSpeed * speed.d)); // raw PID command
                 lastErrSpeed = errSpeed;
             }
             // ************* command merge *************
-            if (!(motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
-                (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
+            if (!(motor.mode.mode_angular_position || motor.mode.mode_linear_position) && (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
             {
                 // Speed control only
                 set_ratio(speedPower * currentfactor);
@@ -350,7 +349,7 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
         // Report management
         msg_t pub_msg;
         pub_msg.header.target_mode = ID;
-        pub_msg.header.target = msg->header.source;
+        pub_msg.header.target      = msg->header.source;
         if (motor.mode.angular_position)
         {
             if (control.mode_rec)
@@ -395,14 +394,14 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
         if (msg->header.size == sizeof(asserv_pid_t))
         {
             // fill the message infos
-            if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
-                !(motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
+            if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position)
+                && !(motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
             {
                 // only position control is enable, we can save PID for positioning
                 memcpy(&position, msg->data, msg->header.size);
             }
-            if ((motor.mode.mode_angular_speed || motor.mode.mode_linear_speed) &&
-                !(motor.mode.mode_angular_position || motor.mode.mode_linear_position))
+            if ((motor.mode.mode_angular_speed || motor.mode.mode_linear_speed)
+                && !(motor.mode.mode_angular_position || motor.mode.mode_linear_position))
             {
                 // only speed control is enable, we can save PID for speed
                 memcpy(&speed, msg->data, msg->header.size);
@@ -421,9 +420,9 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
             if (motor.mode.mode_compliant == 0)
             {
                 __disable_irq();
-                last_position = motor.angular_position;
-                errAngleSum = 0.0;
-                lastErrAngle = 0.0;
+                last_position                 = motor.angular_position;
+                errAngleSum                   = 0.0;
+                lastErrAngle                  = 0.0;
                 motor.target_angular_position = motor.angular_position;
                 __enable_irq();
             }
@@ -456,12 +455,12 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
     {
         // set state to 0
         __disable_irq();
-        motor.angular_position = 0.0;
+        motor.angular_position        = 0.0;
         motor.target_angular_position = 0.0;
         __enable_irq();
-        errAngleSum = 0.0;
-        lastErrAngle = 0.0;
-        last_position = 0.0;
+        errAngleSum     = 0.0;
+        lastErrAngle    = 0.0;
+        last_position   = 0.0;
         speed_bootstrap = 0;
         return;
     }
@@ -629,8 +628,8 @@ void HAL_SYSTICK_Motor_Callback(void)
         last_systick = HAL_GetTick();
     }
     // ****** Linear interpolation *********
-    if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position) &&
-        (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
+    if ((motor.mode.mode_angular_position || motor.mode.mode_linear_position)
+        && (motor.mode.mode_angular_speed || motor.mode.mode_linear_speed))
     {
 
         // speed control and position control are enabled
@@ -669,13 +668,13 @@ static void set_ratio(float ratio)
     uint16_t pulse;
     if (ratio > 0.0)
     {
-        pulse = (uint16_t)(ratio * 24.0);
+        pulse      = (uint16_t)(ratio * 24.0);
         TIM3->CCR1 = pulse;
         TIM3->CCR2 = 0;
     }
     else
     {
-        pulse = (uint16_t)(-ratio * 24.0);
+        pulse      = (uint16_t)(-ratio * 24.0);
         TIM3->CCR1 = 0;
         TIM3->CCR2 = pulse;
     }

@@ -22,7 +22,10 @@ static void Usart_Init(void);
 #endif
 
 #ifndef REV
-#define REV {1,0,0}
+#define REV     \
+    {           \
+        1, 0, 0 \
+    }
 #endif
 
 /*******************************************************************************
@@ -30,7 +33,7 @@ static void Usart_Init(void);
  ******************************************************************************/
 container_t *container;
 msg_t msg;
-char* RxData;
+char *RxData;
 uint16_t RxDataCtn;
 container_t *container_pointer;
 volatile msg_t pub_msg;
@@ -50,7 +53,7 @@ void Gate_Init(void)
 #ifdef USE_SERIAL
     Gpio_Init();
     Usart_Init();
-    RxData = get_json_buf();
+    RxData    = get_json_buf();
     RxDataCtn = 0;
 #endif
     container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
@@ -71,10 +74,10 @@ __attribute__((weak)) void json_send(char *json)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-    static unsigned int keepAlive = 0;
+    static unsigned int keepAlive          = 0;
     static volatile uint8_t detection_done = 0;
-    static char state = 0;
-    uint32_t tickstart = 0;
+    static char state                      = 0;
+    uint32_t tickstart                     = 0;
 
     // Check if there is a dead container
     if (container->ll_container->dead_container_spotted)
@@ -87,7 +90,7 @@ void Gate_Loop(void)
     if (detection_done)
     {
         char json[JSON_BUFF_SIZE] = {0};
-        state = !state;
+        state                     = !state;
         format_data(container, json);
         if (json[0] != '\0')
         {
@@ -122,11 +125,12 @@ void Gate_Loop(void)
         routing_table_to_json(json);
         json_send(json);
         detection_done = 1;
-        detection_ask = 0;
+        detection_ask  = 0;
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < 1);
+    while ((Luos_GetSystick() - tickstart) < 1)
+        ;
 }
 
 #ifdef USE_SERIAL
@@ -141,17 +145,17 @@ static void Gpio_Init(void)
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    GPIO_InitStruct.Pin = GPIO_PIN_2;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Pin       = GPIO_PIN_2;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Pin       = GPIO_PIN_3;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
@@ -167,13 +171,13 @@ static void Usart_Init(void)
     LL_USART_InitTypeDef USART_InitStruct;
 
     LL_USART_Disable(USART2);
-    USART_InitStruct.BaudRate = 1000000;
-    USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
-    USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
-    USART_InitStruct.Parity = LL_USART_PARITY_NONE;
-    USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+    USART_InitStruct.BaudRate            = 1000000;
+    USART_InitStruct.DataWidth           = LL_USART_DATAWIDTH_8B;
+    USART_InitStruct.StopBits            = LL_USART_STOPBITS_1;
+    USART_InitStruct.Parity              = LL_USART_PARITY_NONE;
+    USART_InitStruct.TransferDirection   = LL_USART_DIRECTION_TX_RX;
     USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
-    USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
+    USART_InitStruct.OverSampling        = LL_USART_OVERSAMPLING_16;
     LL_USART_Init(USART2, &USART_InitStruct);
     LL_USART_ConfigAsyncMode(USART2);
     LL_USART_Enable(USART2);
@@ -198,15 +202,15 @@ void USART2_IRQHandler(void)
     {
         *RxData = LL_USART_ReceiveData8(USART2);
         RxDataCtn++;
-        if(*RxData == '\r')
+        if (*RxData == '\r')
         {
-          check_json(RxDataCtn-1);
-          RxData = get_json_buf();
-          RxDataCtn = 0;
+            check_json(RxDataCtn - 1);
+            RxData    = get_json_buf();
+            RxDataCtn = 0;
         }
         else
         {
-          RxData++;
+            RxData++;
         }
     }
     USART2->SR = 0xFFFFFFFF;
@@ -220,7 +224,8 @@ static int serial_write(char *data, int len)
 {
     for (unsigned short i = 0; i < len; i++)
     {
-        while (!LL_USART_IsActiveFlag_TXE(USART2));
+        while (!LL_USART_IsActiveFlag_TXE(USART2))
+            ;
         LL_USART_TransmitData8(USART2, *(data + i));
     }
     return 0;

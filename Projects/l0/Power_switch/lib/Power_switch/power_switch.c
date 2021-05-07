@@ -27,8 +27,8 @@ static void PowerSwitch_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void PowerSwitch_Init(void)
 {
-	revision_t revision = {.unmap = REV};
-	
+    revision_t revision = {.unmap = REV};
+
     Luos_CreateContainer(PowerSwitch_MsgHandler, STATE_MOD, "switch_mod", revision);
 }
 /******************************************************************************

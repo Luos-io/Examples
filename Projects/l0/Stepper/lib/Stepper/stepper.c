@@ -18,8 +18,8 @@
  ******************************************************************************/
 volatile motor_config_t motor;
 volatile uint8_t microstepping = 16;
-volatile int target_step_nb = 0;
-volatile int current_step_nb = 0;
+volatile int target_step_nb    = 0;
+volatile int current_step_nb   = 0;
 
 /*******************************************************************************
  * Function
@@ -35,17 +35,17 @@ static void compute_speed(void);
 void Stepper_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    
+
     Luos_CreateContainer(Stepper_MsgHandler, STEPPER_MOD, "stepper_mod", revision);
-    motor.resolution = 200.0;
-    motor.wheel_diameter = 0.0;
+    motor.resolution           = 200.0;
+    motor.wheel_diameter       = 0.0;
     motor.target_angular_speed = 100.0;
 
-    motor.mode.mode_compliant = 1;
+    motor.mode.mode_compliant        = 1;
     motor.mode.mode_angular_position = 1;
-    motor.mode.mode_angular_speed = 0;
-    motor.mode.mode_linear_position = 0;
-    motor.mode.mode_linear_speed = 0;
+    motor.mode.mode_angular_speed    = 0;
+    motor.mode.mode_linear_position  = 0;
+    motor.mode.mode_linear_speed     = 0;
 
     HAL_GPIO_WritePin(MS1_GPIO_Port, MS1_Pin, 1);
     HAL_GPIO_WritePin(MS2_GPIO_Port, MS2_Pin, 1);
@@ -64,7 +64,7 @@ void Stepper_Loop(void)
 {
     // compute values
     float degPerStep = 360.0 / (float)(motor.resolution * microstepping);
-    target_step_nb = (int)(motor.target_angular_position / degPerStep);
+    target_step_nb   = (int)(motor.target_angular_position / degPerStep);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this container
@@ -94,9 +94,9 @@ static void Stepper_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == REINIT)
     {
         // set motor position to 0
-        motor.angular_position = 0.0;
+        motor.angular_position        = 0.0;
         motor.target_angular_position = 0.0;
-        motor.target_angular_speed = 100.0;
+        motor.target_angular_speed    = 100.0;
         return;
     }
     if (msg->header.cmd == DIMENSION)
@@ -149,10 +149,10 @@ static void compute_speed(void)
 {
     if (fabs(motor.target_angular_speed) > 0.1)
     {
-        volatile float degPerStep = 360.0 / (float)(motor.resolution * microstepping);
+        volatile float degPerStep  = 360.0 / (float)(motor.resolution * microstepping);
         volatile float timePerStep = 1.0 / (fabs(motor.target_angular_speed) / degPerStep);
-        htim3.Init.Period = (uint32_t)(timePerStep * (float)(48000000 / htim3.Init.Prescaler));
-        TIM3->CCR3 = htim3.Init.Period / 2;
+        htim3.Init.Period          = (uint32_t)(timePerStep * (float)(48000000 / htim3.Init.Prescaler));
+        TIM3->CCR3                 = htim3.Init.Period / 2;
         HAL_TIM_Base_Init(&htim3);
         HAL_TIM_Base_Start(&htim3);
         HAL_TIM_Base_Start_IT(&htim3);

@@ -12,7 +12,6 @@
  ******************************************************************************/
 #define LIGHT_INTENSITY 255
 
-
 #define UPDATE_PERIOD_MS 10
 
 typedef enum
@@ -26,10 +25,10 @@ typedef enum
  ******************************************************************************/
 container_t *app;
 volatile control_mode_t control_mode;
-uint8_t lock = 1;
+uint8_t lock           = 1;
 uint8_t last_btn_state = 0;
-uint8_t state_switch = 0;
-uint8_t init = 0;
+uint8_t state_switch   = 0;
+uint8_t init           = 0;
 
 /*******************************************************************************
  * Function
@@ -43,7 +42,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void StartController_Init(void)
 {
-	revision_t revision = {.unmap = REV};
+    revision_t revision = {.unmap = REV};
     // By default this app running
     control_mode.mode_control = PLAY;
     // Create App
@@ -56,8 +55,8 @@ void StartController_Init(void)
  ******************************************************************************/
 void StartController_Loop(void)
 {
-    static short previous_id = -1;
-    static uint32_t switch_date = 0;
+    static short previous_id       = -1;
+    static uint32_t switch_date    = 0;
     static uint8_t animation_state = 0;
     // ********** hot plug management ************
     // Check if we have done the first init or if container Id have changed
@@ -90,7 +89,7 @@ void StartController_Loop(void)
             if (id > 0)
             {
                 msg_t msg;
-                msg.header.target = id;
+                msg.header.target      = id;
                 msg.header.target_mode = IDACK;
                 // Setup auto update each UPDATE_PERIOD_MS on button
                 // This value is resetted on all container at each detection
@@ -127,14 +126,14 @@ void StartController_Loop(void)
             }
             // send message
             msg.header.target = id;
-            msg.header.cmd = CONTROL;
-            msg.header.size = sizeof(control_mode_t);
-            msg.data[0] = alarm_control.unmap;
+            msg.header.cmd    = CONTROL;
+            msg.header.size   = sizeof(control_mode_t);
+            msg.data[0]       = alarm_control.unmap;
             Luos_SendMsg(app, &msg);
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id = RoutingTB_IDFromType(COLOR_MOD);
+        id           = RoutingTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -159,8 +158,8 @@ void StartController_Loop(void)
         {
             // we get a horn
             msg.header.target = id;
-            msg.header.size = sizeof(uint8_t);
-            msg.header.cmd = IO_STATE;
+            msg.header.size   = sizeof(uint8_t);
+            msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 1;
             Luos_SendMsg(app, &msg);
@@ -172,9 +171,9 @@ void StartController_Loop(void)
             if (id > 0)
             {
                 msg.header.target = id;
-                msg.header.cmd = IO_STATE;
-                msg.header.size = 1;
-                msg.data[0] = 1;
+                msg.header.cmd    = IO_STATE;
+                msg.header.size   = 1;
+                msg.data[0]       = 1;
                 Luos_SendMsg(app, &msg);
             }
         }
@@ -188,13 +187,13 @@ void StartController_Loop(void)
         // 100ms after button turn of light and horn
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = RoutingTB_IDFromAlias("horn");
+        int id                 = RoutingTB_IDFromAlias("horn");
         if (id > 0)
         {
             // we get a horn
             msg.header.target = id;
-            msg.header.size = sizeof(uint8_t);
-            msg.header.cmd = IO_STATE;
+            msg.header.size   = sizeof(uint8_t);
+            msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 0;
             Luos_SendMsg(app, &msg);
@@ -206,7 +205,7 @@ void StartController_Loop(void)
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id = RoutingTB_IDFromType(COLOR_MOD);
+        int id                 = RoutingTB_IDFromType(COLOR_MOD);
         if (id > 0)
         {
             // we have an alarm, we can set its color

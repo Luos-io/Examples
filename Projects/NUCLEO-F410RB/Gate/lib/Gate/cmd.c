@@ -5,9 +5,9 @@
 
 // There is no stack here we use the latest command
 volatile char buf[JSON_BUF_NUM][JSON_BUFF_SIZE] = {0};
-volatile int current_table = 0;
-volatile char cmd_ready = 0;
-volatile char detection_ask = 0;
+volatile int current_table                      = 0;
+volatile char cmd_ready                         = 0;
+volatile char detection_ask                     = 0;
 
 char *get_json_buf(void)
 {
@@ -24,9 +24,9 @@ static void next_json(void)
 
 void check_json(uint16_t carac_nbr)
 {
-    if ((current_table > (JSON_BUF_NUM - 1)) ||
-        (current_table < 0) ||
-        (carac_nbr > (JSON_BUFF_SIZE - 1)))
+    if ((current_table > (JSON_BUF_NUM - 1))
+        || (current_table < 0)
+        || (carac_nbr > (JSON_BUFF_SIZE - 1)))
     {
         while (1)
             ; // Check Json overflow => remove it
@@ -85,20 +85,20 @@ void send_cmds(container_t *container)
             if (cJSON_IsObject(cJSON_GetObjectItem(root, "benchmark")))
             {
                 // Get all parameters
-                cJSON *parameters = cJSON_GetObjectItem(root, "benchmark");
+                cJSON *parameters   = cJSON_GetObjectItem(root, "benchmark");
                 uint32_t repetition = 0;
                 if (cJSON_IsNumber(cJSON_GetObjectItem(parameters, "repetitions")))
                 {
                     repetition = (int)cJSON_GetObjectItem(parameters, "repetitions")->valueint;
                 }
                 uint32_t target_id = (int)cJSON_GetObjectItem(parameters, "target")->valueint;
-                cJSON *item = cJSON_GetObjectItem(parameters, "data");
-                uint32_t size = (int)cJSON_GetArrayItem(item, 0)->valueint;
+                cJSON *item        = cJSON_GetObjectItem(parameters, "data");
+                uint32_t size      = (int)cJSON_GetArrayItem(item, 0)->valueint;
                 if (size > 0)
                 {
                     // find the first \r of the current buf
                     char *bin_data = (char *)buf[concerned_table];
-                    int index = 0;
+                    int index      = 0;
                     for (index = 0; index < JSON_BUFF_SIZE; index++)
                     {
                         if (bin_data[index] == '\r')
@@ -110,9 +110,9 @@ void send_cmds(container_t *container)
                     if (index < JSON_BUFF_SIZE - 1)
                     {
                         // create a message from parameters
-                        msg.header.cmd = REVISION;
+                        msg.header.cmd         = REVISION;
                         msg.header.target_mode = IDACK;
-                        msg.header.target = target_id;
+                        msg.header.target      = target_id;
                         // save current time
                         uint32_t begin_systick = Luos_GetSystick();
                         uint32_t failed_msg_nb = 0;
@@ -126,9 +126,9 @@ void send_cmds(container_t *container)
                             }
                         }
                         uint32_t end_systick = Luos_GetSystick();
-                        float data_rate = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
-                        float fail_rate = (float)failed_msg_nb * 100.0 / (float)repetition;
-                        char json[60] = {0};
+                        float data_rate      = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
+                        float fail_rate      = (float)failed_msg_nb * 100.0 / (float)repetition;
+                        char json[60]        = {0};
                         sprintf(json, "{\"benchmark\":{\"data_rate\":%.2f,\"fail_rate\":%.2f}}\n", data_rate, fail_rate);
                         json_send(json);
                     }

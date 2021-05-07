@@ -13,8 +13,8 @@ void collect_data(container_t *container)
 {
     msg_t json_msg;
     json_msg.header.target_mode = ID;
-    json_msg.header.cmd = ASK_PUB_CMD;
-    json_msg.header.size = 0;
+    json_msg.header.cmd         = ASK_PUB_CMD;
+    json_msg.header.size        = 0;
     // ask containers to publish datas
     for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
     {
