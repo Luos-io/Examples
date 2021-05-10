@@ -3,6 +3,7 @@
 [![](http://certified.luos.io)](https://luos.io)
 [![](https://img.shields.io/github/license/Luos-io/Examples)](
 https://github.com/Luos-io/Examples/blob/master/LICENSE)
+[![](https://img.shields.io/reddit/subreddit-subscribers/Luos?style=social)](https://www.reddit.com/r/Luos)
 
 
 # Luos examples
@@ -52,6 +53,8 @@ This contains hardwares librairies used by Luos to inspire you to create your ow
 
 4. Go to the KiCad project folder you want open and click on the .pro file.
 
-[![](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.luos.io&logo=Discourse)](https://community.luos.io)
+## Don't hesitate to read [our documentation](https://docs.luos.io), or to post your questions/issues on the [Luos' subreddit](https://www.reddit.com/r/Luos/). :books:
+
+[![](https://img.shields.io/reddit/subreddit-subscribers/Luos?style=social)](https://www.reddit.com/r/Luos)
 [![](https://img.shields.io/badge/Luos-Documentation-34A3B4)](https://docs.luos.io)
 [![](https://img.shields.io/badge/LinkedIn-Follow%20us-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/company/luos)
