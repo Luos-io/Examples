@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "gate.h"
+#include "json_alloc.h"
+#include "luos_utils.h"
 
 // Create msg from a container json data
 void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
@@ -694,6 +696,7 @@ void routing_table_to_json(char *json)
     json[strlen(json) - 1] = '\0';
     // End the Json message
     sprintf(json, "%s]}\n", json);
+    json = json_alloc_set_tx_task(strlen(json));
 }
 
 void exclude_container_to_json(int id, char *json)
@@ -701,4 +704,13 @@ void exclude_container_to_json(int id, char *json)
     sprintf(json, "{\"dead_container\":\"%s\"", RoutingTB_AliasFromId(id));
     sprintf(json, "%s}\n", json);
     RoutingTB_RemoveOnRoutingTable(id);
+    json = json_alloc_set_tx_task(strlen(json));
+}
+
+void node_assert(char *file, uint32_t line)
+{
+    // manage self crashing scenario
+    char *json = json_alloc_get_tx_buf();
+    sprintf(json, "{\"assert\":{\"node_id\":1,\"file\":\"%s\",\"line\":%d}}\n", file, (unsigned int)line);
+    json_alloc_set_tx_task(strlen(json));
 }

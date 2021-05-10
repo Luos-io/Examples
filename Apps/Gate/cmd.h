@@ -6,7 +6,6 @@
 
 extern volatile char detection_ask;
 
-char *get_json_buf(void);
 void check_json(uint16_t carac_nbr);
 void send_cmds(container_t *container);
 

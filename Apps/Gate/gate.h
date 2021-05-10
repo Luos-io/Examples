@@ -21,5 +21,4 @@
  ******************************************************************************/
 void Gate_Init(void);
 void Gate_Loop(void);
-void json_send(char *json);
 #endif /* GATE_H */
