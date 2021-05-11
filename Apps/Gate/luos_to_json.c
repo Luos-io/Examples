@@ -1,5 +1,4 @@
 #include "luos_to_json.h"
-#include "cmd.h"
 #include "convert.h"
 #include "json_alloc.h"
 #include <stdio.h>

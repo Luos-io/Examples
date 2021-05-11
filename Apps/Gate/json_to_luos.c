@@ -1,4 +1,4 @@
-#include "cmd.h"
+#include "json_to_luos.h"
 #include "convert.h"
 #include <stdio.h>
 #include "json_alloc.h"
@@ -6,7 +6,7 @@
 // There is no stack here we use the latest command
 volatile char detection_ask = 0;
 
-void send_cmds(container_t *container)
+void json_to_luos(container_t *container)
 {
     msg_t msg;
     char *json = json_alloc_pull_rx_task();

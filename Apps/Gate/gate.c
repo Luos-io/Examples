@@ -9,7 +9,7 @@
 #include "luos_to_json.h"
 #include "json_pipe.h"
 #include "json_alloc.h"
-#include "cmd.h"
+#include "json_to_luos.h"
 #include "convert.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -107,7 +107,7 @@ void Gate_Loop(void)
             }
         }
         // check if serial input messages ready and convert it into luos messages
-        send_cmds(gate);
+        json_to_luos(gate);
         if (detection_ask)
         {
             // reinit Json buffer.
