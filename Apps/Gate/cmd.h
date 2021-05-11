@@ -1,7 +1,7 @@
 #ifndef CMD_H
 #define CMD_H
 
-#include <json_mnger.h>
+#include "luos.h"
 #include "stdint.h"
 
 extern volatile char detection_ask;

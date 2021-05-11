@@ -6,7 +6,7 @@
  ******************************************************************************/
 
 #include "gate.h"
-#include "json_mnger.h"
+#include "luos_to_json.h"
 #include <stdio.h>
 #include "json_pipe.h"
 #include "json_alloc.h"
