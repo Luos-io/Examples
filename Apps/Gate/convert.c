@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "gate.h"
 #include "json_alloc.h"
 #include "luos_utils.h"
 
@@ -415,7 +414,7 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         case GATE_MOD:
             if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "delay")))
             {
-                set_delay(cJSON_GetObjectItem(jobj, "delay")->valueint);
+                // Don't do anything
             }
             break;
         default:

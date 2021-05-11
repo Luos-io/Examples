@@ -1,8 +1,6 @@
 #include "cmd.h"
 #include "convert.h"
 #include <stdio.h>
-#include "main.h"
-#include "gate.h"
 #include "json_alloc.h"
 
 // There is no stack here we use the latest command
@@ -83,7 +81,7 @@ void send_cmds(container_t *container)
                         msg.header.target_mode = IDACK;
                         msg.header.target      = target_id;
                         // save current time
-                        uint32_t begin_systick = HAL_GetTick();
+                        uint32_t begin_systick = Luos_GetSystick();
                         uint32_t failed_msg_nb = 0;
                         // Before trying to send anything make sure to finish any transmission
                         while (Luos_TxComplete() == FAILED)

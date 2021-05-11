@@ -1,11 +1,9 @@
-#include <stdio.h>
-#include <stdbool.h>
+#include "luos_to_json.h"
 #include "cmd.h"
 #include "convert.h"
 #include "json_alloc.h"
-#include "luos_hal.h"
-
-static unsigned int delayms = 0;
+#include <stdio.h>
+#include <stdbool.h>
 
 //******************* sensor update ****************************
 // This function will gather data from sensors and create a json string for you
@@ -38,8 +36,8 @@ void collect_data(container_t *container)
         }
     }
     // wait a little bit for the first reply
-    uint32_t start_time = LuosHAL_GetSystick();
-    while ((start_time == LuosHAL_GetSystick()) && (Luos_NbrAvailableMsg() == 0))
+    uint32_t start_time = Luos_GetSystick();
+    while ((start_time == Luos_GetSystick()) && (Luos_NbrAvailableMsg() == 0))
         ;
 }
 
@@ -120,14 +118,4 @@ void format_data(container_t *container, char *json)
         //create a void string
         *json = '\0';
     }
-}
-
-unsigned int get_delay(void)
-{
-    return delayms;
-}
-
-void set_delay(unsigned int new_delayms)
-{
-    delayms = new_delayms;
 }

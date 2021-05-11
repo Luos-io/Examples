@@ -7,9 +7,12 @@
 
 #include "gate.h"
 #include "luos_to_json.h"
-#include <stdio.h>
 #include "json_pipe.h"
 #include "json_alloc.h"
+#include "cmd.h"
+#include "convert.h"
+#include <stdio.h>
+#include <stdbool.h>
 
 /*******************************************************************************
  * Definitions
@@ -41,12 +44,12 @@ void Gate_Init(void)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-    static short previous_id               = -1;
-    static unsigned int keepAlive          = 0;
-    static volatile uint8_t detection_done = 0;
-    static char state                      = 0;
-    char *tx_json                          = json_alloc_get_tx_buf();
+    static short previous_id          = -1;
+    static unsigned int keepAlive     = 0;
+    static volatile bool gate_running = false;
+    char *tx_json                     = json_alloc_get_tx_buf();
 
+    // Check the detection status.
     if (RoutingTB_IDFromContainer(gate) == 0)
     {
         // We don't have any ID, meaning no detection occure or detection is occuring.
@@ -71,26 +74,29 @@ void Gate_Loop(void)
     }
     else
     {
-        if (detection_ask)
-        {
-            detection_done = 0;
-        }
+        // Network have been detected, We are good to go
         // Check if there is a dead container
         if (gate->ll_container->dead_container_spotted)
         {
+            // There is a dead container spotted by gate, manage it.
             exclude_container_to_json(gate->ll_container->dead_container_spotted, tx_json);
             gate->ll_container->dead_container_spotted = 0;
         }
-        if (detection_done)
+        if (gate_running && !detection_ask)
         {
-            state = !state;
+            // retrive data from network services
+            collect_data(gate);
+            // convert received data into Json
             format_data(gate, tx_json);
+            // Check if we don't convert anything.
             if (tx_json[0] != '\0')
             {
                 keepAlive = 0;
             }
             else
             {
+                // We don't receive anything.
+                // After 200 void reception send void Json allowing client to send commands.
                 if (keepAlive > 200)
                 {
                     sprintf(tx_json, "{}\n");
@@ -102,12 +108,8 @@ void Gate_Loop(void)
                 }
             }
         }
-        // check if serial input messages ready and convert it into a luos message
+        // check if serial input messages ready and convert it into luos messages
         send_cmds(gate);
-        if (detection_done)
-        {
-            collect_data(gate);
-        }
         if (detection_ask)
         {
             // reinit Json buffer.
@@ -117,8 +119,8 @@ void Gate_Loop(void)
             RoutingTB_DetectContainers(gate);
             // Create Json from container
             routing_table_to_json(tx_json);
-            detection_done = 1;
-            detection_ask  = 0;
+            gate_running  = true;
+            detection_ask = 0;
         }
     }
 }
