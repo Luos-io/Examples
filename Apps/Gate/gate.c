@@ -18,7 +18,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *container;
+container_t *gate;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -31,7 +31,7 @@ void Gate_Init(void)
 {
     revision_t revision = {.unmap = REV};
     json_pipe_init();
-    container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
+    gate = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 
 /******************************************************************************
@@ -50,15 +50,15 @@ void Gate_Loop(void)
         detection_done = 0;
     }
     // Check if there is a dead container
-    if (container->ll_container->dead_container_spotted)
+    if (gate->ll_container->dead_container_spotted)
     {
-        exclude_container_to_json(container->ll_container->dead_container_spotted, tx_json);
-        container->ll_container->dead_container_spotted = 0;
+        exclude_container_to_json(gate->ll_container->dead_container_spotted, tx_json);
+        gate->ll_container->dead_container_spotted = 0;
     }
     if (detection_done)
     {
         state = !state;
-        format_data(container, tx_json);
+        format_data(gate, tx_json);
         if (tx_json[0] != '\0')
         {
             keepAlive = 0;
@@ -77,10 +77,10 @@ void Gate_Loop(void)
         }
     }
     // check if serial input messages ready and convert it into a luos message
-    send_cmds(container);
+    send_cmds(gate);
     if (detection_done)
     {
-        collect_data(container);
+        collect_data(gate);
     }
     if (detection_ask)
     {
@@ -88,7 +88,7 @@ void Gate_Loop(void)
         json_alloc_reinit();
         tx_json = json_alloc_get_tx_buf();
         // Run detection
-        RoutingTB_DetectContainers(container);
+        RoutingTB_DetectContainers(gate);
         // Create Json from container
         routing_table_to_json(tx_json);
         detection_done = 1;
