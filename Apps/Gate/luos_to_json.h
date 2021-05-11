@@ -4,7 +4,6 @@
 
 #include "luos.h"
 
-void collect_data(container_t *container);
-void format_data(container_t *container, char *json);
+void luos_to_json(container_t *container, char *json);
 
 #endif /* LUOS_TO_JSON */

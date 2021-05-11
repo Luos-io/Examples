@@ -84,10 +84,8 @@ void Gate_Loop(void)
         }
         if (gate_running && !detection_ask)
         {
-            // retrive data from network services
-            collect_data(gate);
-            // convert received data into Json
-            format_data(gate, tx_json);
+            // retrive and convert received data into Json
+            luos_to_json(gate, tx_json);
             // Check if we don't convert anything.
             if (tx_json[0] != '\0')
             {

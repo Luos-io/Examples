@@ -5,6 +5,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+static void collect_data(container_t *container);
+static void format_data(container_t *container, char *json);
+
+void luos_to_json(container_t *container, char *json)
+{
+    collect_data(container);
+    format_data(container, json);
+}
+
 //******************* sensor update ****************************
 // This function will gather data from sensors and create a json string for you
 void collect_data(container_t *container)
