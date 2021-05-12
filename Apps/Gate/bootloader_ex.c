@@ -29,20 +29,19 @@ void LuosBootloader_GateRcv(msg_t *msg)
     char boot_json[256] = "\0";
     uint8_t response_cmd = msg->data[0];
 
-    switch(response_cmd)
+    switch (response_cmd)
     {
-        case BOOTLOADER_READY_RESP:
-            sprintf(boot_json, "{\"bootloader\":{\"response\":16}}\n");
-            break;
+    case BOOTLOADER_READY_RESP:
+        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_READY_RESP);
+        break;
 
-        case BOOTLOADER_BIN_HEADER_RESP:
-            sprintf(boot_json, "{\"bootloader\":{\"response\":17}}\n");
-            break;
-        
-        default:
-            break;
+    case BOOTLOADER_BIN_HEADER_RESP:
+        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_BIN_HEADER_RESP);
+        break;
+
+    default:
+        break;
     }
 
-    HAL_Delay(1000);
     json_send(boot_json);
 }

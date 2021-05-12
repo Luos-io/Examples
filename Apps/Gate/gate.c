@@ -20,7 +20,10 @@ static int serial_write(char *data, int len);
 #endif
 
 #ifndef REV
-#define REV {1,0,0}
+#define REV     \
+    {           \
+        1, 0, 0 \
+    }
 #endif
 /*******************************************************************************
  * Variables
@@ -129,8 +132,8 @@ void Gate_Loop(void)
     }
 
     tickstart = Luos_GetSystick();
-    while((Luos_GetSystick() - tickstart) < get_delay());
-
+    while ((Luos_GetSystick() - tickstart) < get_delay())
+        ;
 }
 
 #ifdef USE_SERIAL
@@ -157,7 +160,6 @@ void USART3_4_IRQHandler(void)
     }
 }
 #endif
-
 
 #ifdef USE_SERIAL
 static int serial_write(char *data, int len)
