@@ -2,7 +2,7 @@
 #include "convert.h"
 #include <stdio.h>
 #include "gate.h"
-#include "bootloader.h"
+#include "bootloader_ex.h"
 
 // There is no stack here we use the latest command
 volatile char buf[JSON_BUF_NUM][JSON_BUFF_SIZE] = {0};
@@ -166,97 +166,7 @@ void send_cmds(container_t *container)
         cJSON *bootloader_json = cJSON_GetObjectItem(root, "bootloader");
         if (cJSON_IsObject(bootloader_json))
         {
-            if(cJSON_IsObject(cJSON_GetObjectItem(bootloader_json, "command")))
-            {
-                // command type
-                char* cmd[8] = {
-                        "dummy", 
-                        "start",
-                        "stop",
-                        "ready",
-                        "bin_header",
-                        "bin_chunk",
-                        "bin_end",
-                        "crc_test"};
-
-                // get "command" json object
-                cJSON *command_item = cJSON_GetObjectItem(bootloader_json, "command");
-                // parse all relevant values in json object
-                char* type = cJSON_GetStringValue(cJSON_GetObjectItem(command_item, "type"));
-                uint8_t node_target = cJSON_GetObjectItem(command_item, "node")->valueint;
-
-                // create a message to send to nodes
-    	        msg_t boot_msg;
-    	        boot_msg.header.target = node_target;                 // first node of the network
-    	        boot_msg.header.cmd = BOOTLOADER_CMD;                 // bootloader cmd
-    	        boot_msg.header.target_mode = NODEIDACK;              // msg send to the node
-
-                if(strcmp(type, cmd[BOOTLOADER_START]) == 0)
-                {
-                    // send start command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = BOOTLOADER_START;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                }
-                
-                if(strcmp(type, cmd[BOOTLOADER_STOP]) == 0)
-                {
-                    // send stop command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = BOOTLOADER_STOP;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                }
-
-                if(strcmp(type, cmd[BOOTLOADER_READY]) == 0)
-                {
-                    // send ready command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = BOOTLOADER_READY;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                }
-
-                if(strcmp(type, cmd[BOOTLOADER_BIN_HEADER]) == 0)
-                {
-                    // send bin header command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = BOOTLOADER_BIN_HEADER;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                }
-
-                if(strcmp(type, cmd[BOOTLOADER_BIN_CHUNK]) == 0)
-                {
-                    // find binary size in json header
-                    uint8_t binary_size = cJSON_GetObjectItem(command_item, "size")->valueint;
-                    char *bin_data = (char *)buf[concerned_table];
-
-                    // send bin chunk command to bootloader app
-                    boot_msg.data[0] = BOOTLOADER_BIN_CHUNK;
-                    int i = 0;
-                    // find the first \r of the current buf
-                    for (i = 0; i < JSON_BUFF_SIZE; i++)
-                    {
-                        if (bin_data[i] == '\r')
-                        {
-                            i++;
-                            break;
-                        }
-                    }
-                    if (i < JSON_BUFF_SIZE - 1)
-                    {
-                        boot_msg.header.size = binary_size + sizeof(char);
-                        memcpy(&(boot_msg.data[1]), &bin_data[i], binary_size);
-                        Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                    }                        
-                }
-
-                if(strcmp(type, cmd[BOOTLOADER_BIN_END]) == 0)
-                {
-                    // send bin header command to bootloader app
-                    boot_msg.header.size = sizeof(char); //Our message only contains one character
-                    boot_msg.data[0] = BOOTLOADER_BIN_END;
-                    Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
-                }
-            }
+            LuosBootloader_GateCmd(container, (char *)buf[concerned_table], bootloader_json);
         }
 
         cJSON *containers = cJSON_GetObjectItem(root, "containers");

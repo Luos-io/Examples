@@ -8,6 +8,8 @@
 #define BOOTLOADER_EX_H
 
 #include "robus_struct.h"
+#include "cJSON.h"
+#include "gate.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -20,5 +22,6 @@
  * Function
  ******************************************************************************/
 void LuosBootloader_GateRcv(msg_t *);
+void LuosBootloader_GateCmd(container_t *, char *, cJSON *);
 
 #endif /* BOOTLOADER_H */
