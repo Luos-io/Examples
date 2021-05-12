@@ -52,6 +52,10 @@ void LuosBootloader_GateRcv(msg_t *msg)
         sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_BIN_END_RESP);
         break;
 
+    case BOOTLOADER_CRC_RESP:
+        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_CRC_RESP);
+        break;
+
     default:
         break;
     }
@@ -94,33 +98,33 @@ void LuosBootloader_GateCmd(container_t *container, char *bin_data, cJSON *bootl
         if (strcmp(type, cmd[BOOTLOADER_START]) == 0)
         {
             // send start command to bootloader app
-            boot_msg.header.size = sizeof(char); //Our message only contains one character
+            boot_msg.header.size = sizeof(char);
             boot_msg.data[0] = BOOTLOADER_START;
-            Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+            Luos_SendMsg(container, &boot_msg);
         }
 
         if (strcmp(type, cmd[BOOTLOADER_STOP]) == 0)
         {
             // send stop command to bootloader app
-            boot_msg.header.size = sizeof(char); //Our message only contains one character
+            boot_msg.header.size = sizeof(char);
             boot_msg.data[0] = BOOTLOADER_STOP;
-            Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+            Luos_SendMsg(container, &boot_msg);
         }
 
         if (strcmp(type, cmd[BOOTLOADER_READY]) == 0)
         {
             // send ready command to bootloader app
-            boot_msg.header.size = sizeof(char); //Our message only contains one character
+            boot_msg.header.size = sizeof(char);
             boot_msg.data[0] = BOOTLOADER_READY;
-            Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+            Luos_SendMsg(container, &boot_msg);
         }
 
         if (strcmp(type, cmd[BOOTLOADER_BIN_HEADER]) == 0)
         {
             // send bin header command to bootloader app
-            boot_msg.header.size = sizeof(char); //Our message only contains one character
+            boot_msg.header.size = sizeof(char);
             boot_msg.data[0] = BOOTLOADER_BIN_HEADER;
-            Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+            Luos_SendMsg(container, &boot_msg);
         }
 
         if (strcmp(type, cmd[BOOTLOADER_BIN_CHUNK]) == 0)
@@ -144,16 +148,24 @@ void LuosBootloader_GateCmd(container_t *container, char *bin_data, cJSON *bootl
             {
                 boot_msg.header.size = binary_size + sizeof(char);
                 memcpy(&(boot_msg.data[1]), &bin_data[i], binary_size);
-                Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+                Luos_SendMsg(container, &boot_msg);
             }
         }
 
         if (strcmp(type, cmd[BOOTLOADER_BIN_END]) == 0)
         {
-            // send bin header command to bootloader app
-            boot_msg.header.size = sizeof(char); //Our message only contains one character
+            // send bin end command to bootloader app
+            boot_msg.header.size = sizeof(char);
             boot_msg.data[0] = BOOTLOADER_BIN_END;
-            Luos_SendMsg(container, &boot_msg); //Now that we have the elements, send the message
+            Luos_SendMsg(container, &boot_msg);
+        }
+
+        if (strcmp(type, cmd[BOOTLOADER_CRC_TEST]) == 0)
+        {
+            // send crc test command to bootloader app
+            boot_msg.header.size = sizeof(char);
+            boot_msg.data[0] = BOOTLOADER_CRC_TEST;
+            Luos_SendMsg(container, &boot_msg);
         }
     }
 }
