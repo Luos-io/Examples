@@ -53,7 +53,7 @@ void LuosBootloader_GateRcv(msg_t *msg)
         break;
 
     case BOOTLOADER_CRC_RESP:
-        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_CRC_RESP);
+        sprintf(boot_json, "{\"bootloader\":{\"response\":%d,\"crc_value\":%d}}\n", BOOTLOADER_CRC_RESP, msg->data[1]);
         break;
 
     default:
