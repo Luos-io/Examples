@@ -113,9 +113,13 @@ void LuosBootloader_GateCmd(container_t *container, char *bin_data, cJSON *bootl
 
         if (strcmp(type, cmd[BOOTLOADER_READY]) == 0)
         {
+            // find binary size in json header
+            uint32_t binary_size = cJSON_GetObjectItem(command_item, "size")->valueint;
+
             // send ready command to bootloader app
-            boot_msg.header.size = sizeof(char);
+            boot_msg.header.size = sizeof(char) + sizeof(uint32_t);
             boot_msg.data[0] = BOOTLOADER_READY;
+            memcpy(&(boot_msg.data[1]), &binary_size, sizeof(uint32_t));
             Luos_SendMsg(container, &boot_msg);
         }
 
