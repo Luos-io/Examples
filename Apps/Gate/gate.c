@@ -97,8 +97,8 @@ void Gate_Loop(void)
                 // After 200 void reception send void Json allowing client to send commands.
                 if (keepAlive > 200)
                 {
-                    sprintf(tx_json, "{}\n");
-                    tx_json = json_alloc_set_tx_task(strlen(tx_json));
+                    //sprintf(tx_json, "{}\n");
+                    //tx_json = json_alloc_set_tx_task(strlen(tx_json));
                 }
                 else
                 {
@@ -117,6 +117,10 @@ void Gate_Loop(void)
             RoutingTB_DetectContainers(gate);
             // Create Json from container
             routing_table_to_json(tx_json);
+#ifndef GATE_POLLING
+            // Set update frequecy
+            collect_data(gate);
+#endif
             gate_running  = true;
             detection_ask = 0;
         }

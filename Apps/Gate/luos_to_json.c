@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-static void collect_data(container_t *container);
+static time_luos_t update_time = DEFAULT_REFRESH_S;
+
 static void format_data(container_t *container, char *json);
 
 void luos_to_json(container_t *container, char *json)
 {
+#ifdef GATE_POLLING
     collect_data(container);
+#endif
     format_data(container, json);
 }
 
@@ -17,19 +20,24 @@ void luos_to_json(container_t *container, char *json)
 // This function will gather data from sensors and create a json string for you
 void collect_data(container_t *container)
 {
-    msg_t json_msg;
-    json_msg.header.target_mode = ID;
-    json_msg.header.cmd         = ASK_PUB_CMD;
-    json_msg.header.size        = 0;
+    msg_t update_msg;
+#ifdef GATE_POLLING
+    update_msg.header.cmd         = ASK_PUB_CMD;
+    update_msg.header.target_mode = ID;
+    update_msg.header.size        = 0;
+#else
+    update_msg.header.target_mode = IDACK;
+#endif
     // ask containers to publish datas
     for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
     {
         // Check if this container is a sensor
         if ((RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i))) || (RoutingTB_TypeFromID(i) >= LUOS_LAST_TYPE))
         {
+#ifdef GATE_POLLING
             // This container is a sensor so create a msg and send it
-            json_msg.header.target = i;
-            Luos_SendMsg(container, &json_msg);
+            update_msg.header.target = i;
+            Luos_SendMsg(container, &update_msg);
 #ifdef GATE_TIMEOUT
             // Get the current number of message available
             int back_nbr_msg = Luos_NbrAvailableMsg();
@@ -40,6 +48,13 @@ void collect_data(container_t *container)
             {
                 Luos_Loop();
             }
+#endif
+#else
+            // This contaiiner is a sensor so create a msg to enable auto update
+            update_msg.header.target = i;
+            TimeOD_TimeToMsg(&update_time, &update_msg);
+            update_msg.header.cmd = UPDATE_PUB;
+            Luos_SendMsg(container, &update_msg);
 #endif
         }
     }
@@ -126,4 +141,9 @@ void format_data(container_t *container, char *json)
         //create a void string
         *json = '\0';
     }
+}
+
+void set_update_time(time_luos_t new_time)
+{
+    update_time = new_time;
 }

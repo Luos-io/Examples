@@ -5,6 +5,7 @@
 #include <string.h>
 #include "json_alloc.h"
 #include "luos_utils.h"
+#include "luos_to_json.h"
 
 // Create msg from a container json data
 void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
@@ -293,6 +294,15 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
         msg->header.size = sizeof(char);
         Luos_SendMsg(container, msg);
     }
+    // update time
+    if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "update_time")) & (type != GATE_MOD))
+    {
+        // this should be a function because it is frequently used
+        time = TimeOD_TimeFrom_s((float)cJSON_GetObjectItem(jobj, "update_time")->valuedouble);
+        TimeOD_TimeToMsg(&time, msg);
+        msg->header.cmd = UPDATE_PUB;
+        Luos_SendMsg(container, msg);
+    }
     // UUID
     if (cJSON_GetObjectItem(jobj, "uuid"))
     {
@@ -412,9 +422,11 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
             break;
             break;
         case GATE_MOD:
-            if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "delay")))
+            if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "update_time")))
             {
-                // Don't do anything
+                // Put all services with the same time value
+                set_update_time(TimeOD_TimeFrom_s((float)cJSON_GetObjectItem(jobj, "update_time")->valuedouble));
+                collect_data(container);
             }
             break;
         default:

@@ -2,6 +2,7 @@
 #include "convert.h"
 #include <stdio.h>
 #include "json_alloc.h"
+#include "luos_to_json.h"
 
 // There is no stack here we use the latest command
 volatile char detection_ask = 0;
@@ -76,6 +77,9 @@ void json_to_luos(container_t *container)
                     }
                     if (index < JSON_BUFF_SIZE - 1)
                     {
+                        // stop sensor polling during benchmark
+                        set_update_time(0.0);
+                        collect_data(container);
                         // create a message from parameters
                         msg.header.cmd         = REVISION;
                         msg.header.target_mode = IDACK;
@@ -124,6 +128,9 @@ void json_to_luos(container_t *container)
                         char *tx_json                                      = json_alloc_get_tx_buf();
                         sprintf(tx_json, "{\"benchmark\":{\"data_rate\":%.2f,\"fail_rate\":%.2f}}\n", data_rate, fail_rate);
                         json_alloc_set_tx_task(strlen(tx_json));
+                        // restart sensor polling
+                        set_update_time(DEFAULT_REFRESH_S);
+                        collect_data(container);
                     }
                 }
             }

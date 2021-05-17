@@ -11,6 +11,8 @@
 #include "luos.h"
 #include "cJSON.h"
 
+#define DEFAULT_REFRESH_S 0.01f
+
 /*
  * Pid
  */
