@@ -40,10 +40,6 @@ void LuosBootloader_GateRcv(msg_t *msg)
         sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_READY_RESP);
         break;
 
-    case BOOTLOADER_BIN_HEADER_RESP:
-        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_BIN_HEADER_RESP);
-        break;
-
     case BOOTLOADER_BIN_CHUNK_RESP:
         sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_BIN_CHUNK_RESP);
         break;
@@ -78,7 +74,6 @@ void LuosBootloader_GateCmd(container_t *container, char *bin_data, cJSON *bootl
             "start",
             "stop",
             "ready",
-            "bin_header",
             "bin_chunk",
             "bin_end",
             "crc_test"};
@@ -120,14 +115,6 @@ void LuosBootloader_GateCmd(container_t *container, char *bin_data, cJSON *bootl
             boot_msg.header.size = sizeof(char) + sizeof(uint32_t);
             boot_msg.data[0] = BOOTLOADER_READY;
             memcpy(&(boot_msg.data[1]), &binary_size, sizeof(uint32_t));
-            Luos_SendMsg(container, &boot_msg);
-        }
-
-        if (strcmp(type, cmd[BOOTLOADER_BIN_HEADER]) == 0)
-        {
-            // send bin header command to bootloader app
-            boot_msg.header.size = sizeof(char);
-            boot_msg.data[0] = BOOTLOADER_BIN_HEADER;
             Luos_SendMsg(container, &boot_msg);
         }
 
