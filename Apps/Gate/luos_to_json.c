@@ -73,8 +73,8 @@ void format_data(container_t *container, char *json)
     if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the json string
-        sprintf(json, "{\"containers\":{");
-        json_ptr += strlen(json_ptr);
+        memcpy(json, "{\"containers\":{", sizeof("{\"containers\":{"));
+        json_ptr += sizeof("{\"containers\":{") - 1;
         // loop into containers.
         // get the oldest message
         while (Luos_ReadMsg(container, &json_msg) == SUCCEED)
@@ -101,24 +101,20 @@ void format_data(container_t *container, char *json)
                 json_ok = true;
                 sprintf(json_ptr, "\"%s\":{", alias);
                 json_ptr += strlen(json_ptr);
-                // now add json data from container
-                msg_to_json(json_msg, json_ptr);
-                json_ptr += strlen(json_ptr);
-                // Check if we receive other messages from this container
-                while (Luos_ReadFromContainer(container, json_msg->header.source, &json_msg) == SUCCEED)
+                // now add json data from this container
+                do
                 {
-                    // we receive some, add it to the Json
                     msg_to_json(json_msg, json_ptr);
                     json_ptr += strlen(json_ptr);
-                }
+                } while (Luos_ReadFromContainer(container, json_msg->header.source, &json_msg) == SUCCEED);
                 if (*json_ptr != '{')
                 {
                     // remove the last "," char
                     *(--json_ptr) = '\0';
                 }
                 // End the container section
-                sprintf(json_ptr, "},");
-                json_ptr += strlen(json_ptr);
+                memcpy(json_ptr, "},", sizeof("},"));
+                json_ptr += sizeof("},") - 1;
                 LUOS_ASSERT((json_ptr - json) < JSON_BUFF_SIZE);
             }
         }
@@ -127,8 +123,9 @@ void format_data(container_t *container, char *json)
             // remove the last "," char
             *(--json_ptr) = '\0';
             // End the Json message
-            sprintf(json_ptr, "}}\n");
-            json = json_alloc_set_tx_task(strlen(json));
+            memcpy(json_ptr, "}}\n", sizeof("}}\n"));
+            json_ptr += sizeof("}}\n") - 1;
+            json = json_alloc_set_tx_task(json_ptr - json);
         }
         else
         {

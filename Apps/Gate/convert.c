@@ -1,8 +1,8 @@
-#include "convert.h"
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "convert.h"
 #include "json_alloc.h"
 #include "luos_utils.h"
 #include "luos_to_json.h"
@@ -434,65 +434,92 @@ void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *j
     }
 }
 
+// This function have been inspired by Benoit Blanchon Blog : https://blog.benoitblanchon.fr/lightweight-float-to-string/
+void splitFloat(float value, int32_t *integerPart, uint32_t *decimalPart)
+{
+    float remainder;
+    *integerPart = (int32_t)value;
+    if (value >= 0.0)
+    {
+        remainder = (value - *integerPart) * 1000.0;
+    }
+    else
+    {
+        remainder = (-(value - *integerPart)) * 1000.0;
+    }
+
+    *decimalPart = (uint32_t)remainder;
+
+    // rounding values
+    // remainder -= *decimalPart;
+    // if (remainder >= 0.5)
+    // {
+    //     (*decimalPart)++;
+    // }
+}
+
 // Create Json from a container msg
 void msg_to_json(msg_t *msg, char *json)
 {
+    float data;
+    int32_t integerPart;
+    uint32_t decimalPart;
     switch (msg->header.cmd)
     {
         case LINEAR_POSITION:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"trans_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case LINEAR_SPEED:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"trans_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case ANGULAR_POSITION:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"rot_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case ANGULAR_SPEED:
-        case VOLTAGE:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"rot_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case CURRENT:
-        case POWER:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"current\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case ILLUMINANCE:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"lux\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case TEMPERATURE:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"temperature\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case FORCE:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"force\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
         case MOMENT:
-            // check size
-            if (msg->header.size == sizeof(float))
-            {
-                // Size ok, now fill the struct from msg data
-                float data;
-                memcpy(&data, msg->data, msg->header.size);
-                switch (msg->header.cmd)
-                {
-                    case LINEAR_POSITION:
-                        sprintf(json, "\"trans_position\":%.3f,", data);
-                        break;
-                    case LINEAR_SPEED:
-                        sprintf(json, "\"trans_speed\":%.3f,", data);
-                        break;
-                    case ANGULAR_POSITION:
-                        sprintf(json, "\"rot_position\":%.3f,", data);
-                        break;
-                    case ANGULAR_SPEED:
-                        sprintf(json, "\"rot_speed\":%.3f,", data);
-                        break;
-                    case CURRENT:
-                        sprintf(json, "\"current\":%.3f,", data);
-                        break;
-                    case ILLUMINANCE:
-                        sprintf(json, "\"lux\":%.3f,", data);
-                        break;
-                    case TEMPERATURE:
-                        sprintf(json, "\"temperature\":%.3f,", data);
-                        break;
-                    case FORCE:
-                        sprintf(json, "\"force\":%.3f,", data);
-                        break;
-                    case MOMENT:
-                        sprintf(json, "\"moment\":%.3f,", data);
-                        break;
-                    case VOLTAGE:
-                        sprintf(json, "\"volt\":%.3f,", data);
-                        break;
-                    case POWER:
-                        sprintf(json, "\"power\":%.3f,", data);
-                        break;
-                }
-            }
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"moment\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
+        case VOLTAGE:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"volt\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            break;
+        case POWER:
+            memcpy(&data, msg->data, msg->header.size);
+            splitFloat(data, &integerPart, &decimalPart);
+            sprintf(json, "\"power\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case NODE_UUID:
             if (msg->header.size == sizeof(luos_uuid_t))
@@ -506,7 +533,6 @@ void msg_to_json(msg_t *msg, char *json)
             // clean data to be used as string
             if (msg->header.size < MAX_DATA_MSG_SIZE)
             {
-                msg->data[msg->header.size] = '\0';
                 //create the Json content
                 sprintf(json, "\"revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
             }
@@ -515,7 +541,6 @@ void msg_to_json(msg_t *msg, char *json)
             // clean data to be used as string
             if (msg->header.size < MAX_DATA_MSG_SIZE)
             {
-                msg->data[msg->header.size] = '\0';
                 //create the Json content
                 sprintf(json, "\"luos_revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
             }
@@ -543,11 +568,11 @@ void msg_to_json(msg_t *msg, char *json)
                 //create the Json content
                 if (msg->data[0])
                 {
-                    sprintf(json, "\"io_state\":true,");
+                    memcpy(json, "\"io_state\":true,", sizeof("\"io_state\":true,"));
                 }
                 else
                 {
-                    sprintf(json, "\"io_state\":false,");
+                    memcpy(json, "\"io_state\":false,", sizeof("\"io_state\":false,"));
                 }
             }
             break;
@@ -562,6 +587,8 @@ void msg_to_json(msg_t *msg, char *json)
             {
                 // Size ok, now fill the struct from msg data
                 float value[3];
+                int32_t integerPart[3];
+                uint32_t decimalPart[3];
                 memcpy(value, msg->data, msg->header.size);
                 char name[20] = {0};
                 switch (msg->header.cmd)
@@ -585,8 +612,16 @@ void msg_to_json(msg_t *msg, char *json)
                         strcpy(name, "euler");
                         break;
                 }
-                //create the Json content
-                sprintf(json, "\"%s\":[%2f,%2f,%2f],", name, value[0], value[1], value[2]);
+                // Create the Json content
+                // Convert floats
+                splitFloat(value[0], &integerPart[0], &decimalPart[0]);
+                splitFloat(value[1], &integerPart[1], &decimalPart[1]);
+                splitFloat(value[2], &integerPart[2], &decimalPart[2]);
+                sprintf(json, "\"%s\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
+                        name,
+                        integerPart[0], decimalPart[0],
+                        integerPart[1], decimalPart[1],
+                        integerPart[2], decimalPart[2]);
             }
             break;
         case QUATERNION:
@@ -595,9 +630,20 @@ void msg_to_json(msg_t *msg, char *json)
             {
                 // Size ok, now fill the struct from msg data
                 float value[4];
+                int32_t integerPart[4];
+                uint32_t decimalPart[4];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                sprintf(json, "\"quaternion\":[%2f,%2f,%2f,%2f],", value[0], value[1], value[2], value[3]);
+                // Convert floats
+                splitFloat(value[0], &integerPart[0], &decimalPart[0]);
+                splitFloat(value[1], &integerPart[1], &decimalPart[1]);
+                splitFloat(value[2], &integerPart[2], &decimalPart[2]);
+                splitFloat(value[3], &integerPart[3], &decimalPart[3]);
+                sprintf(json, "\"quaternion\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
+                        integerPart[0], decimalPart[0],
+                        integerPart[1], decimalPart[1],
+                        integerPart[2], decimalPart[2],
+                        integerPart[3], decimalPart[3]);
             }
             break;
         case ROT_MAT:
@@ -606,9 +652,29 @@ void msg_to_json(msg_t *msg, char *json)
             {
                 // Size ok, now fill the struct from msg data
                 float value[9];
+                int32_t integerPart[9];
+                uint32_t decimalPart[9];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                sprintf(json, "\"rotational_matrix\":[%2f,%2f,%2f,%2f,%2f,%2f,%2f,%2f,%2f],", value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7], value[8]);
+                splitFloat(value[0], &integerPart[0], &decimalPart[0]);
+                splitFloat(value[1], &integerPart[1], &decimalPart[1]);
+                splitFloat(value[2], &integerPart[2], &decimalPart[2]);
+                splitFloat(value[3], &integerPart[3], &decimalPart[3]);
+                splitFloat(value[4], &integerPart[4], &decimalPart[4]);
+                splitFloat(value[5], &integerPart[5], &decimalPart[5]);
+                splitFloat(value[6], &integerPart[6], &decimalPart[6]);
+                splitFloat(value[7], &integerPart[7], &decimalPart[7]);
+                splitFloat(value[8], &integerPart[8], &decimalPart[8]);
+                sprintf(json, "\"rotational_matrix\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
+                        integerPart[0], decimalPart[0],
+                        integerPart[1], decimalPart[1],
+                        integerPart[2], decimalPart[2],
+                        integerPart[3], decimalPart[3],
+                        integerPart[4], decimalPart[4],
+                        integerPart[5], decimalPart[5],
+                        integerPart[6], decimalPart[6],
+                        integerPart[7], decimalPart[7],
+                        integerPart[8], decimalPart[8]);
             }
             break;
         case HEADING:
@@ -617,9 +683,13 @@ void msg_to_json(msg_t *msg, char *json)
             {
                 // Size ok, now fill the struct from msg data
                 float value;
+                int32_t integerPart;
+                uint32_t decimalPart;
                 memcpy(&value, msg->data, msg->header.size);
                 //create the Json content
-                sprintf(json, "\"heading\":%2f,", value);
+
+                splitFloat(value, &integerPart, &decimalPart);
+                sprintf(json, "\"heading\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             }
             break;
         case PEDOMETER:
@@ -730,6 +800,7 @@ void exclude_container_to_json(int id, char *json)
     json = json_alloc_set_tx_task(strlen(json));
 }
 
+// This function is directly called by Luos_utils in case of curent node assert.
 void node_assert(char *file, uint32_t line)
 {
     // manage self crashing scenario
