@@ -85,7 +85,12 @@ void Gate_Loop(void)
         if (gate_running && !detection_ask)
         {
             // retrive and convert received data into Json
-            luos_to_json(gate, tx_json);
+            static uint32_t last_time = 0;
+            if (Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(get_update_time()))
+            {
+                last_time = Luos_GetSystick();
+                luos_to_json(gate, tx_json);
+            }
             // Check if we don't convert anything.
             if (tx_json[0] != '\0')
             {

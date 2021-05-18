@@ -147,3 +147,8 @@ void set_update_time(time_luos_t new_time)
 {
     update_time = new_time;
 }
+
+time_luos_t get_update_time(void)
+{
+    return update_time;
+}
