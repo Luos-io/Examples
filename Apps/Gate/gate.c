@@ -44,6 +44,7 @@ void Gate_Init(void)
  ******************************************************************************/
 void Gate_Loop(void)
 {
+    static short pipe_id              = 0;
     static short previous_id          = -1;
     static unsigned int keepAlive     = 0;
     static volatile bool gate_running = false;
@@ -71,9 +72,26 @@ void Gate_Loop(void)
             // reset the previous_id state to be ready to setup container at the end of detection
             previous_id = 0;
         }
+        pipe_id = 0;
     }
     else
     {
+        if (pipe_id == 0)
+        {
+            // We dont have spotted any pipe yet. Try to find one
+            pipe_id = RoutingTB_IDFromType(PIPE_MOD);
+            if (pipe_id > 0)
+            {
+                //We find one, ask it to auto-update at 1000Hz
+                msg_t msg;
+                msg.header.target      = pipe_id;
+                msg.header.target_mode = IDACK;
+                time_luos_t time       = TimeOD_TimeFrom_s(0.001f);
+                TimeOD_TimeToMsg(&time, &msg);
+                msg.header.cmd = UPDATE_PUB;
+                Luos_SendMsg(gate, &msg);
+            }
+        }
         // Network have been detected, We are good to go
         // Check if there is a dead container
         if (gate->ll_container->dead_container_spotted)
