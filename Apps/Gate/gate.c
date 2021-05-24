@@ -7,12 +7,12 @@
 
 #include "gate.h"
 #include "luos_to_json.h"
-#include "json_pipe.h"
-#include "json_alloc.h"
 #include "json_to_luos.h"
 #include "convert.h"
+#include "gate_config.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "pipe_link.h"
 
 /*******************************************************************************
  * Definitions
@@ -33,8 +33,7 @@ container_t *gate;
 void Gate_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    json_pipe_init();
-    gate = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
+    gate                = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 
 /******************************************************************************
@@ -46,9 +45,7 @@ void Gate_Loop(void)
 {
     static short pipe_id              = 0;
     static short previous_id          = -1;
-    static unsigned int keepAlive     = 0;
     static volatile bool gate_running = false;
-    char *tx_json                     = json_alloc_get_tx_buf();
 
     // Check the detection status.
     if (RoutingTB_IDFromContainer(gate) == 0)
@@ -76,29 +73,11 @@ void Gate_Loop(void)
     }
     else
     {
+        // Network have been detected, We are good to go
         if (pipe_id == 0)
         {
             // We dont have spotted any pipe yet. Try to find one
-            pipe_id = RoutingTB_IDFromType(PIPE_MOD);
-            if (pipe_id > 0)
-            {
-                //We find one, ask it to auto-update at 1000Hz
-                msg_t msg;
-                msg.header.target      = pipe_id;
-                msg.header.target_mode = IDACK;
-                time_luos_t time       = TimeOD_TimeFrom_s(0.001f);
-                TimeOD_TimeToMsg(&time, &msg);
-                msg.header.cmd = UPDATE_PUB;
-                Luos_SendMsg(gate, &msg);
-            }
-        }
-        // Network have been detected, We are good to go
-        // Check if there is a dead container
-        if (gate->ll_container->dead_container_spotted)
-        {
-            // There is a dead container spotted by gate, manage it.
-            exclude_container_to_json(gate->ll_container->dead_container_spotted, tx_json);
-            gate->ll_container->dead_container_spotted = 0;
+            pipe_id = find_pipe(gate);
         }
         if (gate_running && !detection_ask)
         {
@@ -107,39 +86,15 @@ void Gate_Loop(void)
             if (Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(get_update_time()))
             {
                 last_time = Luos_GetSystick();
-                luos_to_json(gate, tx_json);
-            }
-            // Check if we don't convert anything.
-            if (tx_json[0] != '\0')
-            {
-                keepAlive = 0;
-            }
-            else
-            {
-                // We don't receive anything.
-                // After 200 void reception send void Json allowing client to send commands.
-                if (keepAlive > 200)
-                {
-                    //sprintf(tx_json, "{}\n");
-                    //tx_json = json_alloc_set_tx_task(strlen(tx_json));
-                }
-                else
-                {
-                    keepAlive++;
-                }
+                luos_to_json(gate);
             }
         }
-        // check if serial input messages ready and convert it into luos messages
-        json_to_luos(gate);
         if (detection_ask)
         {
-            // reinit Json buffer.
-            json_alloc_reinit();
-            tx_json = json_alloc_get_tx_buf();
             // Run detection
             RoutingTB_DetectContainers(gate);
             // Create Json from container
-            routing_table_to_json(tx_json);
+            routing_table_to_json(gate);
 #ifndef GATE_POLLING
             // Set update frequecy
             collect_data(gate);

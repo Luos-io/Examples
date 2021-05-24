@@ -1,24 +1,28 @@
 #include "luos_to_json.h"
 #include "convert.h"
-#include "json_alloc.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "gate_config.h"
+#include "json_to_luos.h"
+#include "pipe_link.h"
 
 static time_luos_t update_time = DEFAULT_REFRESH_S;
 
-static void format_data(container_t *container, char *json);
+static void format_data(container_t *service);
 
-void luos_to_json(container_t *container, char *json)
+void luos_to_json(container_t *service)
 {
+    // If there is a dead container, manage it.
+    exclude_container_to_json(service);
 #ifdef GATE_POLLING
-    collect_data(container);
+    collect_data(service);
 #endif
-    format_data(container, json);
+    format_data(service);
 }
 
 //******************* sensor update ****************************
 // This function will gather data from sensors and create a json string for you
-void collect_data(container_t *container)
+void collect_data(container_t *service)
 {
     msg_t update_msg;
 #ifdef GATE_POLLING
@@ -54,7 +58,7 @@ void collect_data(container_t *container)
             update_msg.header.target = i;
             TimeOD_TimeToMsg(&update_time, &update_msg);
             update_msg.header.cmd = UPDATE_PUB;
-            Luos_SendMsg(container, &update_msg);
+            Luos_SendMsg(service, &update_msg);
 #endif
         }
     }
@@ -65,8 +69,10 @@ void collect_data(container_t *container)
 }
 
 // This function will create a json string for containers datas
-void format_data(container_t *container, char *json)
+void format_data(container_t *service)
 {
+    uint32_t FirstNoReceptionDate = 0;
+    char json[JSON_BUFF_SIZE];
     char *json_ptr  = json;
     msg_t *json_msg = 0;
     uint8_t json_ok = false;
@@ -77,19 +83,31 @@ void format_data(container_t *container, char *json)
         json_ptr += sizeof("{\"containers\":{") - 1;
         // loop into containers.
         // get the oldest message
-        while (Luos_ReadMsg(container, &json_msg) == SUCCEED)
+        while (Luos_ReadMsg(service, &json_msg) == SUCCEED)
         {
             // check if this is an assert
             if (json_msg->header.cmd == ASSERT)
             {
-                char backup_json[strlen(json)];
-                memcpy(backup_json, json, strlen(json));
+                char assert_json[512];
                 luos_assert_t assertion;
                 memcpy(assertion.unmap, json_msg->data, json_msg->header.size);
                 assertion.unmap[json_msg->header.size] = '\0';
-                sprintf(json, "{\"assert\":{\"node_id\":%d,\"file\":\"%s\",\"line\":%d}}\n", json_msg->header.source, assertion.file, (unsigned int)assertion.line);
-                json = json_alloc_set_tx_task(strlen(json));
-                memcpy(json, backup_json, strlen(backup_json));
+                sprintf(assert_json, "{\"assert\":{\"node_id\":%d,\"file\":\"%s\",\"line\":%d}}\n", json_msg->header.source, assertion.file, (unsigned int)assertion.line);
+                // Send the message to pipe
+                send_to_pipe(service, assert_json, strlen(assert_json));
+                continue;
+            }
+            // Check if this is a message from pipe
+            if (json_msg->header.source == get_pipe_id())
+            {
+                // This message is a command from pipe
+                // Convert the received data into Luos commands
+                static char json_cmd[JSON_BUFF_SIZE];
+                if (Luos_ReceiveData(service, json_msg, json_cmd) == SUCCEED)
+                {
+                    // We finish to receive this data, execute the received command
+                    json_to_luos(service, json_cmd);
+                }
                 continue;
             }
             // get the source of this message
@@ -106,7 +124,7 @@ void format_data(container_t *container, char *json)
                 {
                     msg_to_json(json_msg, json_ptr);
                     json_ptr += strlen(json_ptr);
-                } while (Luos_ReadFromContainer(container, json_msg->header.source, &json_msg) == SUCCEED);
+                } while (Luos_ReadFromContainer(service, json_msg->header.source, &json_msg) == SUCCEED);
                 if (*json_ptr != '{')
                 {
                     // remove the last "," char
@@ -125,18 +143,40 @@ void format_data(container_t *container, char *json)
             // End the Json message
             memcpy(json_ptr, "}}\n", sizeof("}}\n"));
             json_ptr += sizeof("}}\n") - 1;
-            json = json_alloc_set_tx_task(json_ptr - json);
+            // Send the message to pipe
+            send_to_pipe(service, json, json_ptr - json);
+            FirstNoReceptionDate = 0;
         }
         else
         {
-            //create a void string
-            *json = '\0';
+            // We don't receive anything.
+            // After 1s void reception send void Json allowing client to send commands (because client could be synchronized to reception).
+            if (FirstNoReceptionDate == 0)
+            {
+                FirstNoReceptionDate = Luos_GetSystick();
+            }
+            else if (Luos_GetSystick() - FirstNoReceptionDate > 1000)
+            {
+                sprintf(json, "{}\n");
+                memcpy(json, "{}\n", sizeof("{}\n"));
+                send_to_pipe(service, json, sizeof("{}\n"));
+            }
         }
     }
     else
     {
-        //create a void string
-        *json = '\0';
+        // We don't receive anything.
+        // After 1s void reception send void Json allowing client to send commands (because client could be synchronized to reception).
+        if (FirstNoReceptionDate == 0)
+        {
+            FirstNoReceptionDate = Luos_GetSystick();
+        }
+        else if (Luos_GetSystick() - FirstNoReceptionDate > 1000)
+        {
+            sprintf(json, "{}\n");
+            memcpy(json, "{}\n", sizeof("{}\n"));
+            send_to_pipe(service, json, sizeof("{}\n"));
+        }
     }
 }
 

@@ -6,6 +6,6 @@
 
 extern volatile char detection_ask;
 
-void json_to_luos(container_t *container);
+void json_to_luos(container_t *service, char *json);
 
 #endif /* JSON_TO_LUOS_H */

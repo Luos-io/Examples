@@ -47,9 +47,9 @@ typedef struct
     };
 } servo_parameters_t;
 
-void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *data);
+void json_to_msg(container_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *data);
 void msg_to_json(msg_t *msg, char *json);
-void routing_table_to_json(char *json);
-void exclude_container_to_json(int id, char *json);
+void routing_table_to_json(container_t *service);
+void exclude_container_to_json(container_t *service);
 
 #endif /* CONVERT_H_ */
