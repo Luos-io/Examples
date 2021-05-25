@@ -50,6 +50,10 @@ void LuosBootloader_GateRcv(msg_t *msg)
         sprintf(boot_json, "{\"bootloader\":{\"response\":%d,\"crc_value\":%d}}\n", BOOTLOADER_CRC_RESP, msg->data[1]);
         break;
 
+    case BOOTLOADER_ERROR_SIZE:
+        sprintf(boot_json, "{\"bootloader\":{\"response\":%d}}\n", BOOTLOADER_ERROR_SIZE);
+        break;
+
     default:
         break;
     }
