@@ -74,6 +74,22 @@ void DataManager_Run(container_t *service)
 #endif
     DataManager_Format(service);
 }
+// This function manage only commande incoming from pipe
+void DataManager_RunPipeOnly(container_t *service)
+{
+    msg_t *data_msg;
+    while (Luos_ReadFromContainer(service, PipeLink_GetId(), &data_msg) == SUCCEED)
+    {
+        // This message is a command from pipe
+        // Convert the received data into Luos commands
+        static char data_cmd[GATE_BUFF_SIZE];
+        if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+        {
+            // We finish to receive this data, execute the received command
+            Convert_DataToLuos(service, data_cmd);
+        }
+    }
+}
 
 // This function will create a data string for containers datas
 void DataManager_Format(container_t *service)
