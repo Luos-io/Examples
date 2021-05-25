@@ -1,17 +1,12 @@
-/*
- * convert.h
- *
- *  Created on: 20 juil. 2018
- *      Author: nicolasrabault
- */
-
+/******************************************************************************
+ * @file convert
+ * @brief Functions allowing to manage data convertion to a specific format
+ * @author Luos
+ ******************************************************************************/
 #ifndef CONVERT_H_
 #define CONVERT_H_
 
 #include "luos.h"
-#include "cJSON.h"
-
-#define DEFAULT_REFRESH_S 0.01f
 
 /*
  * Pid
@@ -47,9 +42,22 @@ typedef struct
     };
 } servo_parameters_t;
 
-void json_to_msg(container_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *data);
-void msg_to_json(msg_t *msg, char *json);
-void routing_table_to_json(container_t *service);
-void exclude_container_to_json(container_t *service);
+// Luos data to Luos messages convertion
+void Convert_DataToLuos(container_t *service, char *data);
+
+// Luos service information to Data convertion
+void Convert_StartData(char *data);
+void Convert_StartServiceData(char *data, char *alias);
+void Convert_MsgToData(msg_t *msg, char *data);
+void Convert_EndServiceData(char *data);
+void Convert_EndData(container_t *service, char *data, char *data_ptr);
+void Convert_VoidData(container_t *service);
+
+// Luos default information to Data convertion
+void Convert_AssertToData(container_t *service, uint16_t source, luos_assert_t assertion);
+void Convert_ExcludedContainerData(container_t *service);
+
+// Luos routing table information to Json convertion
+void Convert_RoutingTableData(container_t *service);
 
 #endif /* CONVERT_H_ */

@@ -1,9 +1,13 @@
+/******************************************************************************
+ * @file pipe_link
+ * @brief Manage the communication with a pipe.
+ * @author Luos
+ ******************************************************************************/
 #include "pipe_link.h"
-#include "luos.h"
 
 short pipe_id = 0;
 
-void send_to_pipe(container_t *service, void *data, uint32_t size)
+void PipeLink_Send(container_t *service, void *data, uint32_t size)
 {
     LUOS_ASSERT(pipe_id > 0);
     msg_t msg;
@@ -13,7 +17,7 @@ void send_to_pipe(container_t *service, void *data, uint32_t size)
     Luos_SendData(service, &msg, data, size);
 }
 
-short find_pipe(container_t *service)
+short PipeLink_Find(container_t *service)
 {
     pipe_id = RoutingTB_IDFromType(PIPE_MOD);
     if (pipe_id > 0)
@@ -30,7 +34,7 @@ short find_pipe(container_t *service)
     return pipe_id;
 }
 
-short get_pipe_id(void)
+short PipeLink_GetId(void)
 {
     return pipe_id;
 }

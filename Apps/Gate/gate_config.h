@@ -1,8 +1,19 @@
+/******************************************************************************
+ * @file gate_config
+ * @brief Service gate configuration options
+ * @author Luos
+ ******************************************************************************/
 #ifndef GATE_CONFIG_H
 #define GATE_CONFIG_H
 
-#ifndef JSON_BUFF_SIZE
-#define JSON_BUFF_SIZE 1024
+#include "luos.h"
+
+#ifndef GATE_BUFF_SIZE
+#define GATE_BUFF_SIZE 1024
+#endif
+
+#ifndef GATE_REFRESH_TIME_S
+#define GATE_REFRESH_TIME_S 0.01f
 #endif
 
 // #define GATE_POLLING

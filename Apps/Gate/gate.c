@@ -1,17 +1,14 @@
 /******************************************************************************
  * @file gate
- * @brief Container gate
+ * @brief Service gate
  * @author Luos
- * @version 0.0.0
  ******************************************************************************/
-
-#include "gate.h"
-#include "luos_to_json.h"
-#include "json_to_luos.h"
-#include "convert.h"
-#include "gate_config.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "gate_config.h"
+#include "gate.h"
+#include "data_manager.h"
+#include "convert.h"
 #include "pipe_link.h"
 
 /*******************************************************************************
@@ -22,6 +19,8 @@
  * Variables
  ******************************************************************************/
 container_t *gate;
+char detection_ask      = 0;
+time_luos_t update_time = GATE_REFRESH_TIME_S;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -77,27 +76,28 @@ void Gate_Loop(void)
         if (pipe_id == 0)
         {
             // We dont have spotted any pipe yet. Try to find one
-            pipe_id = find_pipe(gate);
+            pipe_id = PipeLink_Find(gate);
         }
         if (gate_running && !detection_ask)
         {
-            // retrive and convert received data into Json
+            // Manage input and output data
             static uint32_t last_time = 0;
-            if (Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(get_update_time()))
+            if (Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(update_time))
             {
                 last_time = Luos_GetSystick();
-                luos_to_json(gate);
+                DataManager_Run(gate);
             }
         }
         if (detection_ask)
         {
             // Run detection
             RoutingTB_DetectContainers(gate);
-            // Create Json from container
-            routing_table_to_json(gate);
+            pipe_id = PipeLink_Find(gate);
+            // Create data from container
+            Convert_RoutingTableData(gate);
 #ifndef GATE_POLLING
-            // Set update frequecy
-            collect_data(gate);
+            // Set update frequency
+            DataManager_collect(gate);
 #endif
             gate_running  = true;
             detection_ask = 0;
