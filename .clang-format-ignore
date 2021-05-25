@@ -1,6 +1,7 @@
 ./Projects/**/**/src
 ./Projects/**/**/inc
-./Apps/Gate/cJSON
+./Apps/Gate/JSON/cJSON.h
+./Apps/Gate/JSON/cJSON.c
 ./Hardware
 # third party libs
 ./Projects/**/lib/Gate/cJSON
