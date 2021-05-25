@@ -27,4 +27,7 @@ void DataManager_collect(container_t *service);
 // This function manage entirely data conversion
 void DataManager_Run(container_t *service);
 
+// This function manage only commande incoming from pipe
+void DataManager_RunPipeOnly(container_t *service);
+
 #endif /* DATA_MNGR_H */

@@ -88,6 +88,10 @@ void Gate_Loop(void)
                 DataManager_Run(gate);
             }
         }
+        else
+        {
+            DataManager_RunPipeOnly(gate);
+        }
         if (detection_ask)
         {
             // Run detection
