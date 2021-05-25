@@ -193,7 +193,7 @@ void Convert_DataToLuos(container_t *service, char *data)
                 // If alias doesn't exist in our list id_from_alias send us back -1 = 65535
                 // So here there is an error in alias.
                 cJSON_Delete(root);
-                break;
+                return;
             }
             luos_type_t type = RoutingTB_TypeFromID(id);
             Convert_JsonToMsg(service, id, type, container_jsn, &msg, (char *)data);
@@ -203,6 +203,7 @@ void Convert_DataToLuos(container_t *service, char *data)
         cJSON_Delete(root);
         return;
     }
+    cJSON_Delete(root);
 }
 // Create msg from a container json data
 void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
@@ -218,7 +219,10 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSO
     {
         ratio_t ratio = (ratio_t)cJSON_GetObjectItem(jobj, "power_ratio")->valuedouble;
         RatioOD_RatioToMsg(&ratio, msg);
-        Luos_SendMsg(service, msg);
+        while (Luos_SendMsg(service, msg) == FAILED)
+        {
+            Luos_Loop();
+        }
     }
     // target angular position
     if (cJSON_IsNumber(cJSON_GetObjectItem(jobj, "target_rot_position")))
@@ -655,57 +659,57 @@ void Convert_MsgToData(msg_t *msg, char *data)
     switch (msg->header.cmd)
     {
         case LINEAR_POSITION:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"trans_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case LINEAR_SPEED:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"trans_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case ANGULAR_POSITION:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"rot_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case ANGULAR_SPEED:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"rot_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case CURRENT:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"current\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case ILLUMINANCE:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"lux\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case TEMPERATURE:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"temperature\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case FORCE:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"force\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case MOMENT:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"moment\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case VOLTAGE:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"volt\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
         case POWER:
-            memcpy(&fdata, msg->data, msg->header.size);
+            memcpy(&fdata, msg->data, sizeof(float));
             Convert_SplitFloat(fdata, &integerPart, &decimalPart);
             sprintf(data, "\"power\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
             break;
