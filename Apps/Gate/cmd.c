@@ -2,6 +2,7 @@
 #include "convert.h"
 #include <stdio.h>
 #include "gate.h"
+#include "bootloader_ex.h"
 
 // There is no stack here we use the latest command
 volatile char buf[JSON_BUF_NUM][JSON_BUFF_SIZE] = {0};
@@ -161,6 +162,13 @@ void send_cmds(container_t *container)
                 }
             }
         }
+        // bootloader commands
+        cJSON *bootloader_json = cJSON_GetObjectItem(root, "bootloader");
+        if (cJSON_IsObject(bootloader_json))
+        {
+            LuosBootloader_GateCmd(container, (char *)buf[concerned_table], bootloader_json);
+        }
+
         cJSON *containers = cJSON_GetObjectItem(root, "containers");
         // Get containers
         if (cJSON_IsObject(containers))
