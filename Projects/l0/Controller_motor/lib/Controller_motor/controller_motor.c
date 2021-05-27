@@ -412,10 +412,10 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == PARAMETERS)
     {
         // check the message size
-        if (msg->header.size == sizeof(motor_mode_t))
+        if (msg->header.size >= sizeof(motor_mode_t))
         {
             // fill the message infos
-            memcpy((void *)&motor.mode, msg->data, msg->header.size);
+            memcpy((void *)&motor.mode, msg->data, sizeof(motor_mode_t));
             enable_motor(motor.mode.mode_compliant == 0);
             if (motor.mode.mode_compliant == 0)
             {
@@ -596,7 +596,7 @@ static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
     }
 }
 
-void HAL_SYSTICK_Motor_Callback(void)
+void HAL_SYSTICK_Callback(void)
 {
     // ************* motion planning *************
     // ****** recorder management *********
