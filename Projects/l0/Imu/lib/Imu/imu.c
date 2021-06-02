@@ -251,13 +251,9 @@ static void Imu_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == PARAMETERS)
     {
-        // check the message size
-        if (msg->header.size == sizeof(short))
-        {
-            container_pointer = container;
-            // fill the message infos
-            memcpy(&hal.report, msg->data, msg->header.size);
-        }
+        container_pointer = container;
+        // fill the message infos
+        memcpy(&hal.report, msg->data, sizeof(short));
         pub = LUOS_PROTOCOL_NB;
         return;
     }
