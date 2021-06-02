@@ -88,7 +88,7 @@ void pwm_setvalue(color_t *rgb)
     TIM2->CCR1 = (uint16_t)rgb->b * 10;
 }
 
-void HAL_SYSTICK_Led_Callback(void)
+void HAL_SYSTICK_Callback(void)
 {
     // ************* motion planning *************
     if (time != 0)
