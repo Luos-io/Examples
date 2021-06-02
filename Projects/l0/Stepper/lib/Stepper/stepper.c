@@ -76,13 +76,9 @@ static void Stepper_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == PARAMETERS)
     {
-        // check the message size
-        if (msg->header.size == sizeof(motor_mode_t))
-        {
-            // fill the message infos
-            memcpy((void *)&motor.mode, msg->data, msg->header.size);
-            HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, motor.mode.mode_compliant);
-        }
+        // fill the message infos
+        memcpy((void *)&motor.mode, msg->data, sizeof(motor_mode_t));
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, motor.mode.mode_compliant);
         return;
     }
     if (msg->header.cmd == RESOLUTION)
