@@ -639,19 +639,19 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSO
  * Luos service information to Json convertion
  ******************************************************************************/
 // This function start a Json structure and return the string size.
-void Convert_StartData(char *data)
+uint16_t Convert_StartData(char *data)
 {
     memcpy(data, "{\"containers\":{", sizeof("{\"containers\":{"));
-    data += (sizeof("{\"containers\":{") - 1);
+    return (sizeof("{\"containers\":{") - 1);
 }
 // This function start a Service into a Json structure and return the string size.
-void Convert_StartServiceData(char *data, char *alias)
+uint16_t Convert_StartServiceData(char *data, char *alias)
 {
     sprintf(data, "\"%s\":{", alias);
-    data += strlen(data);
+    return (uint16_t)strlen(data);
 }
 // This function create the Json content from a message and return the string size.
-void Convert_MsgToData(msg_t *msg, char *data)
+uint16_t Convert_MsgToData(msg_t *msg, char *data)
 {
     float fdata;
     int32_t integerPart;
@@ -898,10 +898,10 @@ void Convert_MsgToData(msg_t *msg, char *data)
         default:
             break;
     }
-    data += strlen(data);
+    return (uint16_t)strlen(data);
 }
 // This function end a Service into a Json structure and return the string size.
-void Convert_EndServiceData(char *data)
+uint16_t Convert_EndServiceData(char *data)
 {
     if (*data != '{')
     {
@@ -910,7 +910,7 @@ void Convert_EndServiceData(char *data)
     }
     // End the container section
     memcpy(data, "},", sizeof("},"));
-    data += sizeof("},") - 1;
+    return sizeof("},") - 2;
 }
 // This function start a Json structure and return the string size.
 void Convert_EndData(container_t *service, char *data, char *data_ptr)
