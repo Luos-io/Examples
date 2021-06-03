@@ -102,50 +102,62 @@ void DataManager_Format(container_t *service)
     if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the data string
-        Convert_StartData(data_ptr);
+        data_ptr += Convert_StartData(data_ptr);
         // loop into containers.
-        // get the oldest message
-        while (Luos_ReadMsg(service, &data_msg) == SUCCEED)
+        int i = 0;
+        while (RoutingTB_GetMode(i) != CLEAR)
         {
-            // check if this is an assert
-            if (data_msg->header.cmd == ASSERT)
+            if (RoutingTB_GetMode(i) == CONTAINER)
             {
-                luos_assert_t assertion;
-                memcpy(assertion.unmap, data_msg->data, data_msg->header.size);
-                assertion.unmap[data_msg->header.size] = '\0';
-                Convert_AssertToData(service, data_msg->header.source, assertion);
-                continue;
-            }
-            // Check if this is a message from pipe
-            if (data_msg->header.source == PipeLink_GetId())
-            {
-                // This message is a command from pipe
-                // Convert the received data into Luos commands
-                static char data_cmd[GATE_BUFF_SIZE];
-                if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+                if (Luos_ReadFromContainer(service, RoutingTB_GetContainerID(i), &data_msg) == SUCCEED)
                 {
-                    // We finish to receive this data, execute the received command
-                    Convert_DataToLuos(service, data_cmd);
-                }
-                continue;
-            }
-            // get the source of this message
-            // Create container description
-            char *alias;
-            alias = RoutingTB_AliasFromId(data_msg->header.source);
-            if (alias != 0)
-            {
-                data_ok = true;
-                Convert_StartServiceData(data_ptr, alias);
-                // Convert all msgs from this container into data
-                do
-                {
-                    Convert_MsgToData(data_msg, data_ptr);
-                } while (Luos_ReadFromContainer(service, data_msg->header.source, &data_msg) == SUCCEED);
+                    // check if this is an assert
+                    if (data_msg->header.cmd == ASSERT)
+                    {
+                        luos_assert_t assertion;
+                        memcpy(assertion.unmap, data_msg->data, data_msg->header.size);
+                        assertion.unmap[data_msg->header.size] = '\0';
+                        Convert_AssertToData(service, data_msg->header.source, assertion);
+                        i++;
+                        continue;
+                    }
+                    // Check if this is a message from pipe
+                    if (data_msg->header.source == PipeLink_GetId())
+                    {
+                        do
+                        {
+                            // This message is a command from pipe
+                            static char data_cmd[GATE_BUFF_SIZE];
+                            // Convert the received data into Luos commands
+                            if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+                            {
+                                // We finish to receive this data, execute the received command
+                                Convert_DataToLuos(service, data_cmd);
+                            }
+                        } while (Luos_ReadFromContainer(service, PipeLink_GetId(), &data_msg) == SUCCEED);
+                        i++;
+                        continue;
+                    }
+                    // get the source of this message
+                    // Create container description
+                    char *alias;
+                    alias = RoutingTB_AliasFromId(data_msg->header.source);
+                    if (alias != 0)
+                    {
+                        data_ok = true;
+                        data_ptr += Convert_StartServiceData(data_ptr, alias);
+                        // Convert all msgs from this container into data
+                        do
+                        {
+                            data_ptr += Convert_MsgToData(data_msg, data_ptr);
+                        } while (Luos_ReadFromContainer(service, data_msg->header.source, &data_msg) == SUCCEED);
 
-                Convert_EndServiceData(data_ptr);
-                LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
+                        data_ptr += Convert_EndServiceData(data_ptr);
+                        LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
+                    }
+                }
             }
+            i++;
         }
         if (data_ok)
         {

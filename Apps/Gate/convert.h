@@ -46,10 +46,10 @@ typedef struct
 void Convert_DataToLuos(container_t *service, char *data);
 
 // Luos service information to Data convertion
-void Convert_StartData(char *data);
-void Convert_StartServiceData(char *data, char *alias);
-void Convert_MsgToData(msg_t *msg, char *data);
-void Convert_EndServiceData(char *data);
+uint16_t Convert_StartData(char *data);
+uint16_t Convert_StartServiceData(char *data, char *alias);
+uint16_t Convert_MsgToData(msg_t *msg, char *data);
+uint16_t Convert_EndServiceData(char *data);
 void Convert_EndData(container_t *service, char *data, char *data_ptr);
 void Convert_VoidData(container_t *service);
 
