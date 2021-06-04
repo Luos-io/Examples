@@ -42,16 +42,6 @@ void Pipe_Init(void)
  ******************************************************************************/
 void Pipe_Loop(void)
 {
-    uint16_t size = 0;
-    if (PipeCom_SendL2PPending() == false)
-    {
-        size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
-        if (size != 0)
-        {
-            PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-            Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
-        }
-    }
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this container
@@ -80,6 +70,18 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
     }
     else if (msg->header.cmd == SET_CMD)
     {
+        uint16_t size = 0;
         Luos_ReceiveStreaming(container, msg, &L2P_StreamChannel);
+        if (PipeCom_SendL2PPending() == false)
+        {
+            size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
+            PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
+            Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
+        }
     }
+}
+
+streaming_channel_t *get_L2P_StreamChannel()
+{
+    return &L2P_StreamChannel;
 }

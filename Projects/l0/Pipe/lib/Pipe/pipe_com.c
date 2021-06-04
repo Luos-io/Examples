@@ -6,6 +6,7 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include "pipe_com.h"
+#include "luos_utils.h"
 
 /*******************************************************************************
  * Definitions
@@ -131,6 +132,7 @@ static void PipeCom_DMAInit(void)
  ******************************************************************************/
 void PipeCom_SendL2P(uint8_t *data, uint16_t size)
 {
+    LUOS_ASSERT(size > 0);
     is_sending = true;
     LL_DMA_DisableChannel(L2P_DMA, L2P_DMA_CHANNEL);
     LL_DMA_SetMemoryAddress(L2P_DMA, L2P_DMA_CHANNEL, (uint32_t)data);
@@ -181,6 +183,17 @@ void L2P_DMA_IRQHANDLER()
     if ((LL_DMA_IsActiveFlag_TC7(L2P_DMA) != RESET) && (LL_DMA_IsEnabledIT_TC(L2P_DMA, L2P_DMA_CHANNEL) != RESET))
     {
         LL_DMA_ClearFlag_TC7(L2P_DMA);
-        is_sending = false;
+
+        uint16_t size = 0;
+        size          = Stream_GetAvailableSampleNBUntilEndBuffer(get_L2P_StreamChannel());
+        if (size > 0)
+        {
+            PipeCom_SendL2P(get_L2P_StreamChannel()->sample_ptr, size);
+            Stream_RmvAvailableSampleNB(get_L2P_StreamChannel(), size);
+        }
+        else
+        {
+            is_sending = false;
+        }
     }
 }
