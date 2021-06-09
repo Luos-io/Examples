@@ -4,8 +4,10 @@
  * @author Luos
  ******************************************************************************/
 #include "pipe_link.h"
+#include "streaming.h"
 
-short pipe_id = 0;
+short pipe_id                             = 0;
+streaming_channel_t *pipeStreamingChannel = 0;
 
 void PipeLink_Send(container_t *service, void *data, uint32_t size)
 {
@@ -14,7 +16,20 @@ void PipeLink_Send(container_t *service, void *data, uint32_t size)
     msg.header.target      = pipe_id;
     msg.header.cmd         = SET_CMD;
     msg.header.target_mode = IDACK;
-    Luos_SendData(service, &msg, data, size);
+    if (pipeStreamingChannel == 0)
+    {
+        // We are not using localhost send the entire data trough the Luos network
+        Luos_SendData(service, &msg, data, size);
+    }
+    else
+    {
+        // We have a localhost pipe
+        // Copy the data directly into the local streaming channel without passing by Luos.
+        Stream_PutSample(pipeStreamingChannel, data, size);
+        // Send a void set_cmd to strat data transmission on pipe.
+        msg.header.size = 0;
+        Luos_SendMsg(service, &msg);
+    }
 }
 
 short PipeLink_Find(container_t *service)
@@ -31,7 +46,24 @@ short PipeLink_Find(container_t *service)
         msg.header.cmd = UPDATE_PUB;
         Luos_SendMsg(service, &msg);
     }
+    // Check if pipe is localhost
+    if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_container->id))
+    {
+        // This is a localhost pipe
+        // Ask for a Streaming channel
+        msg_t msg;
+        msg.header.target      = pipe_id;
+        msg.header.target_mode = IDACK;
+        msg.header.cmd         = PARAMETERS;
+        msg.header.size        = 0;
+        Luos_SendMsg(service, &msg);
+    }
     return pipe_id;
+}
+
+void PipeLink_SetStreamingChannel(void *streamingChannel)
+{
+    pipeStreamingChannel = streamingChannel;
 }
 
 short PipeLink_GetId(void)

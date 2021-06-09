@@ -83,6 +83,13 @@ void DataManager_RunPipeOnly(container_t *service)
         // This message is a command from pipe
         // Convert the received data into Luos commands
         static char data_cmd[GATE_BUFF_SIZE];
+        if (data_msg->header.cmd == PARAMETERS)
+        {
+            int pointer;
+            memcpy(&pointer, data_msg->data, sizeof(void *));
+            PipeLink_SetStreamingChannel((void *)pointer);
+            continue;
+        }
         if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
         {
             // We finish to receive this data, execute the received command
