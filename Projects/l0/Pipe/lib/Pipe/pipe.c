@@ -96,6 +96,10 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
         memcpy(pub_msg.data, &value, sizeof(void *));
         Luos_SendMsg(container, &pub_msg);
     }
+    else if (msg->header.cmd == REINIT)
+    {
+        L2P_StreamChannel.data_ptr = L2P_StreamChannel.sample_ptr;
+    }
 }
 
 streaming_channel_t *get_L2P_StreamChannel()

@@ -61,6 +61,17 @@ short PipeLink_Find(container_t *service)
     return pipe_id;
 }
 
+void PipeLink_Reset(container_t *service)
+{
+    LUOS_ASSERT(pipe_id > 0);
+    msg_t msg;
+    msg.header.target      = pipe_id;
+    msg.header.cmd         = REINIT;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = 0;
+    Luos_SendMsg(service, &msg);
+}
+
 void PipeLink_SetStreamingChannel(void *streamingChannel)
 {
     pipeStreamingChannel = streamingChannel;

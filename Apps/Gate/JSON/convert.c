@@ -1038,6 +1038,10 @@ void Convert_RoutingTableData(container_t *service)
     *(--json_ptr) = '\0';
     // End the Json message
     sprintf(json_ptr, "]}\n");
+    //reset all the msg in pipe link
+    PipeLink_Reset(service);
+    //call Luos loop to generap a Luos Task with this msg
+    Luos_Loop();
     // Send the message to pipe
     PipeLink_Send(service, json, strlen(json));
 }

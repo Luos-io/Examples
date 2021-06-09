@@ -20,6 +20,7 @@
  ******************************************************************************/
 void PipeLink_Send(container_t *service, void *data, uint32_t size);
 short PipeLink_Find(container_t *service);
+void PipeLink_Reset(container_t *service);
 short PipeLink_GetId(void);
 void PipeLink_SetStreamingChannel(void *streamingChannel);
 
