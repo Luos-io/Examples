@@ -59,7 +59,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
         {
             // fill the message infos
             msg_t pub_msg;
-            pub_msg.header.protocol    = 0;
             pub_msg.header.cmd         = SET_CMD;
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
@@ -71,13 +70,31 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
     else if (msg->header.cmd == SET_CMD)
     {
         uint16_t size = 0;
-        Luos_ReceiveStreaming(container, msg, &L2P_StreamChannel);
+        if (msg->header.size > 0)
+        {
+            Luos_ReceiveStreaming(container, msg, &L2P_StreamChannel);
+        }
         if (PipeCom_SendL2PPending() == false)
         {
             size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
-            PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-            Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
+            if (size > 0)
+            {
+                PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
+                Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
+            }
         }
+    }
+    else if (msg->header.cmd == PARAMETERS)
+    {
+        // return output streaming channel adress
+        msg_t pub_msg;
+        pub_msg.header.cmd         = PARAMETERS;
+        pub_msg.header.target_mode = IDACK;
+        pub_msg.header.target      = msg->header.source;
+        pub_msg.header.size        = sizeof(void *);
+        int value                  = (int)&L2P_StreamChannel;
+        memcpy(pub_msg.data, &value, sizeof(void *));
+        Luos_SendMsg(container, &pub_msg);
     }
 }
 
