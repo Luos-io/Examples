@@ -24,7 +24,7 @@ typedef enum
  * Variables
  ******************************************************************************/
 container_t *app;
-volatile control_mode_t control_mode;
+volatile control_t control_app;
 uint8_t lock           = 1;
 uint8_t last_btn_state = 0;
 uint8_t state_switch   = 0;
@@ -44,7 +44,7 @@ void StartController_Init(void)
 {
     revision_t revision = {.unmap = REV};
     // By default this app running
-    control_mode.mode_control = PLAY;
+    control_app.flux = PLAY;
     // Create App
     app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
 }
@@ -104,7 +104,7 @@ void StartController_Loop(void)
         return;
     }
     // ********** non blocking button management ************
-    if (state_switch & (control_mode.mode_control == PLAY) & (animation_state == 0))
+    if (state_switch & (control_app.flux == PLAY) & (animation_state == 0))
     {
         msg_t msg;
         msg.header.target_mode = IDACK;
@@ -113,22 +113,19 @@ void StartController_Loop(void)
         if (id > 0)
         {
             // we have an alarm_controller App control it
-            control_mode_t alarm_control;
+            control_t alarm_control;
             if (lock)
             {
                 // Bike is locked, alarm need to run.
-                alarm_control.mode_control = PLAY;
+                alarm_control.flux = PLAY;
             }
             else
             {
                 // Bike is unlocked alarm should be sutted down.
-                alarm_control.mode_control = STOP;
+                alarm_control.flux = STOP;
             }
             // send message
-            msg.header.target = id;
-            msg.header.cmd    = CONTROL;
-            msg.header.size   = sizeof(control_mode_t);
-            msg.data[0]       = alarm_control.unmap;
+            ControlOD_ControlToMsg(&alarm_control, &msg);
             Luos_SendMsg(app, &msg);
         }
         // The button state switch, change the led consequently
@@ -239,7 +236,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
-        if (control_mode.mode_control == PLAY)
+        if (control_app.flux == PLAY)
         {
             if (RoutingTB_TypeFromID(msg->header.source) == STATE_MOD)
             {
@@ -265,7 +262,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == CONTROL)
     {
-        control_mode.unmap = msg->data[0];
+        control_app.unmap = msg->data[0];
         return;
     }
 }

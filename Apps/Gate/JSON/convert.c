@@ -448,8 +448,8 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSO
     {
         msg->data[0]     = cJSON_GetObjectItem(jobj, "control")->valueint;
         msg->header.cmd  = CONTROL;
-        msg->header.size = sizeof(control_mode_t);
-        Luos_SendMsg(service, msg);
+        msg->header.size = sizeof(control_t);
+        Luos_SendMsg(container, msg);
     }
     // Color
     if (cJSON_IsArray(cJSON_GetObjectItem(jobj, "color")))
