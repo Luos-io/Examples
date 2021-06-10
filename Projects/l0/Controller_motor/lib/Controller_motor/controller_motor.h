@@ -7,85 +7,9 @@
 #ifndef CONTROLLER_MOTOR_H
 #define CONTROLLER_MOTOR_H
 
-#include "luos.h"
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
-/*
- * Pid
- */
-typedef struct __attribute__((__packed__))
-{
-    union
-    {
-        struct __attribute__((__packed__))
-        {
-            float p;
-            float i;
-            float d;
-        };
-        unsigned char unmap[3 * sizeof(float)];
-    };
-} asserv_pid_t;
-// Motor
-typedef struct __attribute__((__packed__))
-{
-    union
-    {
-        struct __attribute__((__packed__))
-        {
-            // target modes
-            uint16_t mode_compliant : 1;
-            uint16_t mode_ratio : 1;
-            uint16_t mode_torque : 1;
-            uint16_t mode_angular_speed : 1;
-            uint16_t mode_angular_position : 1;
-            uint16_t mode_linear_speed : 1;
-            uint16_t mode_linear_position : 1;
-
-            // report modes
-            uint16_t angular_position : 1;
-            uint16_t angular_speed : 1;
-            uint16_t linear_position : 1;
-            uint16_t linear_speed : 1;
-            uint16_t current : 1;
-            uint16_t temperature : 1;
-        };
-        uint8_t unmap[2];
-    };
-} motor_mode_t;
-
-typedef struct __attribute__((__packed__))
-{
-    // targets
-    motor_mode_t mode;
-    angular_position_t target_angular_position;
-    angular_speed_t target_angular_speed;
-    ratio_t target_ratio;
-
-    // limits
-    angular_position_t limit_angular_position[2];
-    angular_speed_t limit_angular_speed[2];
-    linear_position_t limit_linear_position[2];
-    linear_speed_t limit_linear_speed[2];
-    ratio_t limit_ratio;
-    current_t limit_current;
-
-    // measures
-    angular_position_t angular_position;
-    angular_speed_t angular_speed;
-    linear_position_t linear_position;
-    linear_speed_t linear_speed;
-    current_t current;
-    temperature_t temperature;
-
-    //configs
-    float motor_reduction;
-    float resolution;
-    linear_position_t wheel_diameter;
-} motor_config_t;
 
 /*******************************************************************************
  * Variables
@@ -96,5 +20,6 @@ typedef struct __attribute__((__packed__))
  ******************************************************************************/
 void ControllerMotor_Init(void);
 void ControllerMotor_Loop(void);
+void HAL_SYSTICK_Motor_Callback(void);
 
 #endif /* CONTROLLER_MOTOR_H */
