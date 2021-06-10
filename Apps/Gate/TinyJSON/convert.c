@@ -463,7 +463,7 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cons
     {
         msg->data[0]     = json_getInteger(item);
         msg->header.cmd  = CONTROL;
-        msg->header.size = sizeof(control_mode_t);
+        msg->header.size = sizeof(control_t);
         Luos_SendMsg(service, msg);
     }
     // Color
