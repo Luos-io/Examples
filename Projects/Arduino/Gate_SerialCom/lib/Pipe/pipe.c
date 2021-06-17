@@ -42,6 +42,7 @@ void Pipe_Init(void)
  ******************************************************************************/
 void Pipe_Loop(void)
 {
+    PipeCom_ReceiveP2L();
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this container
@@ -79,9 +80,7 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
             if (size > 0)
             {
-                HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
                 PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-                HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
             }
         }
     }
