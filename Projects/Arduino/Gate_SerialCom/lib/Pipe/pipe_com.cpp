@@ -13,13 +13,11 @@
 
 #include <stdbool.h>
 #include "pipe_com.h"
-#include "main.h"
 #include "luos_utils.h"
 
 #ifdef __cplusplus
 }
 #endif
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -46,15 +44,7 @@ void PipeCom_Init(void)
     }
     PipeBuffer_Init();
 }
-/******************************************************************************
- * @brief init must be call in project init
- * @param None
- * @return None
- ******************************************************************************/
-void PipeCom_SetP2L(uint8_t *data, uint16_t size)
-{
-    Stream_PutSample(get_P2L_StreamChannel(), data, size);
-}
+
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
@@ -69,13 +59,28 @@ volatile uint8_t PipeCom_SendL2PPending(void)
  * @param None
  * @return None
  ******************************************************************************/
+void PipeCom_ReceiveP2L(void)
+{
+    uint8_t data = 0;
+    while (Serial.available() > 0)
+    {
+        data = Serial.read();
+        Stream_PutSample(get_P2L_StreamChannel(), &data, 1);
+    }
+}
+/******************************************************************************
+ * @brief PipeCom_SendL2P
+ * @param None
+ * @return None
+ ******************************************************************************/
 void PipeCom_SendL2P(uint8_t *data, uint16_t size)
 {
     is_sending = true;
     size_to_send = size;
     while(size_to_send != 0)
     {
-        Serial.write(data++);
+        Serial.write((const char)data++);
         size_to_send--;
     }
+    is_sending = false;
 }
