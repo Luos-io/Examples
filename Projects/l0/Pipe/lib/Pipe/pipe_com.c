@@ -15,7 +15,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-volatile uint8_t is_sending = false;
+volatile uint8_t is_sending    = false;
+volatile uint16_t size_to_send = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -133,7 +134,8 @@ static void PipeCom_DMAInit(void)
 void PipeCom_SendL2P(uint8_t *data, uint16_t size)
 {
     LUOS_ASSERT(size > 0);
-    is_sending = true;
+    is_sending   = true;
+    size_to_send = size;
     LL_DMA_DisableChannel(L2P_DMA, L2P_DMA_CHANNEL);
     LL_DMA_SetMemoryAddress(L2P_DMA, L2P_DMA_CHANNEL, (uint32_t)data);
     LL_DMA_SetDataLength(L2P_DMA, L2P_DMA_CHANNEL, size);
@@ -186,17 +188,17 @@ void PIPE_COM_IRQHANDLER()
  ******************************************************************************/
 void L2P_DMA_IRQHANDLER()
 {
+    uint16_t size = 0;
     // check if we receive an IDLE on usart3
     if ((L2P_DMA_TC(L2P_DMA) != RESET) && (LL_DMA_IsEnabledIT_TC(L2P_DMA, L2P_DMA_CHANNEL) != RESET))
     {
         L2P_DMA_CLEAR_TC(L2P_DMA);
 
-        uint16_t size = 0;
-        size          = Stream_GetAvailableSampleNBUntilEndBuffer(get_L2P_StreamChannel());
+        Stream_RmvAvailableSampleNB(get_L2P_StreamChannel(), size_to_send);
+        size = Stream_GetAvailableSampleNBUntilEndBuffer(get_L2P_StreamChannel());
         if (size > 0)
         {
             PipeCom_SendL2P(get_L2P_StreamChannel()->sample_ptr, size);
-            Stream_RmvAvailableSampleNB(get_L2P_StreamChannel(), size);
         }
         else
         {
