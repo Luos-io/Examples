@@ -6,7 +6,6 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include "pipe.h"
-#include "streaming.h"
 #include "pipe_com.h"
 
 /*******************************************************************************
@@ -102,8 +101,23 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
          L2P_StreamChannel.sample_ptr = L2P_StreamChannel.data_ptr;
     }
 }
-
-streaming_channel_t *get_L2P_StreamChannel()
+/******************************************************************************
+ * @brief get_L2P_StreamChannel get adresse streaming
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+streaming_channel_t *get_L2P_StreamChannel(void)
 {
     return &L2P_StreamChannel;
+}
+/******************************************************************************
+ * @brief get_L2P_StreamChannel get adresse streaming
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+streaming_channel_t *get_P2L_StreamChannel(void)
+{
+    return &P2L_StreamChannel;
 }
