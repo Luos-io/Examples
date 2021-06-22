@@ -44,7 +44,8 @@ short PipeLink_Find(container_t *service)
         time_luos_t time       = TimeOD_TimeFrom_s(0.001f);
         TimeOD_TimeToMsg(&time, &msg);
         msg.header.cmd = UPDATE_PUB;
-        Luos_SendMsg(service, &msg);
+        while (Luos_SendMsg(service, &msg) != SUCCEED)
+            ;
     }
     // Check if pipe is localhost
     if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_container->id))
@@ -56,7 +57,8 @@ short PipeLink_Find(container_t *service)
         msg.header.target_mode = IDACK;
         msg.header.cmd         = PARAMETERS;
         msg.header.size        = 0;
-        Luos_SendMsg(service, &msg);
+        while (Luos_SendMsg(service, &msg) != SUCCEED)
+            ;
     }
     return pipe_id;
 }
