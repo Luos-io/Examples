@@ -6,8 +6,9 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include <string.h>
-#include "pipe_buffer.h"
-#include "Luos_utils.h"
+#include "luos_utils.h"
+
+#include "pipe_com.h"
 
 /*******************************************************************************
  * Definitions
@@ -100,12 +101,17 @@ void PipeBuffer_ClearP2LTask(void)
  * @param None
  * @return None
  ******************************************************************************/
-void PipeBuffer_AllocP2LTask(uint16_t PositionLastData)
+void PipeBuffer_AllocP2LTask(uint16_t PositionLastData, uint8_t overflow)
 {
     if (P2L_Buffer[PositionLastData] == '\r')
     {
+        if((overflow == true)&&(P2LBuffer_PrevStartData < PositionLastData))
+        {
+            LUOS_ASSERT(0);
+        }
         while (PipeBuffer_P2LTaskNeedClear(PositionLastData) != false)
             ;
+        LUOS_ASSERT(P2LTaskID < PIPE_TO_LUOS_MAX_TASK);
         for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
         {
             if (P2LTask[i].data_pt == 0)
@@ -121,6 +127,7 @@ void PipeBuffer_AllocP2LTask(uint16_t PositionLastData)
                 {
                     P2LTask[i].size = (((PIPE_TO_LUOS_BUFFER_SIZE)-P2LBuffer_PrevStartData) + PositionLastData);
                 }
+                Stream_AddAvailableSampleNB(get_P2L_StreamChannel(), P2LTask[i].size);
                 if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
                 {
                     P2LBuffer_PrevStartData = PositionLastData;

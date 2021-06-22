@@ -20,12 +20,12 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define PIPE_TX_CLK() __HAL_RCC_GPIOB_CLK_ENABLE();
+#define PIPE_TX_CLK() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define PIPE_TX_PIN   GPIO_PIN_10
 #define PIPE_TX_PORT  GPIOB
 #define PIPE_TX_AF    GPIO_AF4_USART3
 
-#define PIPE_RX_CLK() __HAL_RCC_GPIOB_CLK_ENABLE();
+#define PIPE_RX_CLK() __HAL_RCC_GPIOB_CLK_ENABLE()
 #define PIPE_RX_PIN   GPIO_PIN_11
 #define PIPE_RX_PORT  GPIOB
 #define PIPE_RX_AF    GPIO_AF4_USART3
@@ -35,15 +35,19 @@
 #define PIPE_COM_IRQ            USART3_4_IRQn
 #define PIPE_COM_IRQHANDLER()   USART3_4_IRQHandler()
 
-#define P2L_DMA_CLOCK_ENABLE() __HAL_RCC_DMA1_CLK_ENABLE();
-#define P2L_DMA                DMA1
-#define P2L_DMA_CHANNEL        LL_DMA_CHANNEL_6
+#define P2L_DMA_CLOCK_ENABLE()    __HAL_RCC_DMA1_CLK_ENABLE()
+#define P2L_DMA                   DMA1
+#define P2L_DMA_CHANNEL           LL_DMA_CHANNEL_6
+#define P2L_DMA_TC(P2L_DMA)       LL_DMA_IsActiveFlag_TC6(P2L_DMA)
+#define P2L_DMA_CLEAR_TC(P2L_DMA) LL_DMA_ClearFlag_TC6(P2L_DMA)
 
-#define L2P_DMA_CLOCK_ENABLE() __HAL_RCC_DMA1_CLK_ENABLE();
-#define L2P_DMA                DMA1
-#define L2P_DMA_CHANNEL        LL_DMA_CHANNEL_7
-#define L2P_DMA_IRQ            DMA1_Channel4_5_6_7_IRQn
-#define L2P_DMA_IRQHANDLER()   DMA1_Channel4_5_6_7_IRQHandler()
+#define L2P_DMA_CLOCK_ENABLE()    __HAL_RCC_DMA1_CLK_ENABLE()
+#define L2P_DMA                   DMA1
+#define L2P_DMA_CHANNEL           LL_DMA_CHANNEL_7
+#define L2P_DMA_TC(L2P_DMA)       LL_DMA_IsActiveFlag_TC7(L2P_DMA)
+#define L2P_DMA_CLEAR_TC(L2P_DMA) LL_DMA_ClearFlag_TC7(L2P_DMA)
+#define L2P_DMA_IRQ               DMA1_Channel4_5_6_7_IRQn
+#define L2P_DMA_IRQHANDLER()      DMA1_Channel4_5_6_7_IRQHandler()
 
 /*******************************************************************************
  * Variables
@@ -54,7 +58,8 @@
  ******************************************************************************/
 void PipeCom_Init(void);
 void PipeCom_SendL2P(uint8_t *data, uint16_t size);
-uint8_t PipeCom_SendL2PPending(void);
-streaming_channel_t *get_L2P_StreamChannel();
+volatile uint8_t PipeCom_SendL2PPending(void);
+streaming_channel_t *get_L2P_StreamChannel(void);
+streaming_channel_t *get_P2L_StreamChannel(void);
 
 #endif /* PIPE_H */
