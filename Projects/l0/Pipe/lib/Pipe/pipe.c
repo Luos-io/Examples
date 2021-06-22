@@ -6,7 +6,6 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include "pipe.h"
-#include "streaming.h"
 #include "pipe_com.h"
 
 /*******************************************************************************
@@ -62,8 +61,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             pub_msg.header.cmd         = SET_CMD;
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
-            pub_msg.header.size        = size;
-            Stream_AddAvailableSampleNB(&P2L_StreamChannel, size);
             Luos_SendStreaming(container, &pub_msg, &P2L_StreamChannel);
         }
     }
@@ -101,8 +98,23 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
         L2P_StreamChannel.sample_ptr = L2P_StreamChannel.data_ptr;
     }
 }
-
-streaming_channel_t *get_L2P_StreamChannel()
+/******************************************************************************
+ * @brief get_L2P_StreamChannel get adresse streaming
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+streaming_channel_t *get_L2P_StreamChannel(void)
 {
     return &L2P_StreamChannel;
+}
+/******************************************************************************
+ * @brief get_L2P_StreamChannel get adresse streaming
+ * @param Container destination
+ * @param Msg receive
+ * @return None
+ ******************************************************************************/
+streaming_channel_t *get_P2L_StreamChannel(void)
+{
+    return &P2L_StreamChannel;
 }
