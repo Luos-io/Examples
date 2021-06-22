@@ -6,7 +6,6 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include "pipe.h"
-#include "streaming.h"
 #include "pipe_com.h"
 
 /*******************************************************************************
@@ -42,7 +41,21 @@ void Pipe_Init(void)
  ******************************************************************************/
 void Pipe_Loop(void)
 {
+    uint16_t size = 0;
+
+    //check receive on serial
     PipeCom_ReceiveP2L();
+
+    //check need to transmit
+    if (PipeCom_SendL2PPending() == false)
+    {
+        size = Stream_GetAvailableSampleNB(&L2P_StreamChannel);
+        if (size != 0)
+        {
+            PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
+            Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
+        }
+    }
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this container
@@ -64,7 +77,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
             pub_msg.header.size        = size;
-            Stream_AddAvailableSampleNB(&P2L_StreamChannel, size);
             Luos_SendStreaming(container, &pub_msg, &P2L_StreamChannel);
         }
     }
@@ -74,14 +86,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
         if (msg->header.size > 0)
         {
             Luos_ReceiveStreaming(container, msg, &L2P_StreamChannel);
-        }
-        if (PipeCom_SendL2PPending() == false)
-        {
-            size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
-            if (size > 0)
-            {
-                PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-            }
         }
     }
     else if (msg->header.cmd == PARAMETERS)

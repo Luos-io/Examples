@@ -6,8 +6,9 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include <string.h>
-#include "pipe_buffer.h"
-#include "Luos_utils.h"
+#include "luos_utils.h"
+
+#include "pipe_com.h"
 
 /*******************************************************************************
  * Definitions
@@ -100,43 +101,35 @@ void PipeBuffer_ClearP2LTask(void)
  * @param None
  * @return None
  ******************************************************************************/
-void PipeBuffer_AllocP2LTask(uint16_t PositionLastData)
+void PipeBuffer_AllocP2LTask(uint16_t size)
 {
-    if (P2L_Buffer[PositionLastData] == '\r')
+    LUOS_ASSERT(size < PIPE_TO_LUOS_BUFFER_SIZE);
+    uint16_t PositionLastData = P2LBuffer_PrevStartData + (size - 1);
+    while (PipeBuffer_P2LTaskNeedClear(PositionLastData) != false)
+        ;
+    LUOS_ASSERT(P2LTaskID < PIPE_TO_LUOS_MAX_TASK);
+    for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
     {
-        while (PipeBuffer_P2LTaskNeedClear(PositionLastData) != false)
-            ;
-        LUOS_ASSERT(P2LTaskID < PIPE_TO_LUOS_MAX_TASK);
-        for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
+        if (P2LTask[i].data_pt == 0)
         {
-            if (P2LTask[i].data_pt == 0)
+            P2LTask[i].data_pt = &P2L_Buffer[P2LBuffer_PrevStartData];
+            P2LTask[i].end     = &P2L_Buffer[PositionLastData];
+            P2LTask[i].size     = size;
+            PositionLastData++;
+            if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
             {
-                P2LTask[i].data_pt = &P2L_Buffer[P2LBuffer_PrevStartData];
-                P2LTask[i].end     = &P2L_Buffer[PositionLastData];
-                PositionLastData++;
-                if (P2LBuffer_PrevStartData < PositionLastData)
-                {
-                    P2LTask[i].size = PositionLastData - P2LBuffer_PrevStartData;
-                }
-                else
-                {
-                    P2LTask[i].size = (((PIPE_TO_LUOS_BUFFER_SIZE)-P2LBuffer_PrevStartData) + PositionLastData);
-                }
-                if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
-                {
-                    P2LBuffer_PrevStartData = PositionLastData;
-                }
-                else
-                {
-                    P2LBuffer_PrevStartData = 0;
-                }
-                P2LTaskID++;
-                return;
+                P2LBuffer_PrevStartData = PositionLastData;
             }
+            else
+            {
+                P2LBuffer_PrevStartData = 0;
+            }
+            P2LTaskID++;
+            return;
         }
-        // No more space
-        LUOS_ASSERT(0);
     }
+    // No more space
+    LUOS_ASSERT(0);
 }
 /******************************************************************************
  * @brief init must be call in project init
