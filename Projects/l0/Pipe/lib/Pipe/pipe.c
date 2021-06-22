@@ -98,7 +98,7 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
     }
     else if (msg->header.cmd == REINIT)
     {
-        L2P_StreamChannel.data_ptr = L2P_StreamChannel.sample_ptr;
+        L2P_StreamChannel.sample_ptr = L2P_StreamChannel.data_ptr;
     }
 }
 
