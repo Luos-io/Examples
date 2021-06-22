@@ -77,7 +77,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             if (size > 0)
             {
                 PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-                Stream_RmvAvailableSampleNB(&L2P_StreamChannel, size);
             }
         }
     }
