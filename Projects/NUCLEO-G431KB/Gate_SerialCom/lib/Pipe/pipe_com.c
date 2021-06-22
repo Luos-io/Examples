@@ -6,7 +6,6 @@
  ******************************************************************************/
 #include <stdbool.h>
 #include "pipe_com.h"
-#include "main.h"
 #include "luos_utils.h"
 
 /*******************************************************************************
@@ -161,21 +160,28 @@ volatile uint8_t PipeCom_SendL2PPending(void)
  ******************************************************************************/
 void PIPE_COM_IRQHANDLER()
 {
-    uint16_t LastData = 0;
+    uint16_t LastData        = 0;
+    uint8_t P2L_FlagOverFlow = false;
     // check if we receive an IDLE on usart3
     if (LL_USART_IsActiveFlag_IDLE(PIPE_COM))
     {
         LL_USART_ClearFlag_IDLE(PIPE_COM);
+        if (P2L_DMA_TC(P2L_DMA) != RESET)
+        {
+            P2L_DMA_CLEAR_TC(P2L_DMA);
+            P2L_FlagOverFlow = true;
+        }
         LastData = PIPE_TO_LUOS_BUFFER_SIZE - LL_DMA_GetDataLength(P2L_DMA, P2L_DMA_CHANNEL);
         if (LastData == 0)
         {
-            LastData = PIPE_TO_LUOS_BUFFER_SIZE - 1;
+            LastData         = PIPE_TO_LUOS_BUFFER_SIZE - 1;
+            P2L_FlagOverFlow = false;
         }
         else
         {
             LastData = LastData - 1;
         }
-        PipeBuffer_AllocP2LTask(LastData);
+        PipeBuffer_AllocP2LTask(LastData, P2L_FlagOverFlow);
     }
 }
 /******************************************************************************
@@ -187,9 +193,9 @@ void L2P_DMA_IRQHANDLER()
 {
 	 uint16_t size = 0;
     // check if we receive an IDLE on usart3
-    if ((LL_DMA_IsActiveFlag_TC4(L2P_DMA) != RESET) && (LL_DMA_IsEnabledIT_TC(L2P_DMA, L2P_DMA_CHANNEL) != RESET))
+    if ((L2P_DMA_TC(L2P_DMA) != RESET) && (LL_DMA_IsEnabledIT_TC(L2P_DMA, L2P_DMA_CHANNEL) != RESET))
     {
-        LL_DMA_ClearFlag_TC4(L2P_DMA);
+        L2P_DMA_CLEAR_TC(L2P_DMA);
 
         Stream_RmvAvailableSampleNB(get_L2P_StreamChannel(), size_to_send);
         size          = Stream_GetAvailableSampleNBUntilEndBuffer(get_L2P_StreamChannel());
