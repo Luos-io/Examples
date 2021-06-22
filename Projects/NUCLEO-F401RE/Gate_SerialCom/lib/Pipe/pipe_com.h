@@ -39,11 +39,15 @@
 #define P2L_DMA                DMA1
 #define P2L_DMA_CHANNEL        LL_DMA_STREAM_5
 #define P2L_DMA_REQUEST LL_DMA_CHANNEL_4
+#define P2L_DMA_TC(P2L_DMA)       LL_DMA_IsActiveFlag_TC5(P2L_DMA)
+#define P2L_DMA_CLEAR_TC(P2L_DMA) LL_DMA_ClearFlag_TC5(P2L_DMA)
 
 #define L2P_DMA_CLOCK_ENABLE() __HAL_RCC_DMA1_CLK_ENABLE();
 #define L2P_DMA                DMA1
 #define L2P_DMA_CHANNEL        LL_DMA_STREAM_6
 #define L2P_DMA_REQUEST LL_DMA_CHANNEL_4
+#define L2P_DMA_TC(L2P_DMA)       LL_DMA_IsActiveFlag_TC6(L2P_DMA)
+#define L2P_DMA_CLEAR_TC(L2P_DMA) LL_DMA_ClearFlag_TC6(L2P_DMA)
 #define L2P_DMA_IRQ            DMA1_Stream6_IRQn
 #define L2P_DMA_IRQHANDLER()   DMA1_Stream6_IRQHandler()
 
@@ -58,6 +62,7 @@
 void PipeCom_Init(void);
 void PipeCom_SendL2P(uint8_t *data, uint16_t size);
 volatile uint8_t PipeCom_SendL2PPending(void);
-streaming_channel_t *get_L2P_StreamChannel();
+streaming_channel_t *get_L2P_StreamChannel(void);
+streaming_channel_t *get_P2L_StreamChannel(void);
 
 #endif /* PIPE_H */
