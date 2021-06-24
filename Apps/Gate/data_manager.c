@@ -139,7 +139,10 @@ void DataManager_Format(container_t *service)
                             if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
                             {
                                 // We finish to receive this data, execute the received command
-                                Convert_DataToLuos(service, data_cmd);
+                                if (data_msg->header.cmd == SET_CMD)
+                                {
+                                    Convert_DataToLuos(service, data_cmd);
+                                }
                             }
                         } while (Luos_ReadFromContainer(service, PipeLink_GetId(), &data_msg) == SUCCEED);
                         i++;
