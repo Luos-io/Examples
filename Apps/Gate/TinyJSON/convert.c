@@ -587,7 +587,6 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cons
     if ((item != NULL) && (json_getType(item) == JSON_ARRAY))
     {
         item = json_getChild(item);
-
         if (json_getSibling(item) != NULL)
         {
             // We have multiple field on this array
@@ -624,65 +623,61 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cons
             }
         }
     }
-    switch (type)
-    {
-        case VOID_MOD:
-        case DYNAMIXEL_MOD:
 
-            item = json_getProperty(jobj, "register");
-            if ((item != NULL) && (json_getType(item) == JSON_ARRAY))
+    item = json_getProperty(jobj, "register"); // Watch out this one is only used by Dxl and specific to it.
+    if ((item != NULL) && (json_getType(item) == JSON_ARRAY))
+    {
+        item = json_getChild(item);
+        if (json_getSibling(item) != NULL)
+        {
+            // We have multiple field on this array
+            json_t const *val;
+            int i = 0;
+            for (val = item; val != 0; val = json_getSibling(val))
             {
-                item    = json_getChild(item);
-                int val = (int)json_getInteger(item);
-                memcpy(&msg->data[0], &val, sizeof(uint16_t));
-                item = json_getSibling(item);
-                val  = (int)json_getInteger(item);
-                if (val <= 0xFF)
+                uint32_t value = (uint32_t)json_getInteger(val);
+                memcpy(&msg->data[i * sizeof(uint32_t)], &value, sizeof(uint32_t));
+                i++;
+            }
+            msg->header.cmd  = REGISTER;
+            msg->header.size = i * sizeof(uint32_t);
+            Luos_SendMsg(service, msg);
+        }
+        else
+        {
+            int i = 0;
+            // This is a binary
+            unsigned int size = (int)json_getInteger(item);
+            // find the first \r of the current buf
+            for (i = 0; i < GATE_BUFF_SIZE; i++)
+            {
+                if (bin_data[i] == '\r')
                 {
-                    memcpy(&msg->data[2], &val, sizeof(uint8_t));
-                    msg->header.size = sizeof(uint16_t) + sizeof(uint8_t);
+                    i++;
+                    break;
                 }
-                else if (val <= 0xFFFF)
-                {
-                    memcpy(&msg->data[2], &val, sizeof(uint16_t));
-                    msg->header.size = sizeof(uint16_t) + sizeof(uint16_t);
-                }
-                else
-                {
-                    memcpy(&msg->data[2], &val, sizeof(uint32_t));
-                    msg->header.size = sizeof(uint16_t) + sizeof(uint32_t);
-                }
+            }
+            if (i < GATE_BUFF_SIZE - 1)
+            {
                 msg->header.cmd = REGISTER;
-                Luos_SendMsg(service, msg);
+                Luos_SendData(service, msg, &bin_data[i], (unsigned int)size);
             }
-            item = json_getProperty(jobj, "set_id");
-            if ((item != NULL) && (json_getType(item) == JSON_INTEGER))
-            {
-                msg->data[0]     = (char)json_getInteger(item);
-                msg->header.cmd  = SETID;
-                msg->header.size = sizeof(char);
-                Luos_SendMsg(service, msg);
-            }
-            item = json_getProperty(jobj, "wheel_mode");
-            if ((item != NULL) && (json_getType(item) == JSON_BOOLEAN))
-            {
-                msg->data[0]     = json_getBoolean(item);
-                msg->header.cmd  = DXL_WHEELMODE;
-                msg->header.size = sizeof(char);
-                Luos_SendMsg(service, msg);
-            }
-            break;
-        case GATE_MOD:
-            item = json_getProperty(jobj, "set_id");
-            if ((item != NULL) && (json_getType(item) == JSON_REAL))
-            {
-                // Put all services with the same time value
-                update_time = TimeOD_TimeFrom_s((float)json_getReal(item));
-                DataManager_collect(service);
-            }
-            break;
-        default:
-            break;
+        }
+    }
+    item = json_getProperty(jobj, "set_id");
+    if ((item != NULL) && (json_getType(item) == JSON_INTEGER))
+    {
+        msg->data[0]     = (char)json_getInteger(item);
+        msg->header.cmd  = SETID;
+        msg->header.size = sizeof(char);
+        Luos_SendMsg(service, msg);
+    }
+    item = json_getProperty(jobj, "update_time");
+    if ((item != NULL) && (json_getType(item) == JSON_INTEGER))
+    {
+        // Put all services with the same time value
+        update_time = TimeOD_TimeFrom_s((float)json_getReal(item));
+        DataManager_collect(service);
     }
 }
 
