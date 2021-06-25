@@ -6,7 +6,9 @@
  ******************************************************************************/
 #include "button.h"
 #include "gpio.h"
-#include "template_state.h"
+
+// use profile framework
+#include "profile_state.h"
 
 /*******************************************************************************
  * Definitions
@@ -15,8 +17,10 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-template_state_t button_template;
-profile_state_t *button = &button_template.profile;
+
+// create a general profile handler
+profile_t button_profile;
+profile_state_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -30,9 +34,11 @@ void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
     // Profile configuration
-    button->access = READ_ONLY_ACCESS;
+    button_profile.access = READ_ONLY_ACCESS;
+    // Link state profile to the general profile handler
+    Luos_LinkProfile(&button_profile, &button, 0, "button", revision);
     // Container creation following template
-    TemplateState_CreateContainer(0, &button_template, "button", revision);
+    Luos_LaunchProfile(&button_profile);
 }
 
 /******************************************************************************
@@ -42,5 +48,5 @@ void Button_Init(void)
  ******************************************************************************/
 void Button_Loop(void)
 {
-    button->state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
+    button.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 }
