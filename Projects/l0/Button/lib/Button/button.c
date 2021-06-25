@@ -36,9 +36,9 @@ void Button_Init(void)
     // Profile configuration
     button_profile.access = READ_ONLY_ACCESS;
     // Link state profile to the general profile handler
-    Luos_LinkProfile(&button_profile, &button, 0, "button_mod", revision);
+    Luos_LinkProfile(&button_profile, &button, 0);
     // Container creation following template
-    Luos_LaunchProfile(&button_profile);
+    Luos_LaunchProfile(&button_profile, "button_mod", revision);
 }
 
 /******************************************************************************
