@@ -19,8 +19,8 @@
  ******************************************************************************/
 
 // create a general profile handler
-profile_t button_1_profile;
-profile_state_t button_1;
+profile_t button_profile;
+profile_state_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -35,9 +35,9 @@ void Button_Init(void)
     revision_t revision = {.unmap = REV};
 
     // Link state profile to the general profile handler
-    Luos_LinkProfile(&button_1_profile, &button_1, 0);
+    Luos_LinkProfile(&button_profile, &button, 0);
     // Container creation following template
-    Luos_LaunchProfile(&button_1_profile, "button_1", revision);
+    Luos_LaunchProfile(&button_profile, "button", revision);
 }
 
 /******************************************************************************
@@ -47,6 +47,5 @@ void Button_Init(void)
  ******************************************************************************/
 void Button_Loop(void)
 {
-    // button_1.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
-    button_1.state = true;
+    button.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 }
