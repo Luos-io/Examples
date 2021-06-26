@@ -19,7 +19,7 @@
  ******************************************************************************/
 
 // create a general profile handler
-profile_t button_profile;
+profile_core_t button_profile;
 profile_state_t button;
 /*******************************************************************************
  * Function
@@ -34,7 +34,7 @@ void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
-    // Link state profile to the general profile handler
+    // Link state profile to the core profile handler
     Luos_LinkProfile(&button_profile, &button, 0);
     // Container creation following template
     Luos_LaunchProfile(&button_profile, "button", revision);
