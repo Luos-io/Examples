@@ -22,8 +22,6 @@
 profile_core_t button_profile;
 // create a specific state profile handler
 profile_state_t button;
-
-container_t *app;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -40,7 +38,7 @@ void Button_Init(void)
     // Link state profile to the core profile handler
     Luos_LinkProfile(&button_profile, &button, 0);
     // Container creation following template
-    app = Luos_LaunchProfile(&button_profile, "button", revision);
+    Luos_LaunchProfile(&button_profile, "button", revision);
 }
 
 /******************************************************************************
@@ -52,5 +50,5 @@ void Button_Loop(void)
 {
     button.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 
-    Luos_SendProfile("led", app, IO_STATE, &button, button_profile.profile_data.size);
+    Luos_SendProfile("led", "button", IO_STATE, &button, sizeof(profile_state_t));
 }
