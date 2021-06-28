@@ -52,17 +52,5 @@ void Button_Loop(void)
 {
     button.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 
-    //Now send a message
-    msg_t led_msg;
-
-    //Get the ID of our LED from the routing table
-    uint8_t id_led = RoutingTB_IDFromAlias("led");
-
-    led_msg.header.target      = id_led;   //We are sending this to the LED
-    led_msg.header.cmd         = IO_STATE; //We are specifying an IO state (on or off)
-    led_msg.header.target_mode = IDACK;    //We are asking for an acknowledgement
-
-    led_msg.header.size = sizeof(char); //Our message only contains one character, the IO state
-    led_msg.data[0]     = button.state; //The I/O state of the LED to be sent (1 or 0, on or off)
-    Luos_SendMsg(app, &led_msg);        //Now that we have the elements, send the message
+    Luos_SendProfile("led", app, IO_STATE, &button, button_profile.profile_data.size);
 }
