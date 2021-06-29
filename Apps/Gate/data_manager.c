@@ -152,19 +152,17 @@ void DataManager_Format(container_t *service)
                     // Create container description
                     char *alias;
                     alias = RoutingTB_AliasFromId(data_msg->header.source);
-                    if (alias != 0)
+                    LUOS_ASSERT(alias != 0);
+                    data_ok = true;
+                    data_ptr += Convert_StartServiceData(data_ptr, alias);
+                    // Convert all msgs from this container into data
+                    do
                     {
-                        data_ok = true;
-                        data_ptr += Convert_StartServiceData(data_ptr, alias);
-                        // Convert all msgs from this container into data
-                        do
-                        {
-                            data_ptr += Convert_MsgToData(data_msg, data_ptr);
-                        } while (Luos_ReadFromContainer(service, data_msg->header.source, &data_msg) == SUCCEED);
+                        data_ptr += Convert_MsgToData(data_msg, data_ptr);
+                    } while (Luos_ReadFromContainer(service, data_msg->header.source, &data_msg) == SUCCEED);
 
-                        data_ptr += Convert_EndServiceData(data_ptr);
-                        LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
-                    }
+                    data_ptr += Convert_EndServiceData(data_ptr);
+                    LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
                 }
             }
             i++;
