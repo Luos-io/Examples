@@ -9,9 +9,6 @@
     },
     "licence": "MIT",
     "build": {
-        "flags": [
-            "-DREV={0,9,0}"
-        ],
         "extraScript": "select_format_script.py"
     },
     "dependencies": [

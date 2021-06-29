@@ -31,7 +31,7 @@ time_luos_t update_time = GATE_REFRESH_TIME_S;
  ******************************************************************************/
 void Gate_Init(void)
 {
-    revision_t revision = {.unmap = REV};
+    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
     gate                = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 
