@@ -13,7 +13,7 @@
 #endif
 
 #ifndef GATE_REFRESH_TIME_S
-#define GATE_REFRESH_TIME_S 0.01f
+#define GATE_REFRESH_TIME_S 0.05f
 #endif
 
 // #define GATE_POLLING

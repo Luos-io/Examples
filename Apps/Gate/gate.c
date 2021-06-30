@@ -42,9 +42,13 @@ void Gate_Init(void)
  ******************************************************************************/
 void Gate_Loop(void)
 {
+#ifndef GATE_POLLING
+    static uint8_t first_conversion = 1;
+#endif
     static short pipe_id              = 0;
     static short previous_id          = -1;
     static volatile bool gate_running = false;
+    static uint32_t last_time         = 0;
 
     // Check the detection status.
     if (RoutingTB_IDFromContainer(gate) == 0)
@@ -59,6 +63,10 @@ void Gate_Loop(void)
             {
                 // No detection occure, do it
                 RoutingTB_DetectContainers(gate);
+#ifndef GATE_POLLING
+                first_conversion = 1;
+                update_time      = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
+#endif
             }
 #endif
         }
@@ -81,11 +89,22 @@ void Gate_Loop(void)
         if (gate_running && !detection_ask)
         {
             // Manage input and output data
-            static uint32_t last_time = 0;
-            if (Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(update_time))
+            if ((Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(update_time)) && (Luos_GetSystick() > last_time))
             {
                 last_time = Luos_GetSystick();
                 DataManager_Run(gate);
+#ifndef GATE_POLLING
+                if (first_conversion == 1)
+                {
+                    // This is the first time we perform a convertion
+                    // Evaluate the time needed to convert all the data of this configuration and update refresh rate
+                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 1;
+                    update_time             = TimeOD_TimeFrom_ms(execution_time);
+                    // Update refresh rate for all services of the network
+                    DataManager_collect(gate);
+                    first_conversion = 0;
+                }
+#endif
             }
         }
         else
@@ -101,7 +120,10 @@ void Gate_Loop(void)
             Convert_RoutingTableData(gate);
 #ifndef GATE_POLLING
             // Set update frequency
+            update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
             DataManager_collect(gate);
+            last_time        = Luos_GetSystick() + (uint32_t)(TimeOD_TimeTo_ms(GATE_REFRESH_TIME_S) / 2);
+            first_conversion = 1;
 #endif
             gate_running  = true;
             detection_ask = 0;
