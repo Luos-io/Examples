@@ -20,8 +20,10 @@
 
 // create a general core profile handler
 profile_core_t button_profile;
-// create a specific state profile handler
-profile_state_t button;
+// create an array which will contain all commands
+profile_cmd_t button_cmd[NB_CMD];
+// create an handler for each command
+state_cmd_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -35,8 +37,10 @@ void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
+    // Add command to button profile
+    Luos_AddCommandToProfile(button_cmd, &button);
     // Link state profile to the core profile handler
-    Luos_LinkProfile(&button_profile, &button, 0);
+    Luos_LinkStateProfile(&button_profile, button_cmd, 0);
     // Container creation following template
     Luos_LaunchProfile(&button_profile, "button", revision);
 }
@@ -48,7 +52,7 @@ void Button_Init(void)
  ******************************************************************************/
 void Button_Loop(void)
 {
-    button.state = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
+    button.value = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 
-    Luos_SendProfile("led", "button", IO_STATE, &button, sizeof(profile_state_t));
+    Luos_SendProfile("led", "button", IO_STATE, &button, sizeof(state_cmd_t));
 }
