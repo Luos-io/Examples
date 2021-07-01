@@ -37,12 +37,7 @@ void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
-    // Add command to button profile
-    Luos_AddCommandToProfile(button_cmd, &button);
-    // Link state profile to the core profile handler
-    Luos_LinkStateProfile(&button_profile, button_cmd, 0);
-    // Container creation following template
-    Luos_LaunchProfile(&button_profile, "button", revision);
+    CREATE_STATE_PROFILE(button_profile, button_cmd, button, "button", revision)
 }
 
 /******************************************************************************
