@@ -23,7 +23,7 @@ profile_core_t button_profile;
 // create an array which will contain all commands
 profile_cmd_t button_cmd[NB_CMD];
 // create an handler for each command
-state_cmd_t button;
+state_data_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -49,5 +49,5 @@ void Button_Loop(void)
 {
     button.value = (bool)HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
 
-    Luos_SendProfile("led", "button", IO_STATE, &button, sizeof(state_cmd_t));
+    Luos_SendProfile("led", "button", IO_STATE, &button, sizeof(state_data_t));
 }

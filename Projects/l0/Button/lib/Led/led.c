@@ -23,7 +23,7 @@ profile_core_t led_profile;
 // create an array which will contain all commands
 profile_cmd_t led_cmd[NB_CMD];
 // create an handler for each command
-state_cmd_t led;
+state_data_t led;
 /*******************************************************************************
  * Function
  ******************************************************************************/
