@@ -23,6 +23,7 @@
 // create a general core profile handler
 profile_core_t button_profile;
 // create an state profile
+profile_state_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
