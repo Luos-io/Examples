@@ -36,7 +36,7 @@ void Led_Init(void)
     revision_t revision = {.unmap = REV};
 
     // Link state profile to the core profile handler
-    Luos_LinkProfile(&led_profile, &led, 0);
+    Luos_LinkStateProfile(&led_profile, &led, 0);
     // Container creation following template
     Luos_LaunchProfile(&led_profile, "led", revision);
 }

@@ -9,7 +9,9 @@
 
 // use profile framework
 #include "profile_state.h"
-
+#include "profile_motor.h"
+#include "profile_voltage.h"
+#include "profile_servo_motor.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -21,7 +23,6 @@
 // create a general core profile handler
 profile_core_t button_profile;
 // create an state profile
-profile_state_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -36,7 +37,7 @@ void Button_Init(void)
     revision_t revision = {.unmap = REV};
 
     // Link state profile to the core profile handler
-    Luos_LinkProfile(&button_profile, &button, 0);
+    Luos_LinkStateProfile(&button_profile, &button, 0);
     // Container creation following template
     Luos_LaunchProfile(&button_profile, "button", revision);
 }
