@@ -22,8 +22,14 @@
 
 // create a general core profile handler
 profile_core_t button_profile;
+profile_core_t voltage_profile;
+profile_core_t motor_profile;
+profile_core_t servo_motor_profile;
 // create an state profile
 profile_state_t button;
+profile_voltage_t voltage;
+profile_motor_t motor;
+profile_servo_motor_t servo_motor;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -41,6 +47,15 @@ void Button_Init(void)
     Luos_LinkStateProfile(&button_profile, &button, 0);
     // Container creation following template
     Luos_LaunchProfile(&button_profile, "button", revision);
+
+    Luos_LinkVoltageProfile(&voltage_profile, &voltage, 0);
+    Luos_LaunchProfile(&voltage_profile, "voltage", revision);
+
+    Luos_LinkMotorProfile(&motor_profile, &motor, 0);
+    Luos_LaunchProfile(&motor_profile, "motor", revision);
+
+    Luos_LinkServoMotorProfile(&servo_motor_profile, &servo_motor, 0);
+    Luos_LaunchProfile(&servo_motor_profile, "servo_motor", revision);
 }
 
 /******************************************************************************
