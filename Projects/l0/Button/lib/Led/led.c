@@ -20,10 +20,8 @@
 
 // create a general core profile handler
 profile_core_t led_profile;
-// create an array which will contain all commands
-profile_cmd_t led_cmd[NB_CMD];
-// create an handler for each command
-state_data_t led;
+// create an state profile
+profile_state_t led;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -37,10 +35,8 @@ void Led_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
-    // Add command to led profile
-    Luos_AddCommandToProfile(led_cmd, &led);
     // Link state profile to the core profile handler
-    Luos_LinkStateProfile(&led_profile, led_cmd, 0);
+    Luos_LinkProfile(&led_profile, &led, 0);
     // Container creation following template
     Luos_LaunchProfile(&led_profile, "led", revision);
 }
@@ -52,5 +48,5 @@ void Led_Init(void)
  ******************************************************************************/
 void Led_Loop(void)
 {
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, led.value);
+    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, led.state);
 }
