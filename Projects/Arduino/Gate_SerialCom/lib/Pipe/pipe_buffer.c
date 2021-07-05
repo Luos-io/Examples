@@ -114,7 +114,7 @@ void PipeBuffer_AllocP2LTask(uint16_t size)
         {
             P2LTask[i].data_pt = &P2L_Buffer[P2LBuffer_PrevStartData];
             P2LTask[i].end     = &P2L_Buffer[PositionLastData];
-            P2LTask[i].size     = size;
+            P2LTask[i].size    = size;
             PositionLastData++;
             if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
             {

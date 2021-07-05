@@ -8,7 +8,8 @@
 #include <Arduino.h>
 
 #ifdef __cplusplus
- extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdbool.h>
@@ -25,8 +26,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-volatile uint8_t is_sending = false;
-volatile uint16_t size_to_send = 0;
+volatile uint8_t is_sending       = false;
+volatile uint16_t size_to_send    = 0;
 volatile uint16_t size_to_receive = 0;
 /*******************************************************************************
  * Function
@@ -40,8 +41,9 @@ volatile uint16_t size_to_receive = 0;
 void PipeCom_Init(void)
 {
     Serial.begin(1000000);
-    while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    while (!Serial)
+    {
+        ; // wait for serial port to connect. Needed for native USB port only
     }
     PipeBuffer_Init();
 }
@@ -66,9 +68,9 @@ void PipeCom_ReceiveP2L(void)
     while (Serial.available() > 0)
     {
         data = Serial.read();
-        Stream_PutSample(get_P2L_StreamChannel(), &data, 1); 
+        Stream_PutSample(get_P2L_StreamChannel(), &data, 1);
         size_to_receive++;
-        if(data == '\r') 
+        if (data == '\r')
         {
             PipeBuffer_AllocP2LTask(size_to_receive);
             size_to_receive = 0;
@@ -82,10 +84,10 @@ void PipeCom_ReceiveP2L(void)
  ******************************************************************************/
 void PipeCom_SendL2P(uint8_t *data, uint16_t size)
 {
-    is_sending = true;
-    size_to_send = size;
+    is_sending     = true;
+    size_to_send   = size;
     char character = 0;
-    while(size_to_send != 0)
+    while (size_to_send != 0)
     {
         character = *data++;
         Serial.write(&character);

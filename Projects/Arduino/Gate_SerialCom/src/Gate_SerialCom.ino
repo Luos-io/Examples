@@ -2,7 +2,8 @@
 #include <Arduino.h>
 
 #ifdef __cplusplus
- extern "C" {
+extern "C"
+{
 #endif
 
 #include <pipe.h>
@@ -13,16 +14,17 @@
 }
 #endif
 
-void setup() {
+void setup()
+{
 
-  Luos_Init();
-  Gate_Init();
-  Pipe_Init();
+    Luos_Init();
+    Gate_Init();
+    Pipe_Init();
 }
 
-void loop() {
-  Luos_Loop();
-  Gate_Loop();
-  Pipe_Loop();
+void loop()
+{
+    Luos_Loop();
+    Gate_Loop();
+    Pipe_Loop();
 }
-

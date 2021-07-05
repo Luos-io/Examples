@@ -31,7 +31,7 @@
 /*******************************************************************************
  * PROJECT DEFINITION
 *******************************************************************************/
-#define GATEFORMAT=TinyJSON
+#define GATEFORMAT = TinyJSON
 
 /*******************************************************************************
  * LUOS LIBRARY DEFINITION
@@ -45,9 +45,9 @@
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
 
-#define MAX_CONTAINER_NUMBER      2
-#define MSG_BUFFER_SIZE           2048
-#define MAX_MSG_NB                40
+#define MAX_CONTAINER_NUMBER 2
+#define MSG_BUFFER_SIZE      2048
+#define MAX_MSG_NB           40
 
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
@@ -107,13 +107,12 @@
  * COM TIMEOUT CONFIG
  ******************************************************************************/
 #define LUOS_TIMER_CLOCK_ENABLE() __HAL_RCC_TIM5_CLK_ENABLE()
-#define LUOS_TIMER TIM5
-#define LUOS_TIMER_IRQ TIM5_IRQn
-#define LUOS_TIMER_IRQHANDLER() TIM5_IRQHandler()
+#define LUOS_TIMER                TIM5
+#define LUOS_TIMER_IRQ            TIM5_IRQn
+#define LUOS_TIMER_IRQHANDLER()   TIM5_IRQHandler()
 /*******************************************************************************
  * FLASH CONFIG
  ******************************************************************************/
 #define FLASH_SECTOR FLASH_SECTOR_4
 
 #endif /* _NODE_CONFIG_H_ */
-

@@ -31,7 +31,7 @@
 /*******************************************************************************
  * PROJECT DEFINITION
 *******************************************************************************/
-#define GATEFORMAT=TinyJSON
+#define GATEFORMAT = TinyJSON
 
 /*******************************************************************************
  * LUOS LIBRARY DEFINITION
@@ -45,9 +45,9 @@
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
 
-#define MAX_CONTAINER_NUMBER      2
-#define MSG_BUFFER_SIZE           2048
-#define MAX_MSG_NB                40
+#define MAX_CONTAINER_NUMBER 2
+#define MSG_BUFFER_SIZE      2048
+#define MAX_MSG_NB           40
 
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
@@ -88,4 +88,3 @@
 ******************************************************************************/
 
 #endif /* _NODE_CONFIG_H_ */
-

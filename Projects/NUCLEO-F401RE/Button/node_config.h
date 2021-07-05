@@ -44,8 +44,8 @@
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
 
-#define MAX_CONTAINER_NUMBER      1
-#define MAX_MSG_NB                5
+#define MAX_CONTAINER_NUMBER 1
+#define MAX_MSG_NB           5
 
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
@@ -105,13 +105,12 @@
  * COM TIMEOUT CONFIG
  ******************************************************************************/
 #define LUOS_TIMER_CLOCK_ENABLE() __HAL_RCC_TIM3_CLK_ENABLE()
-#define LUOS_TIMER TIM3
-#define LUOS_TIMER_IRQ TIM3_IRQn
-#define LUOS_TIMER_IRQHANDLER() TIM3_IRQHandler()
+#define LUOS_TIMER                TIM3
+#define LUOS_TIMER_IRQ            TIM3_IRQn
+#define LUOS_TIMER_IRQHANDLER()   TIM3_IRQHandler()
 /*******************************************************************************
  * FLASH CONFIG
  ******************************************************************************/
 #define FLASH_SECTOR FLASH_SECTOR_7
 
 #endif /* _NODE_CONFIG_H_ */
-

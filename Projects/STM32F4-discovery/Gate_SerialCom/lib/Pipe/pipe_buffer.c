@@ -105,7 +105,7 @@ void PipeBuffer_AllocP2LTask(uint16_t PositionLastData, uint8_t overflow)
 {
     if (P2L_Buffer[PositionLastData] == '\r')
     {
-        if((overflow == true)&&(P2LBuffer_PrevStartData < PositionLastData))
+        if ((overflow == true) && (P2LBuffer_PrevStartData < PositionLastData))
         {
             LUOS_ASSERT(0);
         }

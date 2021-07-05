@@ -45,9 +45,9 @@
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
 
-#define MAX_CONTAINER_NUMBER      2
-#define MSG_BUFFER_SIZE           1024
-#define MAX_MSG_NB                30
+#define MAX_CONTAINER_NUMBER 2
+#define MSG_BUFFER_SIZE      1024
+#define MAX_MSG_NB           30
 
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
@@ -88,4 +88,3 @@
 ******************************************************************************/
 
 #endif /* _NODE_CONFIG_H_ */
-

@@ -35,22 +35,21 @@
 #define PIPE_COM_IRQ            USART2_IRQn
 #define PIPE_COM_IRQHANDLER()   USART2_IRQHandler()
 
-#define P2L_DMA_CLOCK_ENABLE() __HAL_RCC_DMA1_CLK_ENABLE();
-#define P2L_DMA                DMA1
-#define P2L_DMA_CHANNEL        LL_DMA_CHANNEL_6
-#define P2L_DMA_REQUEST LL_DMA_REQUEST_2
+#define P2L_DMA_CLOCK_ENABLE()    __HAL_RCC_DMA1_CLK_ENABLE();
+#define P2L_DMA                   DMA1
+#define P2L_DMA_CHANNEL           LL_DMA_CHANNEL_6
+#define P2L_DMA_REQUEST           LL_DMA_REQUEST_2
 #define P2L_DMA_TC(P2L_DMA)       LL_DMA_IsActiveFlag_TC6(P2L_DMA)
 #define P2L_DMA_CLEAR_TC(P2L_DMA) LL_DMA_ClearFlag_TC6(P2L_DMA)
 
-#define L2P_DMA_CLOCK_ENABLE() __HAL_RCC_DMA1_CLK_ENABLE();
-#define L2P_DMA                DMA1
-#define L2P_DMA_CHANNEL        LL_DMA_CHANNEL_7
-#define L2P_DMA_REQUEST LL_DMA_REQUEST_2
+#define L2P_DMA_CLOCK_ENABLE()    __HAL_RCC_DMA1_CLK_ENABLE();
+#define L2P_DMA                   DMA1
+#define L2P_DMA_CHANNEL           LL_DMA_CHANNEL_7
+#define L2P_DMA_REQUEST           LL_DMA_REQUEST_2
 #define L2P_DMA_TC(L2P_DMA)       LL_DMA_IsActiveFlag_TC7(L2P_DMA)
 #define L2P_DMA_CLEAR_TC(L2P_DMA) LL_DMA_ClearFlag_TC7(L2P_DMA)
-#define L2P_DMA_IRQ            DMA1_Channel7_IRQn
-#define L2P_DMA_IRQHANDLER()   DMA1_Channel7_IRQHandler()
-
+#define L2P_DMA_IRQ               DMA1_Channel7_IRQn
+#define L2P_DMA_IRQHANDLER()      DMA1_Channel7_IRQHandler()
 
 /*******************************************************************************
  * Variables
