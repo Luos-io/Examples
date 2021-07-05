@@ -10,7 +10,7 @@
 #include "pipe_buffer.h"
 #include "streaming.h"
 
-#include "stm32L4xx_hal.h"
+#include "stm32l4xx_hal.h"
 #include "stm32l4xx_ll_usart.h"
 #include "stm32l4xx_ll_gpio.h"
 #include "stm32l4xx_ll_exti.h"
