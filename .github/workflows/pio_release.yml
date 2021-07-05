@@ -1,0 +1,29 @@
+name: Upload platformio library
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    description: 'manual upload'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+    - name: Build and publish
+      env:
+        PLATFORMIO_AUTH_TOKEN: ${{ secrets.PIO_TOKEN }}
+      run: |
+        cd Apps/Gate/
+        pio package pack
+        pio package publish --owner luos
