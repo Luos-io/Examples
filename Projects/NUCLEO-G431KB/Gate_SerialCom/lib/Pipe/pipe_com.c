@@ -75,7 +75,7 @@ void PipeCom_Init(void)
     LL_USART_EnableIT_IDLE(PIPE_COM);
 
     HAL_NVIC_EnableIRQ(PIPE_COM_IRQ);
-    HAL_NVIC_SetPriority(PIPE_COM_IRQ, 0, 1);
+    HAL_NVIC_SetPriority(PIPE_COM_IRQ, 1, 1);
 
     LL_USART_TransmitData8(PIPE_COM, 0x55);
 
@@ -124,7 +124,7 @@ static void PipeCom_DMAInit(void)
     LL_DMA_SetPeriphAddress(L2P_DMA, L2P_DMA_CHANNEL, (uint32_t)&PIPE_COM->TDR);
     LL_USART_EnableDMAReq_TX(PIPE_COM);
     HAL_NVIC_EnableIRQ(L2P_DMA_IRQ);
-    HAL_NVIC_SetPriority(L2P_DMA_IRQ, 0, 1);
+    HAL_NVIC_SetPriority(L2P_DMA_IRQ, 1, 1);
 
     LL_DMA_EnableIT_TC(L2P_DMA, L2P_DMA_CHANNEL);
 }
