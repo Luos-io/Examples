@@ -28,7 +28,7 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Pipe_Init(void)
 {
-    revision_t revision = {.unmap = REV};
+    revision_t revision = {.Major = 0, .Minor = 0, .Build = 0};
     Luos_CreateContainer(Pipe_MsgHandler, PIPE_MOD, "Pipe_mod", revision);
     PipeCom_Init();
     P2L_StreamChannel = Stream_CreateStreamingChannel(PipeBuffer_GetP2LBuffer(), PIPE_TO_LUOS_BUFFER_SIZE, 1);
@@ -61,8 +61,6 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             pub_msg.header.cmd         = SET_CMD;
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
-            pub_msg.header.size        = size;
-            Stream_AddAvailableSampleNB(&P2L_StreamChannel, size);
             Luos_SendStreaming(container, &pub_msg, &P2L_StreamChannel);
         }
     }
@@ -78,9 +76,7 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg)
             size = Stream_GetAvailableSampleNBUntilEndBuffer(&L2P_StreamChannel);
             if (size > 0)
             {
-                HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
                 PipeCom_SendL2P(L2P_StreamChannel.sample_ptr, size);
-                HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
             }
         }
     }
