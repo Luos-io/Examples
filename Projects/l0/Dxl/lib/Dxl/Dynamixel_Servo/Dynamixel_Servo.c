@@ -737,8 +737,7 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
 
     *d++ = ~(uint8_t)checksum;
 #endif
-    huart3.Init.Mode = UART_MODE_TX;
-    HAL_UART_Init(&huart3);
+    LL_USART_DisableIT_RXNE(USART3); // Disable Rx IT
     HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_OUTPUT);
     //Delay was necessary when on solderless breadboard, but not on custom PCB (probably stray capacitance)
     //delayMicroseconds(10);
@@ -748,8 +747,7 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
     //unnecessary, and without interrupts, flush won't know that the last byte has been transmitted
     //servo_serial->write(data, data_size-1);
     HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
-    huart3.Init.Mode = UART_MODE_TX_RX;
-    HAL_UART_Init(&huart3);
+    LL_USART_EnableIT_RXNE(USART3); // Enable Rx IT
 
     if (id != SERVO_BROADCAST_ID)
         error = servo_get_response(id, result, num_results, timeout_ms);
@@ -784,9 +782,9 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
     {
         //ERROR
         dxl_msg_complete = 0;
-        HAL_UART_AbortReceive_IT(&huart3);
+        HAL_UART_DMAStop(&huart3);
     }
-    HAL_UART_Receive_IT(&huart3, data, data_size);
+    HAL_UART_Receive_DMA(&huart3, data, data_size);
     unsigned long timeout_rx = HAL_GetTick();
     while ((dxl_msg_complete == 0))
     {
@@ -794,7 +792,7 @@ servo_error_t servo_get_response(uint8_t id, uint8_t result[], int result_size, 
         if ((HAL_GetTick() - timeout_rx) == timeout_ms)
         {
             // reset reception
-            HAL_UART_AbortReceive_IT(&huart3);
+            HAL_UART_DMAStop(&huart3);
             return SERVO_ERROR_TIMEOUT;
         }
     }

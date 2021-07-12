@@ -1,39 +1,26 @@
 /******************************************************************************
  * @file gate
- * @brief Container gate
+ * @brief Service gate
  * @author Luos
- * @version 0.0.0
  ******************************************************************************/
-#include "gate.h"
-#include "json_mnger.h"
 #include <stdio.h>
-
-#ifdef USE_SERIAL
-#include "main.h"
-#endif
+#include <stdbool.h>
+#include "gate_config.h"
+#include "gate.h"
+#include "data_manager.h"
+#include "convert.h"
+#include "pipe_link.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#ifdef USE_SERIAL
-static int serial_write(char *data, int len);
-#endif
 
-#ifndef REV
-#define REV     \
-    {           \
-        1, 0, 0 \
-    }
-#endif
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *container;
-msg_t msg;
-uint8_t RxData;
-container_t *container_pointer;
-volatile msg_t pub_msg;
-volatile int pub = LUOS_PROTOCOL_NB;
+container_t *gate;
+char detection_ask      = 0;
+time_luos_t update_time = GATE_REFRESH_TIME_S;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -44,32 +31,10 @@ volatile int pub = LUOS_PROTOCOL_NB;
  ******************************************************************************/
 void Gate_Init(void)
 {
-
-    revision_t revision = {.unmap = REV};
-#ifdef USE_SERIAL
-    LL_USART_ClearFlag_IDLE(USART3);
-    LL_USART_EnableIT_IDLE(USART3);
-    NVIC_DisableIRQ(DMA1_Channel2_3_IRQn);
-    LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_3);
-    LL_DMA_DisableIT_HT(DMA1, LL_DMA_CHANNEL_3);
-    LL_DMA_DisableIT_TE(DMA1, LL_DMA_CHANNEL_3);
-    LL_DMA_SetM2MDstAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)get_json_buf());
-    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, JSON_BUFF_SIZE);
-    LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
-    LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
-    LL_USART_EnableDMAReq_RX(USART3);
-#endif
-    container = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
+    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    gate                = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
 }
 
-__attribute__((weak)) void json_send(char *json)
-{
-#ifdef USE_SERIAL
-    serial_write(json, strlen(json));
-#else
-    printf(json);
-#endif
-}
 /******************************************************************************
  * @brief loop must be call in project loop
  * @param None
@@ -77,99 +42,91 @@ __attribute__((weak)) void json_send(char *json)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-    static unsigned int keepAlive          = 0;
-    static volatile uint8_t detection_done = 0;
-    static char state                      = 0;
-    uint32_t tickstart                     = 0;
+#ifndef GATE_POLLING
+    static uint8_t first_conversion = 1;
+#endif
+    static short pipe_id              = 0;
+    static short previous_id          = -1;
+    static volatile bool gate_running = false;
+    static uint32_t last_time         = 0;
 
-    // Check if there is a dead container
-    if (container->ll_container->dead_container_spotted)
+    // Check the detection status.
+    if (RoutingTB_IDFromContainer(gate) == 0)
     {
-        char json[JSON_BUFF_SIZE] = {0};
-        exclude_container_to_json(container->ll_container->dead_container_spotted, json);
-        json_send(json);
-        container->ll_container->dead_container_spotted = 0;
-    }
-    if (detection_done)
-    {
-        char json[JSON_BUFF_SIZE] = {0};
-        state                     = !state;
-        format_data(container, json);
-        if (json[0] != '\0')
+        // We don't have any ID, meaning no detection occure or detection is occuring.
+        if (previous_id == -1)
         {
-            json_send(json);
-            keepAlive = 0;
+            // This is the start period, we have to make a detection.
+            // Be sure the network is powered up 20 ms before starting a detection
+#ifndef NODETECTION
+            if (Luos_GetSystick() > 20)
+            {
+                // No detection occure, do it
+                RoutingTB_DetectContainers(gate);
+#ifndef GATE_POLLING
+                first_conversion = 1;
+                update_time      = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
+#endif
+            }
+#endif
         }
         else
         {
-            if (keepAlive > 200)
+            // someone is making a detection, let it finish.
+            // reset the previous_id state to be ready to setup container at the end of detection
+            previous_id = 0;
+        }
+        pipe_id = 0;
+    }
+    else
+    {
+        // Network have been detected, We are good to go
+        if (pipe_id == 0)
+        {
+            // We dont have spotted any pipe yet. Try to find one
+            pipe_id = PipeLink_Find(gate);
+        }
+        if (gate_running && !detection_ask)
+        {
+            // Manage input and output data
+            if ((Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(update_time)) && (Luos_GetSystick() > last_time))
             {
-                sprintf(json, "{}\n");
-                json_send(json);
-            }
-            else
-            {
-                keepAlive++;
+                last_time = Luos_GetSystick();
+                DataManager_Run(gate);
+#ifndef GATE_POLLING
+                if (first_conversion == 1)
+                {
+                    // This is the first time we perform a convertion
+                    // Evaluate the time needed to convert all the data of this configuration and update refresh rate
+                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 1;
+                    update_time             = TimeOD_TimeFrom_ms(execution_time);
+                    // Update refresh rate for all services of the network
+                    DataManager_collect(gate);
+                    first_conversion = 0;
+                }
+#endif
             }
         }
-        collect_data(container);
-    }
-    if (pub != LUOS_PROTOCOL_NB)
-    {
-        Luos_SendMsg(container_pointer, (msg_t *)&pub_msg);
-        pub = LUOS_PROTOCOL_NB;
-    }
-    // check if serial input messages ready and convert it into a luos message
-    send_cmds(container);
-    if (detection_ask)
-    {
-        char json[JSON_BUFF_SIZE * 2] = {0};
-        RoutingTB_DetectContainers(container);
-        routing_table_to_json(json);
-        json_send(json);
-        detection_done = 1;
-        detection_ask  = 0;
-    }
-
-    tickstart = Luos_GetSystick();
-    while ((Luos_GetSystick() - tickstart) < get_delay())
-        ;
-}
-
-#ifdef USE_SERIAL
-void USART3_4_IRQHandler(void)
-{
-    // check if we receive an IDLE on usart3
-    if (LL_USART_IsActiveFlag_IDLE(USART3))
-    {
-        LL_USART_ClearFlag_IDLE(USART3);
-        // check DMA data
-        check_json(JSON_BUFF_SIZE - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_3) - 1);
-
-        // reset DMA
-        __disable_irq();
-        LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
-        char *addr = get_json_buf();
-        LL_DMA_SetM2MDstAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)addr);
-        LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, JSON_BUFF_SIZE);
-        LL_DMA_SetM2MSrcAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)&USART3->RDR);
-        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)addr);
-        LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
-        LL_USART_EnableDMAReq_RX(USART3);
-        __enable_irq();
-    }
-}
+        else
+        {
+            DataManager_RunPipeOnly(gate);
+        }
+        if (detection_ask)
+        {
+            // Run detection
+            RoutingTB_DetectContainers(gate);
+            pipe_id = PipeLink_Find(gate);
+            // Create data from container
+            Convert_RoutingTableData(gate);
+#ifndef GATE_POLLING
+            // Set update frequency
+            update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
+            DataManager_collect(gate);
+            last_time        = Luos_GetSystick() + (uint32_t)(TimeOD_TimeTo_ms(GATE_REFRESH_TIME_S) / 2);
+            first_conversion = 1;
 #endif
-
-#ifdef USE_SERIAL
-static int serial_write(char *data, int len)
-{
-    for (unsigned short i = 0; i < len; i++)
-    {
-        while (!LL_USART_IsActiveFlag_TXE(USART3))
-            ;
-        LL_USART_TransmitData8(USART3, *(data + i));
+            gate_running  = true;
+            detection_ask = 0;
+        }
     }
-    return 0;
 }
-#endif

@@ -1,34 +1,12 @@
-/*
- * convert.h
- *
- *  Created on: 20 juil. 2018
- *      Author: nicolasrabault
- */
-
+/******************************************************************************
+ * @file convert
+ * @brief Functions allowing to manage data convertion to a specific format
+ * @author Luos
+ ******************************************************************************/
 #ifndef CONVERT_H_
 #define CONVERT_H_
 
-#include <json_mnger.h>
-#include "cJSON.h"
-#include "container_structs.h"
 #include "luos.h"
-
-/*
- * Pid
- */
-typedef struct __attribute__((__packed__))
-{
-    union
-    {
-        struct __attribute__((__packed__))
-        {
-            float p;
-            float i;
-            float d;
-        };
-        unsigned char unmap[3 * sizeof(float)];
-    };
-} asserv_pid_t;
 
 /*
  * Servo
@@ -47,9 +25,22 @@ typedef struct
     };
 } servo_parameters_t;
 
-void json_to_msg(container_t *container, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *data);
-void msg_to_json(msg_t *msg, char *json);
-void routing_table_to_json(char *json);
-void exclude_container_to_json(int id, char *json);
+// Luos data to Luos messages convertion
+void Convert_DataToLuos(container_t *service, char *data);
+
+// Luos service information to Data convertion
+uint16_t Convert_StartData(char *data);
+uint16_t Convert_StartServiceData(char *data, char *alias);
+uint16_t Convert_MsgToData(msg_t *msg, char *data);
+uint16_t Convert_EndServiceData(char *data);
+void Convert_EndData(container_t *service, char *data, char *data_ptr);
+void Convert_VoidData(container_t *service);
+
+// Luos default information to Data convertion
+void Convert_AssertToData(container_t *service, uint16_t source, luos_assert_t assertion);
+void Convert_ExcludedContainerData(container_t *service);
+
+// Luos routing table information to Json convertion
+void Convert_RoutingTableData(container_t *service);
 
 #endif /* CONVERT_H_ */

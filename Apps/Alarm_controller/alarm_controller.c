@@ -49,7 +49,7 @@ typedef enum
  * Variables
  ******************************************************************************/
 container_t *app;
-volatile control_mode_t control_mode;
+volatile control_t control_app;
 uint8_t blink_state = 0;
 /*******************************************************************************
  * Function
@@ -63,9 +63,9 @@ static void AlarmController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void AlarmController_Init(void)
 {
-    revision_t revision = {.unmap = REV};
+    revision_t revision = {.Major = 0, .Minor = 1, .Build = 1};
     // By default this app running
-    control_mode.mode_control = PLAY;
+    control_app.flux = PLAY;
     // Create App
     app = Luos_CreateContainer(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
 }
@@ -148,7 +148,7 @@ void AlarmController_Loop(void)
         return;
     }
     // ********** non blocking blink ************
-    if (control_mode.mode_control == PLAY)
+    if (control_app.flux == PLAY)
     {
         if (blink_state)
         {
@@ -237,7 +237,7 @@ static void AlarmController_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == GYRO_3D)
     {
         // this is imu informations
-        if (control_mode.mode_control == PLAY)
+        if (control_app.flux == PLAY)
         {
             float value[3];
             memcpy(value, msg->data, msg->header.size);
@@ -250,7 +250,7 @@ static void AlarmController_MsgHandler(container_t *container, msg_t *msg)
     }
     if (msg->header.cmd == CONTROL)
     {
-        control_mode.unmap = msg->data[0];
+        ControlOD_ControlFromMsg(&control_app, msg);
         return;
     }
 }
