@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "bootloader_ex.h"
-#include "bootloader.h"
+#include "bootloader_core.h"
 #include "json_mnger.h"
 
 /*******************************************************************************
