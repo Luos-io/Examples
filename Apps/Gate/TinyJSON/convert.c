@@ -13,6 +13,7 @@
 #include "pipe_link.h"
 #include "data_manager.h"
 #include "tiny-json.h"
+#include "bootloader_ex.h"
 
 #define MAX_JSON_FIELDS 50
 
@@ -172,6 +173,15 @@ void Convert_DataToLuos(container_t *service, char *data)
         }
         return;
     }
+
+    // bootloader commands
+    json_t const *bootloader_json = json_getProperty(root, "bootloader");
+    if (json_getType(bootloader_json) == JSON_OBJ)
+    {
+        Bootloader_JsonToLuos(service, (char *)data, bootloader_json);
+        return;
+    }
+
     json_t const *containers = json_getProperty(root, "containers");
     // Get containers
     if (json_getType(containers) == JSON_OBJ)
