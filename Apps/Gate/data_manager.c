@@ -8,6 +8,7 @@
 #include "gate_config.h"
 #include "data_manager.h"
 #include "pipe_link.h"
+#include "bootloader_ex.h"
 
 static void DataManager_Format(container_t *service);
 
@@ -126,6 +127,12 @@ void DataManager_Format(container_t *service)
                         assertion.unmap[data_msg->header.size] = '\0';
                         Convert_AssertToData(service, data_msg->header.source, assertion);
                         i++;
+                        continue;
+                    }
+                    // check if a node send a bootloader message
+                    if (data_msg->header.cmd == BOOTLOADER_RESP)
+                    {
+                        Bootloader_LuosToJson(service, data_msg);
                         continue;
                     }
                     // Check if this is a message from pipe
