@@ -28,7 +28,7 @@ profile_state_t *power_switch = &power_switch_template.profile;
  ******************************************************************************/
 void PowerSwitch_Init(void)
 {
-    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // Profile configuration
     power_switch->access = WRITE_ONLY_ACCESS;
     TemplateState_CreateContainer(0, &power_switch_template, "power_switch", revision);

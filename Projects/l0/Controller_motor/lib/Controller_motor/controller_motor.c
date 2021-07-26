@@ -67,7 +67,7 @@ static void enable_motor(char state);
  ******************************************************************************/
 void ControllerMotor_Init(void)
 {
-    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // ******************* Analog measurement *******************
     // interesting tutorial about ADC : https://visualgdb.com/tutorials/arm/stm32/adc/
     ADC_ChannelConfTypeDef sConfig   = {0};

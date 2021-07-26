@@ -28,7 +28,7 @@ profile_state_t *button = &button_template.profile;
  ******************************************************************************/
 void Button_Init(void)
 {
-    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // Profile configuration
     button->access = READ_ONLY_ACCESS;
     // Container creation following template

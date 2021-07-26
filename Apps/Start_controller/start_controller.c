@@ -42,7 +42,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void StartController_Init(void)
 {
-    revision_t revision = {.Major = 0, .Minor = 1, .Build = 1};
+    revision_t revision = {.major = 0, .minor = 1, .build = 1};
     // By default this app running
     control_app.flux = PLAY;
     // Create App

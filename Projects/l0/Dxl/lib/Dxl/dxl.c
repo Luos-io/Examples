@@ -343,7 +343,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
 
 static void discover_dxl(void)
 {
-    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     int y               = 0;
     char alias[15];
     // Clear container table
