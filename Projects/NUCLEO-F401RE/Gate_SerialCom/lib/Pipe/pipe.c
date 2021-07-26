@@ -28,7 +28,7 @@ static void Pipe_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Pipe_Init(void)
 {
-    revision_t revision = {.Major = 0, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 0, .minor = 0, .build = 0};
     Luos_CreateContainer(Pipe_MsgHandler, PIPE_MOD, "Pipe_mod", revision);
     PipeCom_Init();
     P2L_StreamChannel = Stream_CreateStreamingChannel(PipeBuffer_GetP2LBuffer(), PIPE_TO_LUOS_BUFFER_SIZE, 1);

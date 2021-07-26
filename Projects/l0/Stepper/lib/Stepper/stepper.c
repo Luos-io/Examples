@@ -38,7 +38,7 @@ static void compute_speed(void);
  ******************************************************************************/
 void Stepper_Init(void)
 {
-    revision_t revision = {.Major = 1, .Minor = 0, .Build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
 
     HAL_GPIO_WritePin(MS1_GPIO_Port, MS1_Pin, 1);
     HAL_GPIO_WritePin(MS2_GPIO_Port, MS2_Pin, 1);
