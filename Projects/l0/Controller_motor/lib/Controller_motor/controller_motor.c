@@ -12,7 +12,7 @@
 #include "tim.h"
 #include "math.h"
 #include <float.h>
-#include "template_servo_motor.h"
+#include "profile_servo_motor.h"
 
 /*******************************************************************************
  * Definitions
@@ -30,9 +30,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-
-template_servo_motor_t servo_motor_template;
-profile_servo_motor_t *servo_motor = &servo_motor_template.profile;
+profile_servo_motor_t servo_motor;
 
 float errSpeedSum            = 0.0;
 float motion_target_position = 0.0;
@@ -131,7 +129,7 @@ void ControllerMotor_Init(void)
     // Start infinite ADC measurement
     HAL_ADC_Start_DMA(&ControllerMotor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************** Pwm settings *****************
-    servo_motor->sampling_period = TimeOD_TimeFrom_ms(SAMPLING_PERIOD_MS);
+    servo_motor.sampling_period = TimeOD_TimeFrom_ms(SAMPLING_PERIOD_MS);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1 | TIM_CHANNEL_2);
@@ -139,48 +137,48 @@ void ControllerMotor_Init(void)
     // ************** Default configuration settings *****************
     // motor mode by default
     enable_motor(0);
-    servo_motor->mode.mode_compliant        = 1;
-    servo_motor->mode.current               = 0;
-    servo_motor->mode.mode_power            = 1;
-    servo_motor->mode.mode_angular_position = 0;
-    servo_motor->mode.mode_angular_speed    = 0;
-    servo_motor->mode.mode_linear_position  = 0;
-    servo_motor->mode.mode_linear_speed     = 0;
-    servo_motor->mode.angular_position      = 1;
-    servo_motor->mode.angular_speed         = 0;
-    servo_motor->mode.linear_position       = 0;
-    servo_motor->mode.linear_speed          = 0;
+    servo_motor.mode.mode_compliant        = 1;
+    servo_motor.mode.current               = 0;
+    servo_motor.mode.mode_power            = 1;
+    servo_motor.mode.mode_angular_position = 0;
+    servo_motor.mode.mode_angular_speed    = 0;
+    servo_motor.mode.mode_linear_position  = 0;
+    servo_motor.mode.mode_linear_speed     = 0;
+    servo_motor.mode.angular_position      = 1;
+    servo_motor.mode.angular_speed         = 0;
+    servo_motor.mode.linear_position       = 0;
+    servo_motor.mode.linear_speed          = 0;
 
     // default motor configuration
-    servo_motor->motor_reduction = 131;
-    servo_motor->resolution      = 16;
-    servo_motor->wheel_diameter  = 0.100f;
+    servo_motor.motor_reduction = 131;
+    servo_motor.resolution      = 16;
+    servo_motor.wheel_diameter  = 0.100f;
 
     // default motor limits
-    servo_motor->motor.limit_ratio            = 100.0;
-    servo_motor->limit_angular_position[MINI] = -FLT_MAX;
-    servo_motor->limit_angular_position[MAXI] = FLT_MAX;
-    servo_motor->motor.limit_current          = 6.0;
+    servo_motor.motor.limit_ratio            = 100.0;
+    servo_motor.limit_angular_position[MINI] = -FLT_MAX;
+    servo_motor.limit_angular_position[MAXI] = FLT_MAX;
+    servo_motor.motor.limit_current          = 6.0;
 
     // Position PID default values
-    servo_motor->position_pid.p = 4.0;
-    servo_motor->position_pid.i = 0.02;
-    servo_motor->position_pid.d = 100.0;
+    servo_motor.position_pid.p = 4.0;
+    servo_motor.position_pid.i = 0.02;
+    servo_motor.position_pid.d = 100.0;
 
     // Speed PID default values
-    servo_motor->speed_pid.p = 0.1;
-    servo_motor->speed_pid.i = 0.1;
-    servo_motor->speed_pid.d = 0.0;
+    servo_motor.speed_pid.p = 0.1;
+    servo_motor.speed_pid.i = 0.1;
+    servo_motor.speed_pid.d = 0.0;
 
     // Control mode default values
-    servo_motor->control.unmap = 0; // PLAY and no REC
+    servo_motor.control.unmap = 0; // PLAY and no REC
 
     // Init streaming channels
-    servo_motor->trajectory  = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
-    servo_motor->measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
+    servo_motor.trajectory  = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
+    servo_motor.measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
     // ************** Service creation *****************
-    TemplateServoMotor_CreateService(ControllerMotor_MsgHandler, &servo_motor_template, "servo_motor", revision);
+    ProfileServo_CreateService(&servo_motor, ControllerMotor_MsgHandler, "servo_motor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -201,11 +199,11 @@ void ControllerMotor_Loop(void)
     // angular_posistion => degree
     int32_t encoder_count = (int16_t)TIM2->CNT;
     TIM2->CNT             = 0;
-    servo_motor->angular_position += AngularOD_PositionFrom_deg(((double)encoder_count / (double)(servo_motor->motor_reduction * servo_motor->resolution * 4)) * 360.0);
+    servo_motor.angular_position += AngularOD_PositionFrom_deg(((double)encoder_count / (double)(servo_motor.motor_reduction * servo_motor.resolution * 4)) * 360.0);
     // linear_distance => m
-    servo_motor->linear_position = LinearOD_PositionFrom_m((servo_motor->angular_position / 360.0) * M_PI * servo_motor->wheel_diameter);
+    servo_motor.linear_position = LinearOD_PositionFrom_m((servo_motor.angular_position / 360.0) * M_PI * servo_motor.wheel_diameter);
     // current => A
-    servo_motor->motor.current = ElectricOD_CurrentFrom_A(((((float)analog_input.current) * 3.3f) / 4096.0f) / 0.525f);
+    servo_motor.motor.current = ElectricOD_CurrentFrom_A(((((float)analog_input.current) * 3.3f) / 4096.0f) / 0.525f);
 
     if (deltatime >= ASSERV_PERIOD)
     {
@@ -217,7 +215,7 @@ void ControllerMotor_Loop(void)
             // Check if this is the first measurement. If it is init the table.
             if (!speed_bootstrap)
             {
-                last_angular_positions[nbr] = servo_motor->angular_position;
+                last_angular_positions[nbr] = servo_motor.angular_position;
             }
             else
             {
@@ -225,56 +223,56 @@ void ControllerMotor_Loop(void)
             }
         }
         speed_bootstrap                                  = 1;
-        last_angular_positions[SPEED_NB_INTEGRATION - 1] = servo_motor->angular_position;
-        servo_motor->angular_speed                       = AngularOD_SpeedFrom_deg_s((last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD);
+        last_angular_positions[SPEED_NB_INTEGRATION - 1] = servo_motor.angular_position;
+        servo_motor.angular_speed                        = AngularOD_SpeedFrom_deg_s((last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD);
         // linear_speed => m/seconds
-        servo_motor->linear_speed = LinearOD_Speedfrom_m_s((servo_motor->angular_speed / 360.0) * M_PI * servo_motor->wheel_diameter);
+        servo_motor.linear_speed = LinearOD_Speedfrom_m_s((servo_motor.angular_speed / 360.0) * M_PI * servo_motor.wheel_diameter);
         // ************* Limit clamping *************
-        if (motion_target_position < servo_motor->limit_angular_position[MINI])
+        if (motion_target_position < servo_motor.limit_angular_position[MINI])
         {
-            motion_target_position = servo_motor->limit_angular_position[MINI];
+            motion_target_position = servo_motor.limit_angular_position[MINI];
         }
-        if (motion_target_position > servo_motor->limit_angular_position[MAXI])
+        if (motion_target_position > servo_motor.limit_angular_position[MAXI])
         {
-            motion_target_position = servo_motor->limit_angular_position[MAXI];
+            motion_target_position = servo_motor.limit_angular_position[MAXI];
         }
         float currentfactor         = 1.0f;
-        currentfactor               = servo_motor->motor.limit_current / (servo_motor->motor.current * 2);
+        currentfactor               = servo_motor.motor.limit_current / (servo_motor.motor.current * 2);
         static float surpCurrentSum = 0.0;
-        float surpCurrent           = servo_motor->motor.current - servo_motor->motor.limit_current;
+        float surpCurrent           = servo_motor.motor.current - servo_motor.motor.limit_current;
         surpCurrentSum += surpCurrent;
         // If surpCurrentSum > 0 do a real coef
         if (surpCurrentSum > 0.0)
         {
-            currentfactor = servo_motor->motor.limit_current / (servo_motor->motor.limit_current + (surpCurrentSum / 1.5));
+            currentfactor = servo_motor.motor.limit_current / (servo_motor.motor.limit_current + (surpCurrentSum / 1.5));
         }
         else
         {
             surpCurrentSum = 0.0;
             currentfactor  = 1.0f;
         }
-        if (servo_motor->mode.mode_compliant)
+        if (servo_motor.mode.mode_compliant)
         {
             //Motor is compliant, only manage motor limits
-            if (servo_motor->angular_position < servo_motor->limit_angular_position[MINI])
+            if (servo_motor.angular_position < servo_motor.limit_angular_position[MINI])
             {
                 //re-enable motor to avoid bypassing motors limits
                 enable_motor(1);
-                set_ratio(100.0 * (servo_motor->limit_angular_position[MINI] - servo_motor->angular_position));
+                set_ratio(100.0 * (servo_motor.limit_angular_position[MINI] - servo_motor.angular_position));
             }
-            else if (servo_motor->angular_position > servo_motor->limit_angular_position[MAXI])
+            else if (servo_motor.angular_position > servo_motor.limit_angular_position[MAXI])
             {
                 enable_motor(1);
-                set_ratio(-100.0 * (servo_motor->angular_position - servo_motor->limit_angular_position[MAXI]));
+                set_ratio(-100.0 * (servo_motor.angular_position - servo_motor.limit_angular_position[MAXI]));
             }
             else
             {
                 enable_motor(0);
             }
         }
-        else if (servo_motor->mode.mode_power)
+        else if (servo_motor.mode.mode_power)
         {
-            set_ratio(servo_motor->motor.power * currentfactor);
+            set_ratio(servo_motor.motor.power * currentfactor);
         }
         else
         {
@@ -283,9 +281,9 @@ void ControllerMotor_Loop(void)
             float errAngle   = 0.0;
             float dErrAngle  = 0.0;
             float anglePower = 0.0;
-            if (servo_motor->mode.mode_angular_position || servo_motor->mode.mode_linear_position)
+            if (servo_motor.mode.mode_angular_position || servo_motor.mode.mode_linear_position)
             {
-                errAngle  = motion_target_position - servo_motor->angular_position;
+                errAngle  = motion_target_position - servo_motor.angular_position;
                 dErrAngle = (errAngle - lastErrAngle) / deltatime;
                 errAngleSum += (errAngle * (float)deltatime);
                 // Integral clamping
@@ -293,27 +291,27 @@ void ControllerMotor_Loop(void)
                     errAngleSum = -100.0;
                 if (errAngleSum > 100.0)
                     errAngleSum = 100;
-                anglePower   = (errAngle * servo_motor->position_pid.p) + (errAngleSum * servo_motor->position_pid.i) + (dErrAngle * servo_motor->position_pid.d); // raw PID command
+                anglePower   = (errAngle * servo_motor.position_pid.p) + (errAngleSum * servo_motor.position_pid.i) + (dErrAngle * servo_motor.position_pid.d); // raw PID command
                 lastErrAngle = errAngle;
             }
             // ************* speed asserv *************
             float errSpeed   = 0.0;
             float dErrSpeed  = 0.0;
             float speedPower = 0.0;
-            if (servo_motor->mode.mode_angular_speed || servo_motor->mode.mode_linear_speed)
+            if (servo_motor.mode.mode_angular_speed || servo_motor.mode.mode_linear_speed)
             {
-                errSpeed  = servo_motor->target_angular_speed - servo_motor->angular_speed;
+                errSpeed  = servo_motor.target_angular_speed - servo_motor.angular_speed;
                 dErrSpeed = (errSpeed - lastErrSpeed) / deltatime;
                 errSpeedSum += (errSpeed * (float)deltatime);
                 if (errSpeedSum < -100.0)
                     errSpeedSum = -100.0;
                 if (errSpeedSum > 100.0)
                     errSpeedSum = 100;
-                speedPower   = ((errSpeed * servo_motor->speed_pid.p) + (errSpeedSum * servo_motor->speed_pid.i) + (dErrSpeed * servo_motor->speed_pid.d)); // raw PID command
+                speedPower   = ((errSpeed * servo_motor.speed_pid.p) + (errSpeedSum * servo_motor.speed_pid.i) + (dErrSpeed * servo_motor.speed_pid.d)); // raw PID command
                 lastErrSpeed = errSpeed;
             }
             // ************* command merge *************
-            if (!(servo_motor->mode.mode_angular_position || servo_motor->mode.mode_linear_position) && (servo_motor->mode.mode_angular_speed || servo_motor->mode.mode_linear_speed))
+            if (!(servo_motor.mode.mode_angular_position || servo_motor.mode.mode_linear_position) && (servo_motor.mode.mode_angular_speed || servo_motor.mode.mode_linear_speed))
             {
                 // Speed control only
                 set_ratio(speedPower * currentfactor);
@@ -340,11 +338,11 @@ static void ControllerMotor_MsgHandler(service_t *service, msg_t *msg)
     }
     if (msg->header.cmd == PARAMETERS)
     {
-        enable_motor(servo_motor->mode.mode_compliant == 0);
-        if (servo_motor->mode.mode_compliant == 0)
+        enable_motor(servo_motor.mode.mode_compliant == 0);
+        if (servo_motor.mode.mode_compliant == 0)
         {
             __disable_irq();
-            last_position = servo_motor->angular_position;
+            last_position = servo_motor.angular_position;
             errAngleSum   = 0.0;
             lastErrAngle  = 0.0;
             __enable_irq();
@@ -362,11 +360,11 @@ static void ControllerMotor_MsgHandler(service_t *service, msg_t *msg)
     }
     if ((msg->header.cmd == ANGULAR_POSITION) || (msg->header.cmd == LINEAR_POSITION))
     {
-        if ((servo_motor->mode.mode_angular_position | servo_motor->mode.mode_angular_position) && (msg->header.size == sizeof(angular_position_t)))
+        if ((servo_motor.mode.mode_angular_position | servo_motor.mode.mode_angular_position) && (msg->header.size == sizeof(angular_position_t)))
         {
             // set the motor target angular position
             __disable_irq();
-            last_position = servo_motor->angular_position;
+            last_position = servo_motor.angular_position;
             __enable_irq();
         }
         return;
@@ -374,7 +372,7 @@ static void ControllerMotor_MsgHandler(service_t *service, msg_t *msg)
     if ((msg->header.cmd == ANGULAR_SPEED) || (msg->header.cmd == LINEAR_SPEED))
     {
         // set the motor target angular position
-        if ((servo_motor->mode.mode_angular_speed) | (servo_motor->mode.mode_linear_speed))
+        if ((servo_motor.mode.mode_angular_speed) | (servo_motor.mode.mode_linear_speed))
         {
             // reset the integral factor for speed
             errSpeedSum = 0.0;
@@ -388,46 +386,46 @@ void HAL_SYSTICK_Motor_Callback(void)
     // ************* motion planning *************
     // ****** recorder management *********
     static uint32_t last_rec_systick = 0;
-    if (servo_motor->control.rec && ((HAL_GetTick() - last_rec_systick) >= TimeOD_TimeTo_ms(servo_motor->sampling_period)))
+    if (servo_motor.control.rec && ((HAL_GetTick() - last_rec_systick) >= TimeOD_TimeTo_ms(servo_motor.sampling_period)))
     {
         // We have to save a sample of current position
-        Stream_PutSample(&servo_motor->measurement, (angular_position_t *)&servo_motor->angular_position, 1);
+        Stream_PutSample(&servo_motor.measurement, (angular_position_t *)&servo_motor.angular_position, 1);
         last_rec_systick = HAL_GetTick();
     }
     // ****** trajectory management *********
     static uint32_t last_systick = 0;
-    if (servo_motor->control.flux == STOP)
+    if (servo_motor.control.flux == STOP)
     {
-        Stream_ResetStreamingChannel(&servo_motor->trajectory);
+        Stream_ResetStreamingChannel(&servo_motor.trajectory);
     }
-    if ((Stream_GetAvailableSampleNB(&servo_motor->trajectory) > 0) && ((HAL_GetTick() - last_systick) >= TimeOD_TimeTo_ms(servo_motor->sampling_period)) && (servo_motor->control.flux == PLAY))
+    if ((Stream_GetAvailableSampleNB(&servo_motor.trajectory) > 0) && ((HAL_GetTick() - last_systick) >= TimeOD_TimeTo_ms(servo_motor.sampling_period)) && (servo_motor.control.flux == PLAY))
     {
-        if (servo_motor->mode.mode_linear_position == 1)
+        if (servo_motor.mode.mode_linear_position == 1)
         {
             linear_position_t linear_position_tmp;
-            Stream_GetSample(&servo_motor->trajectory, &linear_position_tmp, 1);
-            servo_motor->target_angular_position = (linear_position_tmp * 360.0) / (3.141592653589793 * servo_motor->wheel_diameter);
+            Stream_GetSample(&servo_motor.trajectory, &linear_position_tmp, 1);
+            servo_motor.target_angular_position = (linear_position_tmp * 360.0) / (3.141592653589793 * servo_motor.wheel_diameter);
         }
         else
         {
-            Stream_GetSample(&servo_motor->trajectory, (angular_position_t *)&servo_motor->target_angular_position, 1);
+            Stream_GetSample(&servo_motor.trajectory, (angular_position_t *)&servo_motor.target_angular_position, 1);
         }
         last_systick = HAL_GetTick();
     }
     // ****** Linear interpolation *********
-    if ((servo_motor->mode.mode_angular_position || servo_motor->mode.mode_linear_position)
-        && (servo_motor->mode.mode_angular_speed || servo_motor->mode.mode_linear_speed))
+    if ((servo_motor.mode.mode_angular_position || servo_motor.mode.mode_linear_position)
+        && (servo_motor.mode.mode_angular_speed || servo_motor.mode.mode_linear_speed))
     {
 
         // speed control and position control are enabled
         // we need to move target position following target speed
-        float increment = (fabs(servo_motor->target_angular_speed) / 1000.0);
-        if (fabs(servo_motor->target_angular_position - last_position) <= increment)
+        float increment = (fabs(servo_motor.target_angular_speed) / 1000.0);
+        if (fabs(servo_motor.target_angular_position - last_position) <= increment)
         {
             // target_position is the final target position
-            motion_target_position = servo_motor->target_angular_position;
+            motion_target_position = servo_motor.target_angular_position;
         }
-        else if ((servo_motor->target_angular_position - servo_motor->angular_position) < 0.0)
+        else if ((servo_motor.target_angular_position - servo_motor.angular_position) < 0.0)
         {
             motion_target_position = last_position - increment;
         }
@@ -439,7 +437,7 @@ void HAL_SYSTICK_Motor_Callback(void)
     else
     {
         // target_position is the final target position
-        motion_target_position = servo_motor->target_angular_position;
+        motion_target_position = servo_motor.target_angular_position;
     }
     last_position = motion_target_position;
 }
@@ -447,10 +445,10 @@ void HAL_SYSTICK_Motor_Callback(void)
 static void set_ratio(ratio_t ratio)
 {
     // limit power value
-    if (ratio < -servo_motor->motor.limit_ratio)
-        ratio = -servo_motor->motor.limit_ratio;
-    if (ratio > servo_motor->motor.limit_ratio)
-        ratio = servo_motor->motor.limit_ratio;
+    if (ratio < -servo_motor.motor.limit_ratio)
+        ratio = -servo_motor.motor.limit_ratio;
+    if (ratio > servo_motor.motor.limit_ratio)
+        ratio = servo_motor.motor.limit_ratio;
     // transform power ratio to timer value
     uint16_t pulse;
     if (RatioOD_RatioToPercent(ratio) > 0.0)
