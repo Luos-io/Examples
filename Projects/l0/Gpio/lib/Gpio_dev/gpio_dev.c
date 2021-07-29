@@ -7,8 +7,8 @@
 #include <gpio_dev.h>
 #include "main.h"
 #include "analog.h"
-#include "template_state.h"
-#include "template_voltage.h"
+#include "profile_state.h"
+#include "profile_voltage.h"
 
 /*******************************************************************************
  * Definitions
@@ -45,11 +45,8 @@ enum
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-template_state_t gpio_template[GPIO_NB];
-profile_state_t *gpio[GPIO_NB];
-
-template_voltage_t analog_template[ANALOG_NB];
-profile_voltage_t *analog[ANALOG_NB];
+profile_state_t gpio[GPIO_NB];
+profile_voltage_t analog[ANALOG_NB];
 
 /*******************************************************************************
  * Function
@@ -155,43 +152,33 @@ void GpioDev_Init(void)
     // Start infinite ADC measurement
     HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
     // ************* Analog services creation *******************
-    // Link user varaibles to template profile.
-    for (uint8_t i = 0; i < ANALOG_NB; i++)
-    {
-        analog[i] = &analog_template[i].profile;
-    }
     // Profile configuration
-    analog[P1]->access = READ_ONLY_ACCESS;
-    analog[P7]->access = READ_ONLY_ACCESS;
-    analog[P8]->access = READ_ONLY_ACCESS;
-    analog[P9]->access = READ_ONLY_ACCESS;
-    // Service creation following template
-    TemplateVoltage_CreateService(0, &analog_template[P1], "analog_read_P1", revision);
-    TemplateVoltage_CreateService(0, &analog_template[P7], "analog_read_P7", revision);
-    TemplateVoltage_CreateService(0, &analog_template[P8], "analog_read_P8", revision);
-    TemplateVoltage_CreateService(0, &analog_template[P9], "analog_read_P9", revision);
+    analog[P1].access = READ_ONLY_ACCESS;
+    analog[P7].access = READ_ONLY_ACCESS;
+    analog[P8].access = READ_ONLY_ACCESS;
+    analog[P9].access = READ_ONLY_ACCESS;
+    // Service creation following profile
+    ProfileVoltage_CreateService(&analog[P1], 0, "analog_read_P1", revision);
+    ProfileVoltage_CreateService(&analog[P7], 0, "analog_read_P7", revision);
+    ProfileVoltage_CreateService(&analog[P8], 0, "analog_read_P8", revision);
+    ProfileVoltage_CreateService(&analog[P9], 0, "analog_read_P9", revision);
 
     // ************* Digital services creation *******************
-    // Link user varaibles to template profile.
-    for (uint8_t i = 0; i < GPIO_NB; i++)
-    {
-        gpio[i] = &gpio_template[i].profile;
-    }
     // Input profile configuration
-    gpio[P5]->access = READ_ONLY_ACCESS;
-    gpio[P6]->access = READ_ONLY_ACCESS;
-    // Service creation following template
-    TemplateState_CreateService(0, &gpio_template[P5], "digit_read_P5", revision);
-    TemplateState_CreateService(0, &gpio_template[P6], "digit_read_P6", revision);
+    gpio[P5].access = READ_ONLY_ACCESS;
+    gpio[P6].access = READ_ONLY_ACCESS;
+    // Service creation following profile
+    ProfileState_CreateService(&gpio[P5], 0, "digit_read_P5", revision);
+    ProfileState_CreateService(&gpio[P6], 0, "digit_read_P6", revision);
 
     // Output profile configuration
-    gpio[P2]->access = WRITE_ONLY_ACCESS;
-    gpio[P3]->access = WRITE_ONLY_ACCESS;
-    gpio[P4]->access = WRITE_ONLY_ACCESS;
-    // Service creation following template, for this one we one to use a target evnet using callback
-    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P2], "digit_write_P2", revision);
-    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P3], "digit_write_P3", revision);
-    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P4], "digit_write_P4", revision);
+    gpio[P2].access = WRITE_ONLY_ACCESS;
+    gpio[P3].access = WRITE_ONLY_ACCESS;
+    gpio[P4].access = WRITE_ONLY_ACCESS;
+    // Service creation following profile, for this one we one to use a target evnet using callback
+    ProfileState_CreateService(&gpio[P2], rx_digit_write_cb, "digit_write_P2", revision);
+    ProfileState_CreateService(&gpio[P3], rx_digit_write_cb, "digit_write_P3", revision);
+    ProfileState_CreateService(&gpio[P4], rx_digit_write_cb, "digit_write_P4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -201,14 +188,14 @@ void GpioDev_Init(void)
 void GpioDev_Loop(void)
 {
     // update gpio input
-    gpio[P5]->state = (bool)(HAL_GPIO_ReadPin(P5_GPIO_Port, P5_Pin) > 0);
-    gpio[P6]->state = (bool)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
+    gpio[P5].state = (bool)(HAL_GPIO_ReadPin(P5_GPIO_Port, P5_Pin) > 0);
+    gpio[P6].state = (bool)(HAL_GPIO_ReadPin(P6_GPIO_Port, P6_Pin) > 0);
 
     // update analog measurement
-    analog[P1]->voltage = ((float)analog_input.p1 / 4096.0f) * 3.3f;
-    analog[P7]->voltage = ((float)analog_input.p7 / 4096.0f) * 3.3f;
-    analog[P8]->voltage = ((float)analog_input.p8 / 4096.0f) * 3.3f;
-    analog[P9]->voltage = ((float)analog_input.p9 / 4096.0f) * 3.3f;
+    analog[P1].voltage = ((float)analog_input.p1 / 4096.0f) * 3.3f;
+    analog[P7].voltage = ((float)analog_input.p7 / 4096.0f) * 3.3f;
+    analog[P8].voltage = ((float)analog_input.p8 / 4096.0f) * 3.3f;
+    analog[P9].voltage = ((float)analog_input.p9 / 4096.0f) * 3.3f;
 }
 
 static void rx_digit_write_cb(service_t *service, msg_t *msg)
@@ -216,8 +203,8 @@ static void rx_digit_write_cb(service_t *service, msg_t *msg)
     if (msg->header.cmd == IO_STATE)
     {
         // update pin state on event
-        HAL_GPIO_WritePin(P2_GPIO_Port, P2_Pin, gpio[P2]->state);
-        HAL_GPIO_WritePin(P3_GPIO_Port, P3_Pin, gpio[P3]->state);
-        HAL_GPIO_WritePin(P4_GPIO_Port, P4_Pin, gpio[P4]->state);
+        HAL_GPIO_WritePin(P2_GPIO_Port, P2_Pin, gpio[P2].state);
+        HAL_GPIO_WritePin(P3_GPIO_Port, P3_Pin, gpio[P3].state);
+        HAL_GPIO_WritePin(P4_GPIO_Port, P4_Pin, gpio[P4].state);
     }
 }

@@ -44,6 +44,7 @@
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
 #define MAX_SERVICE_NUMBER 9
+#define MAX_PROFILE_NUMBER 9
 #define MSG_BUFFER_SIZE    512
 
 /*******************************************************************************
