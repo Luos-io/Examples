@@ -31,8 +31,8 @@ void Button_Init(void)
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // Profile configuration
     button->access = READ_ONLY_ACCESS;
-    // Container creation following template
-    TemplateState_CreateContainer(0, &button_template, "button", revision);
+    // Service creation following template
+    TemplateState_CreateService(0, &button_template, "button", revision);
 }
 
 /******************************************************************************

@@ -8,7 +8,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 [![](https://img.shields.io/badge/LinkedIn-Share-0077B5?style=social&logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fluos-io)
 
 # Gate app
-Basic Serial Gate container working with USB shield and Raspberry Pi.
+Basic Serial Gate service working with USB shield and Raspberry Pi.
 
 # Link project
 This app is linked to the [Gate project](../../Projects/Gate).

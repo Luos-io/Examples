@@ -23,7 +23,7 @@ char have_to_tare      = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Load_MsgHandler(container_t *container, msg_t *msg);
+static void Load_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -35,7 +35,7 @@ void Load_Init(void)
     revision_t revision = {.unmap = REV};
 
     hx711_init(128);
-    Luos_CreateContainer(Load_MsgHandler, LOAD_TYPE, "load_mod", revision);
+    Luos_CreateService(Load_MsgHandler, LOAD_TYPE, "load", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -56,12 +56,12 @@ void Load_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Load_MsgHandler(container_t *container, msg_t *msg)
+static void Load_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
@@ -72,7 +72,7 @@ static void Load_MsgHandler(container_t *container, msg_t *msg)
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
             ForceOD_ForceToMsg((force_t *)&load, &pub_msg);
-            Luos_SendMsg(container, &pub_msg);
+            Luos_SendMsg(service, &pub_msg);
             new_data_ready = 0;
         }
         return;

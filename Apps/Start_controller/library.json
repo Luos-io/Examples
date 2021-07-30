@@ -1,6 +1,6 @@
 {
     "name": "start_controller",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST,cJSON",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,service,ST,cJSON",
     "description": "A simple button disabling an alarm",
     "version": "0.1.1",
     "authors": {

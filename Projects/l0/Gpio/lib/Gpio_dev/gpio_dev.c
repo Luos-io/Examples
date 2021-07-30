@@ -54,7 +54,7 @@ profile_voltage_t *analog[ANALOG_NB];
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void rx_digit_write_cb(container_t *container, msg_t *msg);
+static void rx_digit_write_cb(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -154,7 +154,7 @@ void GpioDev_Init(void)
     HAL_NVIC_DisableIRQ(DMA1_Channel1_IRQn);
     // Start infinite ADC measurement
     HAL_ADC_Start_DMA(&GpioDev_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input_t) / sizeof(uint32_t));
-    // ************* Analog containers creation *******************
+    // ************* Analog services creation *******************
     // Link user varaibles to template profile.
     for (uint8_t i = 0; i < ANALOG_NB; i++)
     {
@@ -165,13 +165,13 @@ void GpioDev_Init(void)
     analog[P7]->access = READ_ONLY_ACCESS;
     analog[P8]->access = READ_ONLY_ACCESS;
     analog[P9]->access = READ_ONLY_ACCESS;
-    // Container creation following template
-    TemplateVoltage_CreateContainer(0, &analog_template[P1], "analog_read_P1", revision);
-    TemplateVoltage_CreateContainer(0, &analog_template[P7], "analog_read_P7", revision);
-    TemplateVoltage_CreateContainer(0, &analog_template[P8], "analog_read_P8", revision);
-    TemplateVoltage_CreateContainer(0, &analog_template[P9], "analog_read_P9", revision);
+    // Service creation following template
+    TemplateVoltage_CreateService(0, &analog_template[P1], "analog_read_P1", revision);
+    TemplateVoltage_CreateService(0, &analog_template[P7], "analog_read_P7", revision);
+    TemplateVoltage_CreateService(0, &analog_template[P8], "analog_read_P8", revision);
+    TemplateVoltage_CreateService(0, &analog_template[P9], "analog_read_P9", revision);
 
-    // ************* Digital containers creation *******************
+    // ************* Digital services creation *******************
     // Link user varaibles to template profile.
     for (uint8_t i = 0; i < GPIO_NB; i++)
     {
@@ -180,18 +180,18 @@ void GpioDev_Init(void)
     // Input profile configuration
     gpio[P5]->access = READ_ONLY_ACCESS;
     gpio[P6]->access = READ_ONLY_ACCESS;
-    // Container creation following template
-    TemplateState_CreateContainer(0, &gpio_template[P5], "digit_read_P5", revision);
-    TemplateState_CreateContainer(0, &gpio_template[P6], "digit_read_P6", revision);
+    // Service creation following template
+    TemplateState_CreateService(0, &gpio_template[P5], "digit_read_P5", revision);
+    TemplateState_CreateService(0, &gpio_template[P6], "digit_read_P6", revision);
 
     // Output profile configuration
     gpio[P2]->access = WRITE_ONLY_ACCESS;
     gpio[P3]->access = WRITE_ONLY_ACCESS;
     gpio[P4]->access = WRITE_ONLY_ACCESS;
-    // Container creation following template, for this one we one to use a target evnet using callback
-    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P2], "digit_write_P2", revision);
-    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P3], "digit_write_P3", revision);
-    TemplateState_CreateContainer(rx_digit_write_cb, &gpio_template[P4], "digit_write_P4", revision);
+    // Service creation following template, for this one we one to use a target evnet using callback
+    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P2], "digit_write_P2", revision);
+    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P3], "digit_write_P3", revision);
+    TemplateState_CreateService(rx_digit_write_cb, &gpio_template[P4], "digit_write_P4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -211,7 +211,7 @@ void GpioDev_Loop(void)
     analog[P9]->voltage = ((float)analog_input.p9 / 4096.0f) * 3.3f;
 }
 
-static void rx_digit_write_cb(container_t *container, msg_t *msg)
+static void rx_digit_write_cb(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {

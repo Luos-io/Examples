@@ -1,7 +1,7 @@
 {
     "name": "motion_driver_6.12",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST,motion_driver_6.12,motion_driver,motion,driver",
-    "description": "Luos turn your embedded system as containers like microservice do it in software.",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,service,ST,motion_driver_6.12,motion_driver,motion,driver",
+    "description": "Luos turn your embedded system as services like microservice do it in software.",
     "version": "0.7.0",
     "licence": "MIT",
     "build": {

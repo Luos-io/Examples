@@ -16,13 +16,13 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *container[MOTORNUMBER];
+service_t *service[MOTORNUMBER];
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void MotorDC_MsgHandler(container_t *container, msg_t *msg);
-static int find_id(container_t *my_container);
-static void set_power(container_t *container, ratio_t power);
+static void MotorDC_MsgHandler(service_t *service, msg_t *msg);
+static int find_id(service_t *my_service);
+static void set_power(service_t *service, ratio_t power);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -36,8 +36,8 @@ void MotorDC_Init(void)
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-    container[0] = Luos_CreateContainer(MotorDC_MsgHandler, MOTOR_TYPE, "DC_motor1_mod", revision);
-    container[1] = Luos_CreateContainer(MotorDC_MsgHandler, MOTOR_TYPE, "DC_motor2_mod", revision);
+    service[0] = Luos_CreateService(MotorDC_MsgHandler, MOTOR_TYPE, "DC_motor1", revision);
+    service[1] = Luos_CreateService(MotorDC_MsgHandler, MOTOR_TYPE, "DC_motor2", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -48,35 +48,35 @@ void MotorDC_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg manager call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg manager call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void MotorDC_MsgHandler(container_t *container, msg_t *msg)
+static void MotorDC_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == RATIO)
     {
         // set the motor position
         ratio_t power;
         RatioOD_RatioFromMsg(&power, msg);
-        set_power(container, power);
+        set_power(service, power);
         return;
     }
 }
 
-static int find_id(container_t *my_container)
+static int find_id(service_t *my_service)
 {
     int i = 0;
     for (i = 0; i <= MOTORNUMBER; i++)
     {
-        if ((int)my_container == (int)container[i])
+        if ((int)my_service == (int)service[i])
             return i;
     }
     return i;
 }
 
-static void set_power(container_t *container, ratio_t power)
+static void set_power(service_t *service, ratio_t power)
 {
     // limit power value
     if (power < -100.0)
@@ -93,7 +93,7 @@ static void set_power(container_t *container, ratio_t power)
     {
         pulse = (uint16_t)(-power * 50.0);
     }
-    switch (find_id(container))
+    switch (find_id(service))
     {
         case 0:
             if (power > 0.0)

@@ -10,10 +10,10 @@
 #include "pipe_link.h"
 #include "bootloader_ex.h"
 
-static void DataManager_Format(container_t *service);
+static void DataManager_Format(service_t *service);
 
 // This function will manage msg collection from sensors
-void DataManager_collect(container_t *service)
+void DataManager_collect(service_t *service)
 {
     msg_t update_msg;
 #ifdef GATE_POLLING
@@ -23,14 +23,14 @@ void DataManager_collect(container_t *service)
 #else
     update_msg.header.target_mode = IDACK;
 #endif
-    // ask containers to publish datas
-    for (uint8_t i = 1; i <= RoutingTB_GetLastContainer(); i++)
+    // ask services to publish datas
+    for (uint8_t i = 1; i <= RoutingTB_GetLastService(); i++)
     {
-        // Check if this container is a sensor
-        if ((RoutingTB_ContainerIsSensor(RoutingTB_TypeFromID(i))) || (RoutingTB_TypeFromID(i) >= LUOS_LAST_TYPE))
+        // Check if this service is a sensor
+        if ((RoutingTB_ServiceIsSensor(RoutingTB_TypeFromID(i))) || (RoutingTB_TypeFromID(i) >= LUOS_LAST_TYPE))
         {
 #ifdef GATE_POLLING
-            // This container is a sensor so create a msg and send it
+            // This service is a sensor so create a msg and send it
             update_msg.header.target = i;
             Luos_SendMsg(service, &update_msg);
 #ifdef GATE_TIMEOUT
@@ -60,15 +60,15 @@ void DataManager_collect(container_t *service)
 }
 
 // This function manage entirely data conversion
-void DataManager_Run(container_t *service)
+void DataManager_Run(service_t *service)
 {
-    // Check if there is a dead container.
-    if (service->ll_container->dead_container_spotted)
+    // Check if there is a dead service.
+    if (service->ll_service->dead_service_spotted)
     {
-        Convert_ExcludedContainerData(service);
-        RoutingTB_RemoveOnRoutingTable(service->ll_container->dead_container_spotted);
-        // Reset spotted dead container
-        service->ll_container->dead_container_spotted = 0;
+        Convert_ExcludedServiceData(service);
+        RoutingTB_RemoveOnRoutingTable(service->ll_service->dead_service_spotted);
+        // Reset spotted dead service
+        service->ll_service->dead_service_spotted = 0;
     }
 #ifdef GATE_POLLING
     DataManager_collect(service);
@@ -76,10 +76,10 @@ void DataManager_Run(container_t *service)
     DataManager_Format(service);
 }
 // This function manage only commande incoming from pipe
-void DataManager_RunPipeOnly(container_t *service)
+void DataManager_RunPipeOnly(service_t *service)
 {
     msg_t *data_msg;
-    while (Luos_ReadFromContainer(service, PipeLink_GetId(), &data_msg) == SUCCEED)
+    while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED)
     {
         // This message is a command from pipe
         // Convert the received data into Luos commands
@@ -99,8 +99,8 @@ void DataManager_RunPipeOnly(container_t *service)
     }
 }
 
-// This function will create a data string for containers datas
-void DataManager_Format(container_t *service)
+// This function will create a data string for services datas
+void DataManager_Format(service_t *service)
 {
     static uint32_t FirstNoReceptionDate = 0;
     char data[GATE_BUFF_SIZE];
@@ -111,13 +111,13 @@ void DataManager_Format(container_t *service)
     {
         // Init the data string
         data_ptr += Convert_StartData(data_ptr);
-        // loop into containers.
+        // loop into services.
         int i = 0;
         while (RoutingTB_GetMode(i) != CLEAR)
         {
-            if (RoutingTB_GetMode(i) == CONTAINER)
+            if (RoutingTB_GetMode(i) == SERVICE)
             {
-                if (Luos_ReadFromContainer(service, RoutingTB_GetContainerID(i), &data_msg) == SUCCEED)
+                if (Luos_ReadFromService(service, RoutingTB_GetServiceID(i), &data_msg) == SUCCEED)
                 {
                     // check if this is an assert
                     if (data_msg->header.cmd == ASSERT)
@@ -151,22 +151,22 @@ void DataManager_Format(container_t *service)
                                     Convert_DataToLuos(service, data_cmd);
                                 }
                             }
-                        } while (Luos_ReadFromContainer(service, PipeLink_GetId(), &data_msg) == SUCCEED);
+                        } while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED);
                         i++;
                         continue;
                     }
                     // get the source of this message
-                    // Create container description
+                    // Create service description
                     char *alias;
                     alias = RoutingTB_AliasFromId(data_msg->header.source);
                     LUOS_ASSERT(alias != 0);
                     data_ok = true;
                     data_ptr += Convert_StartServiceData(data_ptr, alias);
-                    // Convert all msgs from this container into data
+                    // Convert all msgs from this service into data
                     do
                     {
                         data_ptr += Convert_MsgToData(data_msg, data_ptr);
-                    } while (Luos_ReadFromContainer(service, data_msg->header.source, &data_msg) == SUCCEED);
+                    } while (Luos_ReadFromService(service, data_msg->header.source, &data_msg) == SUCCEED);
 
                     data_ptr += Convert_EndServiceData(data_ptr);
                     LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);

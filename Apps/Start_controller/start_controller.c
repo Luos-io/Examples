@@ -23,7 +23,7 @@ typedef enum
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *app;
+service_t *app;
 volatile control_t control_app;
 uint8_t lock           = 1;
 uint8_t last_btn_state = 0;
@@ -33,7 +33,7 @@ uint8_t init           = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void StartController_MsgHandler(container_t *container, msg_t *msg);
+static void StartController_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -46,7 +46,7 @@ void StartController_Init(void)
     // By default this app running
     control_app.flux = PLAY;
     // Create App
-    app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
+    app = Luos_CreateService(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -59,10 +59,10 @@ void StartController_Loop(void)
     static uint32_t switch_date    = 0;
     static uint8_t animation_state = 0;
     // ********** hot plug management ************
-    // Check if we have done the first init or if container Id have changed
-    if (previous_id != RoutingTB_IDFromContainer(app))
+    // Check if we have done the first init or if service Id have changed
+    if (previous_id != RoutingTB_IDFromService(app))
     {
-        if (RoutingTB_IDFromContainer(app) == 0)
+        if (RoutingTB_IDFromService(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -72,19 +72,19 @@ void StartController_Loop(void)
                 if (HAL_GetTick() > 1000)
                 {
                     // No detection occure, do it
-                    RoutingTB_DetectContainers(app);
+                    RoutingTB_DetectServices(app);
                 }
             }
             else
             {
                 // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup container at the end of detection
+                // reset the init state to be ready to setup service at the end of detection
                 previous_id = 0;
             }
         }
         else
         {
-            // Make containers configurations
+            // Make services configurations
             int id = RoutingTB_IDFromAlias("lock");
             if (id > 0)
             {
@@ -92,14 +92,14 @@ void StartController_Loop(void)
                 msg.header.target      = id;
                 msg.header.target_mode = IDACK;
                 // Setup auto update each UPDATE_PERIOD_MS on button
-                // This value is resetted on all container at each detection
+                // This value is resetted on all service at each detection
                 // It's important to setting it each time.
                 time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
                 TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
                 Luos_SendMsg(app, &msg);
             }
-            previous_id = RoutingTB_IDFromContainer(app);
+            previous_id = RoutingTB_IDFromService(app);
         }
         return;
     }
@@ -178,7 +178,7 @@ void StartController_Loop(void)
         switch_date = HAL_GetTick();
         animation_state++;
     }
-    // This part is a start stop animation using available containers
+    // This part is a start stop animation using available services
     if (((HAL_GetTick() - switch_date) > 100) & (animation_state == 1))
     {
         // 100ms after button turn of light and horn
@@ -227,12 +227,12 @@ void StartController_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void StartController_MsgHandler(container_t *container, msg_t *msg)
+static void StartController_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {

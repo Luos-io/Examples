@@ -15,7 +15,7 @@
 #include "cJSON.h"
 
 static void Convert_SplitFloat(float value, int32_t *integerPart, uint32_t *decimalPart);
-static void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data);
+static void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data);
 
 /*******************************************************************************
  * Tools
@@ -49,7 +49,7 @@ void Convert_SplitFloat(float value, int32_t *integerPart, uint32_t *decimalPart
  * Luos Json data to Luos messages convertion
  ******************************************************************************/
 // Convert a Json into messages
-void Convert_DataToLuos(container_t *service, char *data)
+void Convert_DataToLuos(service_t *service, char *data)
 {
     msg_t msg;
 
@@ -133,8 +133,8 @@ void Convert_DataToLuos(container_t *service, char *data)
                     // We have to reinit the number of dropped message before start
                     uint8_t drop_back                                = service->node_statistics->memory.msg_drop_number;
                     service->node_statistics->memory.msg_drop_number = 0;
-                    uint8_t retry_back                               = *service->ll_container->ll_stat.max_retry;
-                    *service->ll_container->ll_stat.max_retry        = 0;
+                    uint8_t retry_back                               = *service->ll_service->ll_stat.max_retry;
+                    *service->ll_service->ll_stat.max_retry          = 0;
                     // send this message multiple time
                     int i = 0;
                     for (i = 0; i < repetition; i++)
@@ -148,13 +148,13 @@ void Convert_DataToLuos(container_t *service, char *data)
                     failed_msg_nb = service->node_statistics->memory.msg_drop_number;
                     // Get the number of retry
                     // If retry == max retry number consider all messages as lost
-                    if (*service->ll_container->ll_stat.max_retry >= NBR_RETRY)
+                    if (*service->ll_service->ll_stat.max_retry >= NBR_RETRY)
                     {
                         // We failed to transmit this message count all as failed
                         failed_msg_nb = repetition;
                     }
                     service->node_statistics->memory.msg_drop_number = drop_back;
-                    *service->ll_container->ll_stat.max_retry        = retry_back;
+                    *service->ll_service->ll_stat.max_retry          = retry_back;
                     uint32_t end_systick                             = Luos_GetSystick();
                     float data_rate                                  = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
                     float fail_rate                                  = (float)failed_msg_nb * 100.0 / (float)repetition;
@@ -177,16 +177,16 @@ void Convert_DataToLuos(container_t *service, char *data)
         cJSON_Delete(root);
         return;
     }
-    cJSON *containers = cJSON_GetObjectItem(root, "containers");
-    // Get containers
-    if (cJSON_IsObject(containers))
+    cJSON *services = cJSON_GetObjectItem(root, "services");
+    // Get services
+    if (cJSON_IsObject(services))
     {
-        // Loop into containers
-        cJSON *container_jsn = containers->child;
-        while (container_jsn != NULL)
+        // Loop into services
+        cJSON *service_jsn = services->child;
+        while (service_jsn != NULL)
         {
             // Create msg
-            char *alias = container_jsn->string;
+            char *alias = service_jsn->string;
             uint16_t id = RoutingTB_IDFromAlias(alias);
             if (id == 65535)
             {
@@ -196,17 +196,17 @@ void Convert_DataToLuos(container_t *service, char *data)
                 return;
             }
             luos_type_t type = RoutingTB_TypeFromID(id);
-            Convert_JsonToMsg(service, id, type, container_jsn, &msg, (char *)data);
-            // Get next container
-            container_jsn = container_jsn->next;
+            Convert_JsonToMsg(service, id, type, service_jsn, &msg, (char *)data);
+            // Get next service
+            service_jsn = service_jsn->next;
         }
         cJSON_Delete(root);
         return;
     }
     cJSON_Delete(root);
 }
-// Create msg from a container json data
-void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
+// Create msg from a service json data
+void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, cJSON *jobj, msg_t *msg, char *bin_data)
 {
     time_luos_t time;
     float data = 0.0;
@@ -613,8 +613,8 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cJSO
 // This function start a Json structure and return the string size.
 uint16_t Convert_StartData(char *data)
 {
-    memcpy(data, "{\"containers\":{", sizeof("{\"containers\":{"));
-    return (sizeof("{\"containers\":{") - 1);
+    memcpy(data, "{\"services\":{", sizeof("{\"services\":{"));
+    return (sizeof("{\"services\":{") - 1);
 }
 // This function start a Service into a Json structure and return the string size.
 uint16_t Convert_StartServiceData(char *data, char *alias)
@@ -721,7 +721,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                         stat->node_stat.memory.buffer_occupation_ratio,
                         stat->node_stat.memory.msg_drop_number,
                         stat->node_stat.max_loop_time_ms,
-                        stat->container_stat.max_retry);
+                        stat->service_stat.max_retry);
             }
             break;
         case IO_STATE:
@@ -880,12 +880,12 @@ uint16_t Convert_EndServiceData(char *data)
         // remove the last "," char
         *(--data) = '\0';
     }
-    // End the container section
+    // End the service section
     memcpy(data, "},", sizeof("},"));
     return sizeof("},") - 2;
 }
 // This function start a Json structure and return the string size.
-void Convert_EndData(container_t *service, char *data, char *data_ptr)
+void Convert_EndData(service_t *service, char *data, char *data_ptr)
 {
     // remove the last "," char
     *(--data_ptr) = '\0';
@@ -896,7 +896,7 @@ void Convert_EndData(container_t *service, char *data, char *data_ptr)
     PipeLink_Send(service, data, data_ptr - data);
 }
 // If there is no message receive for sometime we need to send void Json for synchronization.
-void Convert_VoidData(container_t *service)
+void Convert_VoidData(service_t *service)
 {
     char data[sizeof("{}\n")] = "{}\n";
     PipeLink_Send(service, data, sizeof("{}\n"));
@@ -906,7 +906,7 @@ void Convert_VoidData(container_t *service)
  * Luos default information to Json convertion
  ******************************************************************************/
 // This function generate a Json about assertion and send it.
-void Convert_AssertToData(container_t *service, uint16_t source, luos_assert_t assertion)
+void Convert_AssertToData(service_t *service, uint16_t source, luos_assert_t assertion)
 {
     char assert_json[512];
     sprintf(assert_json, "{\"assert\":{\"node_id\":%d,\"file\":\"%s\",\"line\":%d}}\n", source, assertion.file, (unsigned int)assertion.line);
@@ -914,10 +914,10 @@ void Convert_AssertToData(container_t *service, uint16_t source, luos_assert_t a
     PipeLink_Send(service, assert_json, strlen(assert_json));
 }
 // This function generate a Json about excluded services and send it.
-void Convert_ExcludedContainerData(container_t *service)
+void Convert_ExcludedServiceData(service_t *service)
 {
     char json[300];
-    sprintf(json, "{\"dead_container\":\"%s\"", RoutingTB_AliasFromId(service->ll_container->dead_container_spotted));
+    sprintf(json, "{\"dead_service\":\"%s\"", RoutingTB_AliasFromId(service->ll_service->dead_service_spotted));
     sprintf(json, "%s}\n", json);
     // Send the message to pipe
     PipeLink_Send(service, json, strlen(json));
@@ -935,18 +935,18 @@ void node_assert(char *file, uint32_t line)
 /*******************************************************************************
  * Luos routing table information to Json convertion
  ******************************************************************************/
-void Convert_RoutingTableData(container_t *service)
+void Convert_RoutingTableData(service_t *service)
 {
     // Init the json string
     char json[GATE_BUFF_SIZE * 2];
     char *json_ptr = json;
     sprintf(json_ptr, "{\"routing_table\":[");
     json_ptr += strlen(json_ptr);
-    // loop into containers.
+    // loop into services.
     routing_table_t *routing_table = RoutingTB_Get();
     int last_entry                 = RoutingTB_GetLastEntry();
     int i                          = 0;
-    //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only containers.
+    //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only services.
     while (i < last_entry)
     {
         if (routing_table[i].mode == NODE)
@@ -980,15 +980,15 @@ void Convert_RoutingTableData(container_t *service)
                     break;
                 }
             }
-            sprintf(json_ptr, "],\"containers\":[");
+            sprintf(json_ptr, "],\"services\":[");
             json_ptr += strlen(json_ptr);
             i++;
-            // Containers loop
+            // Services loop
             while (i < last_entry)
             {
-                if (routing_table[i].mode == CONTAINER)
+                if (routing_table[i].mode == SERVICE)
                 {
-                    // Create container description
+                    // Create service description
                     sprintf(json_ptr, "{\"type\":\"%s\",\"id\":%d,\"alias\":\"%s\"},", RoutingTB_StringFromType(routing_table[i].type), routing_table[i].id, routing_table[i].alias);
                     json_ptr += strlen(json_ptr);
                     i++;

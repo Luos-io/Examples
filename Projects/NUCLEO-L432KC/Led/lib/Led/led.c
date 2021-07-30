@@ -18,7 +18,7 @@ uint8_t Led_last_state = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Led_MsgHandler(container_t *container, msg_t *msg);
+static void Led_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -28,7 +28,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
 void Led_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(Led_MsgHandler, STATE_TYPE, "led_mod", revision);
+    Luos_CreateService(Led_MsgHandler, STATE_TYPE, "led", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -39,12 +39,12 @@ void Led_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg manager callback when a msg receive for this container
- * @param Container destination
+ * @brief Msg manager callback when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Led_MsgHandler(container_t *container, msg_t *msg)
+static void Led_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
@@ -55,7 +55,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg)
         pub_msg.header.target      = msg->header.source;
         pub_msg.header.size        = sizeof(char);
         pub_msg.data[0]            = HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin);
-        Luos_SendMsg(container, &pub_msg);
+        Luos_SendMsg(service, &pub_msg);
         return;
     }
     else if (msg->header.cmd == IO_STATE)

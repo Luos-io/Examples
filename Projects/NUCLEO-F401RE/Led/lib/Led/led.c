@@ -18,7 +18,7 @@ uint8_t Led_last_state = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Led_MsgHandler(container_t *container, msg_t *msg);
+static void Led_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -28,7 +28,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
 void Led_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(Led_MsgHandler, STATE_TYPE, "led_mod", revision);
+    Luos_CreateService(Led_MsgHandler, STATE_TYPE, "led", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -39,12 +39,12 @@ void Led_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg manager callback when a msg receive for this container
- * @param Container destination
+ * @brief Msg manager callback when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Led_MsgHandler(container_t *container, msg_t *msg)
+static void Led_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {

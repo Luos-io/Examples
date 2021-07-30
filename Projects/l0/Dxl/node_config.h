@@ -37,15 +37,15 @@
 *******************************************************************************
  *    Define                | Default Value              | Description
  *    :---------------------|------------------------------------------------------
- *    MAX_CONTAINER_NUMBER  |              5             | Service number in the node
+ *    MAX_SERVICE_NUMBER    |              5             | Service number in the node
  *    MSG_BUFFER_SIZE       | 3*SIZE_MSG_MAX (405 Bytes) | Size in byte of the Luos buffer TX and RX
- *    MAX_MSG_NB            |   2*MAX_CONTAINER_NUMBER   | Message number in Luos buffer
+ *    MAX_MSG_NB            |   2*MAX_SERVICE_NUMBER   | Message number in Luos buffer
  *    NBR_PORT              |              2             | PTP Branch number Max 8
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
-#define MAX_CONTAINER_NUMBER 10
-#define MAX_MSG_NB           30
-#define MSG_BUFFER_SIZE      512
+#define MAX_SERVICE_NUMBER 10
+#define MAX_MSG_NB         30
+#define MSG_BUFFER_SIZE    512
 
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION

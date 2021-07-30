@@ -24,10 +24,10 @@
  ******************************************************************************/
 /******************************************************************************
  * @brief Process node responses and send them to the Host
- * @param container pointer, luos message
+ * @param service pointer, luos message
  * @return None
  ******************************************************************************/
-void Bootloader_LuosToJson(container_t *container, msg_t *msg)
+void Bootloader_LuosToJson(service_t *service, msg_t *msg)
 {
     char boot_json[64]   = "\0";
     uint8_t response_cmd = msg->data[0];
@@ -63,15 +63,15 @@ void Bootloader_LuosToJson(container_t *container, msg_t *msg)
     }
 
     // Send the message to pipe
-    PipeLink_Send(container, boot_json, strlen(boot_json));
+    PipeLink_Send(service, boot_json, strlen(boot_json));
 }
 
 /******************************************************************************
  * @brief Process Host commands and send them to the node
- * @param container pointer, binary data and json object received 
+ * @param service pointer, binary data and json object received 
  * @return None
  ******************************************************************************/
-void Bootloader_JsonToLuos(container_t *container, char *bin_data, json_t const *bootloader_json)
+void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *bootloader_json)
 {
     if (json_getType(json_getProperty(bootloader_json, "command")) == JSON_OBJ)
     {
@@ -94,14 +94,14 @@ void Bootloader_JsonToLuos(container_t *container, char *bin_data, json_t const 
                 // send start command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_START;
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             case BOOTLOADER_STOP:
                 // send stop command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_STOP;
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             case BOOTLOADER_READY:
@@ -112,14 +112,14 @@ void Bootloader_JsonToLuos(container_t *container, char *bin_data, json_t const 
                 boot_msg.header.size = sizeof(char) + sizeof(uint32_t);
                 boot_msg.data[0]     = BOOTLOADER_READY;
                 memcpy(&(boot_msg.data[1]), &binary_size, sizeof(uint32_t));
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             case BOOTLOADER_ERASE:
                 // send erase command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_ERASE;
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             case BOOTLOADER_BIN_CHUNK:
@@ -142,7 +142,7 @@ void Bootloader_JsonToLuos(container_t *container, char *bin_data, json_t const 
                 {
                     boot_msg.header.size = binary_size + sizeof(char);
                     memcpy(&(boot_msg.data[1]), &bin_data[i], binary_size);
-                    Luos_SendMsg(container, &boot_msg);
+                    Luos_SendMsg(service, &boot_msg);
                 }
                 break;
 
@@ -150,14 +150,14 @@ void Bootloader_JsonToLuos(container_t *container, char *bin_data, json_t const 
                 // send bin end command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_BIN_END;
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             case BOOTLOADER_CRC_TEST:
                 // send crc test command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_CRC_TEST;
-                Luos_SendMsg(container, &boot_msg);
+                Luos_SendMsg(service, &boot_msg);
                 break;
 
             default:

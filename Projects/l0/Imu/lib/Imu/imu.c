@@ -18,14 +18,14 @@
 volatile uint32_t hal_timestamp = 0;
 unsigned char *mpl_key          = (unsigned char *)"eMPL 5.1";
 
-container_t *container_pointer;
+service_t *service_pointer;
 volatile msg_t pub_msg;
 volatile int pub = LUOS_PROTOCOL_NB;
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Imu_MsgHandler(container_t *container, msg_t *msg);
+static void Imu_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -37,7 +37,7 @@ void Imu_Init(void)
     revision_t revision = {.unmap = REV};
     mpu_setup();
     hal.report.quat = 1;
-    Luos_CreateContainer(Imu_MsgHandler, IMU_TYPE, "Imu_mod", revision);
+    Luos_CreateService(Imu_MsgHandler, IMU_TYPE, "Imu", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -228,30 +228,30 @@ void Imu_Loop(void)
     }
     if (hal.update_request == 1)
     {
-        read_from_mpl(container_pointer);
+        read_from_mpl(service_pointer);
         hal.update_request = 0;
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Imu_MsgHandler(container_t *container, msg_t *msg)
+static void Imu_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
         // fill the message infos
         hal.update_request = 1;
-        container_pointer  = container;
+        service_pointer    = service;
         hal.source_id      = msg->header.source;
         pub                = LUOS_PROTOCOL_NB;
         return;
     }
     if (msg->header.cmd == PARAMETERS)
     {
-        container_pointer = container;
+        service_pointer = service;
         // fill the message infos
         memcpy(&hal.report, msg->data, sizeof(short));
         pub = LUOS_PROTOCOL_NB;
@@ -271,7 +271,7 @@ void HAL_SYSTICK_Callback(void)
 {
     if (pub != LUOS_PROTOCOL_NB)
     {
-        Luos_SendMsg(container_pointer, (msg_t *)&pub_msg);
+        Luos_SendMsg(service_pointer, (msg_t *)&pub_msg);
         pub = LUOS_PROTOCOL_NB;
     }
 }

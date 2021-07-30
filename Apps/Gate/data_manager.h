@@ -22,12 +22,12 @@ extern char detection_ask;
  ******************************************************************************/
 
 // This function will manage msg collection from sensors
-void DataManager_collect(container_t *service);
+void DataManager_collect(service_t *service);
 
 // This function manage entirely data conversion
-void DataManager_Run(container_t *service);
+void DataManager_Run(service_t *service);
 
 // This function manage only commande incoming from pipe
-void DataManager_RunPipeOnly(container_t *service);
+void DataManager_RunPipeOnly(service_t *service);
 
 #endif /* DATA_MNGR_H */

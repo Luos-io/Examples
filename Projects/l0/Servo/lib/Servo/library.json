@@ -1,6 +1,6 @@
 {
     "name": "Servo",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,service,ST",
     "description": "a simple Servo",
     "version": "0.7.0",
     "authors": {

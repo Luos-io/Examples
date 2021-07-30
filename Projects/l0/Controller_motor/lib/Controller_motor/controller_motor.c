@@ -56,7 +56,7 @@ char speed_bootstrap = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg);
+static void ControllerMotor_MsgHandler(service_t *service, msg_t *msg);
 static void set_ratio(ratio_t ratio);
 static void enable_motor(char state);
 
@@ -179,8 +179,8 @@ void ControllerMotor_Init(void)
     servo_motor->trajectory  = Stream_CreateStreamingChannel((float *)trajectory_buf, BUFFER_SIZE, sizeof(float));
     servo_motor->measurement = Stream_CreateStreamingChannel((float *)measurement_buf, BUFFER_SIZE, sizeof(float));
 
-    // ************** Container creation *****************
-    TemplateServoMotor_CreateContainer(ControllerMotor_MsgHandler, &servo_motor_template, "servo_motor", revision);
+    // ************** Service creation *****************
+    TemplateServoMotor_CreateService(ControllerMotor_MsgHandler, &servo_motor_template, "servo_motor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -327,12 +327,12 @@ void ControllerMotor_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg manager call by luos when container created a msg receive
- * @param Container send msg
+ * @brief Msg manager call by luos when service created a msg receive
+ * @param Service send msg
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
+static void ControllerMotor_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {

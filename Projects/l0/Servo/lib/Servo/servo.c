@@ -21,15 +21,15 @@ typedef struct
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static container_t *container_serv[SERVONUMBER];
+static service_t *service_serv[SERVONUMBER];
 volatile servo_t servo[SERVONUMBER];
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Servo_MsgHandler(container_t *container, msg_t *msg);
+static void Servo_MsgHandler(service_t *service, msg_t *msg);
 static void set_position(uint8_t motor_id);
-static uint8_t find_id(container_t *my_container);
+static uint8_t find_id(service_t *my_service);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -40,10 +40,10 @@ void Servo_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
-    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo1_mod", revision);
-    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo2_mod", revision);
-    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo3_mod", revision);
-    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo4_mod", revision);
+    service_serv[0] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo1", revision);
+    service_serv[1] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo2", revision);
+    service_serv[2] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo3", revision);
+    service_serv[3] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo4", revision);
     servo_parameters_t param;
     param.max_angle      = 180.0;
     param.max_pulse_time = 1.5 / 1000.0;
@@ -66,17 +66,17 @@ void Servo_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Servo_MsgHandler(container_t *container, msg_t *msg)
+static void Servo_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == ANGULAR_POSITION)
     {
         // set the motor position
-        uint8_t motor_id = find_id(container);
+        uint8_t motor_id = find_id(service);
         AngularOD_PositionFromMsg((angular_position_t *)&servo[motor_id].angle, msg);
         set_position(motor_id);
         return;
@@ -84,7 +84,7 @@ static void Servo_MsgHandler(container_t *container, msg_t *msg)
     if (msg->header.cmd == PARAMETERS)
     {
         // set the servo parameters
-        uint8_t motor_id = find_id(container);
+        uint8_t motor_id = find_id(service);
         memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
         set_position(motor_id);
         return;
@@ -148,12 +148,12 @@ static void set_position(uint8_t motor_id)
     }
 }
 
-static uint8_t find_id(container_t *my_container)
+static uint8_t find_id(service_t *my_service)
 {
     uint8_t i = 0;
     for (i = 0; i <= SERVONUMBER; i++)
     {
-        if ((int)my_container == (int)container_serv[i])
+        if ((int)my_service == (int)service_serv[i])
             return i;
     }
     return i;

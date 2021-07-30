@@ -24,7 +24,7 @@ volatile illuminance_t lux = 0.0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void LightSensor_MsgHandler(container_t *container, msg_t *msg);
+static void LightSensor_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -101,8 +101,8 @@ void LightSensor_Init(void)
 
     // ******************* Analog measurement *******************
 
-    // ******************* container creation *******************
-    Luos_CreateContainer(LightSensor_MsgHandler, LIGHT_TYPE, "light_sensor_mod", revision);
+    // ******************* service creation *******************
+    Luos_CreateService(LightSensor_MsgHandler, LIGHT_TYPE, "light_sensor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -114,12 +114,12 @@ void LightSensor_Loop(void)
     lux = (((float)analog_input.light / 4096.0f) * 3.3f) * 1000.0f;
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void LightSensor_MsgHandler(container_t *container, msg_t *msg)
+static void LightSensor_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
@@ -128,7 +128,7 @@ static void LightSensor_MsgHandler(container_t *container, msg_t *msg)
         pub_msg.header.target_mode = ID;
         pub_msg.header.target      = msg->header.source;
         IlluminanceOD_IlluminanceToMsg((illuminance_t *)&lux, &pub_msg);
-        Luos_SendMsg(container, &pub_msg);
+        Luos_SendMsg(service, &pub_msg);
         return;
     }
 }

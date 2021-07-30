@@ -27,16 +27,16 @@ typedef struct
     unsigned char id;
 } dxl_t;
 
-template_servo_motor_t dxl_motor_template[MAX_CONTAINER_NUMBER];
-dxl_t dxl[MAX_CONTAINER_NUMBER];
+template_servo_motor_t dxl_motor_template[MAX_SERVICE_NUMBER];
+dxl_t dxl[MAX_SERVICE_NUMBER];
 
 // volatile char publish = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Dxl_MsgHandler(container_t *container, msg_t *msg);
+static void Dxl_MsgHandler(service_t *service, msg_t *msg);
 static void discover_dxl(void);
-static int find_id(container_t *container);
+static int find_id(service_t *service);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -56,8 +56,8 @@ void Dxl_Init(void)
  ******************************************************************************/
 void Dxl_Loop(void)
 {
-    static int index                                = 0;
-    static uint32_t last_temp[MAX_CONTAINER_NUMBER] = {0};
+    static int index                              = 0;
+    static uint32_t last_temp[MAX_SERVICE_NUMBER] = {0};
     //check motor values one by one
     // Get motor info
     if (dxl[index].id == 0)
@@ -92,14 +92,14 @@ void Dxl_Loop(void)
     index++;
 }
 /******************************************************************************
- * @brief Msg handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Dxl_MsgHandler(container_t *container, msg_t *msg)
+static void Dxl_MsgHandler(service_t *service, msg_t *msg)
 {
-    int index = find_id(container);
+    int index = find_id(service);
 
     if (msg->header.cmd == GET_CMD)
     {
@@ -160,7 +160,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
                 }
                 else
                 {
-                    // void container will use this mode
+                    // void service will use this mode
                     switch (val)
                     {
                         case 9600:
@@ -177,16 +177,16 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
                     }
                 }
                 servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, baud, DXL_TIMEOUT);
-                // Set actual baudrate into container
+                // Set actual baudrate into service
                 servo_init(val);
             }
         }
         if (reg == FACTORY_RESET_REG)
         {
-            // check if it is a void container or not
+            // check if it is a void service or not
             if (dxl[0].id == 0)
             {
-                //If it is a void container send it to general call
+                //If it is a void service send it to general call
                 servo_factory_reset(SERVO_BROADCAST_ID, DXL_TIMEOUT);
             }
             else
@@ -346,11 +346,11 @@ static void discover_dxl(void)
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
     int y               = 0;
     char alias[15];
-    // Clear container table
-    Luos_ContainersClear();
+    // Clear service table
+    Luos_ServicesClear();
     // Clear local tables
-    memset((void *)dxl, 0, sizeof(dxl_t) * MAX_CONTAINER_NUMBER);
-    for (int i = 0; i < MAX_CONTAINER_NUMBER; i++)
+    memset((void *)dxl, 0, sizeof(dxl_t) * MAX_SERVICE_NUMBER);
+    for (int i = 0; i < MAX_SERVICE_NUMBER; i++)
     {
         dxl[i].dxl_motor = &dxl_motor_template[i].profile;
         memset(dxl[i].dxl_motor, 0, sizeof(profile_servo_motor_t));
@@ -399,8 +399,8 @@ static void discover_dxl(void)
 
             dxl[y].id = i;
 
-            // ************** Container creation *****************
-            TemplateServoMotor_CreateContainer(Dxl_MsgHandler, &dxl_motor_template[y], alias, revision);
+            // ************** Service creation *****************
+            TemplateServoMotor_CreateService(Dxl_MsgHandler, &dxl_motor_template[y], alias, revision);
             servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl[y].model, DXL_TIMEOUT);
             // put a delay on motor response
             servo_set_raw_byte(i, SERVO_REGISTER_RETURN_DELAY_TIME, 10, DXL_TIMEOUT);
@@ -414,17 +414,17 @@ static void discover_dxl(void)
     HAL_NVIC_EnableIRQ(USART3_4_IRQn);
     if (y == 0)
     {
-        // there is no motor detected, create a Void container to only manage l0 things
-        Luos_CreateContainer(Dxl_MsgHandler, VOID_TYPE, "void_dxl", revision);
+        // there is no motor detected, create a Void service to only manage l0 things
+        Luos_CreateService(Dxl_MsgHandler, VOID_TYPE, "void_dxl", revision);
     }
 }
 
-static int find_id(container_t *container)
+static int find_id(service_t *service)
 {
     int i = 0;
-    for (i = 0; i <= MAX_CONTAINER_NUMBER; i++)
+    for (i = 0; i <= MAX_SERVICE_NUMBER; i++)
     {
-        if ((int)container->template_context == (int)&dxl_motor_template[i])
+        if ((int)service->template_context == (int)&dxl_motor_template[i])
             return i;
     }
     return i;

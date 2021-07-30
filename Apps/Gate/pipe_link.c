@@ -9,7 +9,7 @@
 short pipe_id                             = 0;
 streaming_channel_t *pipeStreamingChannel = 0;
 
-void PipeLink_Send(container_t *service, void *data, uint32_t size)
+void PipeLink_Send(service_t *service, void *data, uint32_t size)
 {
     LUOS_ASSERT(pipe_id > 0);
     msg_t msg;
@@ -32,7 +32,7 @@ void PipeLink_Send(container_t *service, void *data, uint32_t size)
     }
 }
 
-short PipeLink_Find(container_t *service)
+short PipeLink_Find(service_t *service)
 {
     pipe_id = RoutingTB_IDFromType(PIPE_TYPE);
     if (pipe_id > 0)
@@ -48,7 +48,7 @@ short PipeLink_Find(container_t *service)
             ;
     }
     // Check if pipe is localhost
-    if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_container->id))
+    if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_service->id))
     {
         // This is a localhost pipe
         // Ask for a Streaming channel
@@ -63,7 +63,7 @@ short PipeLink_Find(container_t *service)
     return pipe_id;
 }
 
-void PipeLink_Reset(container_t *service)
+void PipeLink_Reset(service_t *service)
 {
     LUOS_ASSERT(pipe_id > 0);
     msg_t msg;

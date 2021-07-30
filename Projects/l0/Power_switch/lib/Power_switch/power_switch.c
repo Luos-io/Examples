@@ -31,7 +31,7 @@ void PowerSwitch_Init(void)
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // Profile configuration
     power_switch->access = WRITE_ONLY_ACCESS;
-    TemplateState_CreateContainer(0, &power_switch_template, "power_switch", revision);
+    TemplateState_CreateService(0, &power_switch_template, "power_switch", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

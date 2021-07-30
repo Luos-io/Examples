@@ -28,7 +28,7 @@ volatile int current_step_nb   = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Stepper_MsgHandler(container_t *container, msg_t *msg);
+static void Stepper_MsgHandler(service_t *service, msg_t *msg);
 static void compute_speed(void);
 
 /******************************************************************************
@@ -76,8 +76,8 @@ void Stepper_Init(void)
 
     compute_speed();
 
-    // ************** Container creation *****************
-    TemplateServoMotor_CreateContainer(Stepper_MsgHandler, &stepper_motor_template, "stepper_motor", revision);
+    // ************** Service creation *****************
+    TemplateServoMotor_CreateService(Stepper_MsgHandler, &stepper_motor_template, "stepper_motor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -91,12 +91,12 @@ void Stepper_Loop(void)
     target_step_nb   = (int)(stepper_motor->target_angular_position / degPerStep);
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Stepper_MsgHandler(container_t *container, msg_t *msg)
+static void Stepper_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == PARAMETERS)
     {

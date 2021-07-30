@@ -18,7 +18,7 @@
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Button_MsgHandler(container_t *container, msg_t *msg);
+static void Button_MsgHandler(service_t *service, msg_t *msg);
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
@@ -27,7 +27,7 @@ static void Button_MsgHandler(container_t *container, msg_t *msg);
 void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(Button_MsgHandler, STATE_TYPE, "button_mod", revision);
+    Luos_CreateService(Button_MsgHandler, STATE_TYPE, "button", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -38,12 +38,12 @@ void Button_Loop(void)
 {
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Button_MsgHandler(container_t *container, msg_t *msg)
+static void Button_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
@@ -54,7 +54,7 @@ static void Button_MsgHandler(container_t *container, msg_t *msg)
         pub_msg.header.target      = msg->header.source;
         pub_msg.header.size        = sizeof(char);
         pub_msg.data[0]            = HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
-        Luos_SendMsg(container, &pub_msg);
+        Luos_SendMsg(service, &pub_msg);
         return;
     }
 }

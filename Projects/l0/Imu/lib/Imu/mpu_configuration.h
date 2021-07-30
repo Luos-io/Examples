@@ -91,6 +91,6 @@ struct platform_data_s
 #define COMPASS_ENABLED 1
 
 void mpu_setup(void);
-void read_from_mpl(container_t *container);
+void read_from_mpl(service_t *service);
 
 #endif /* __MPU_SETUP_H__ */

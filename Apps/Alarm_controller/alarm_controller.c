@@ -48,13 +48,13 @@ typedef enum
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *app;
+service_t *app;
 volatile control_t control_app;
 uint8_t blink_state = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void AlarmController_MsgHandler(container_t *container, msg_t *msg);
+static void AlarmController_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -67,7 +67,7 @@ void AlarmController_Init(void)
     // By default this app running
     control_app.flux = PLAY;
     // Create App
-    app = Luos_CreateContainer(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
+    app = Luos_CreateService(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -82,10 +82,10 @@ void AlarmController_Loop(void)
     static uint32_t last_blink = 0;
 
     // ********** hot plug management ************
-    // Check if we have done the first init or if container Id have changed
-    if (previous_id != RoutingTB_IDFromContainer(app))
+    // Check if we have done the first init or if service Id have changed
+    if (previous_id != RoutingTB_IDFromService(app))
     {
-        if (RoutingTB_IDFromContainer(app) == 0)
+        if (RoutingTB_IDFromService(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -95,19 +95,19 @@ void AlarmController_Loop(void)
                 if (HAL_GetTick() > 1500)
                 {
                     // No detection occure, do it
-                    RoutingTB_DetectContainers(app);
+                    RoutingTB_DetectServices(app);
                 }
             }
             else
             {
                 // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup container at the end of detection
+                // reset the init state to be ready to setup service at the end of detection
                 previous_id = 0;
             }
         }
         else
         {
-            // Make containers configurations
+            // Make services configurations
             // try to find a RGB led and set light transition time just to be fancy
             int id = RoutingTB_IDFromType(COLOR_TYPE);
             if (id > 0)
@@ -136,14 +136,14 @@ void AlarmController_Loop(void)
                 Luos_SendMsg(app, &msg);
 
                 // Setup auto update each UPDATE_PERIOD_MS on imu
-                // This value is resetted on all container at each detection
+                // This value is resetted on all service at each detection
                 // It's important to setting it each time.
                 time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
                 TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
                 Luos_SendMsg(app, &msg);
             }
-            previous_id = RoutingTB_IDFromContainer(app);
+            previous_id = RoutingTB_IDFromService(app);
         }
         return;
     }
@@ -227,12 +227,12 @@ void AlarmController_Loop(void)
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void AlarmController_MsgHandler(container_t *container, msg_t *msg)
+static void AlarmController_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GYRO_3D)
     {
