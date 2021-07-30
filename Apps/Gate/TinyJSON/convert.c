@@ -524,7 +524,7 @@ void Convert_JsonToMsg(container_t *service, uint16_t id, luos_type_t type, cons
     }
     // update time
     item = json_getProperty(jobj, "update_time");
-    if ((json_getType(item) == JSON_REAL) & (type != GATE_MOD))
+    if ((json_getType(item) == JSON_REAL) & (type != GATE_TYPE))
     {
         // this should be a function because it is frequently used
         time = TimeOD_TimeFrom_s((float)json_getReal(item));

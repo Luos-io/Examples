@@ -34,7 +34,7 @@ void PipeLink_Send(container_t *service, void *data, uint32_t size)
 
 short PipeLink_Find(container_t *service)
 {
-    pipe_id = RoutingTB_IDFromType(PIPE_MOD);
+    pipe_id = RoutingTB_IDFromType(PIPE_TYPE);
     if (pipe_id > 0)
     {
         //We find one, ask it to auto-update at 1000Hz

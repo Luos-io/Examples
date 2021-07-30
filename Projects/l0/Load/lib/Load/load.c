@@ -35,7 +35,7 @@ void Load_Init(void)
     revision_t revision = {.unmap = REV};
 
     hx711_init(128);
-    Luos_CreateContainer(Load_MsgHandler, LOAD_MOD, "load_mod", revision);
+    Luos_CreateContainer(Load_MsgHandler, LOAD_TYPE, "load_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -63,7 +63,7 @@ void Load_Loop(void)
  ******************************************************************************/
 static void Load_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         if (new_data_ready)
         {

@@ -40,10 +40,10 @@ void Servo_Init(void)
 {
     revision_t revision = {.unmap = REV};
 
-    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo1_mod", revision);
-    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo2_mod", revision);
-    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo3_mod", revision);
-    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_MOD, "servo4_mod", revision);
+    container_serv[0] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo1_mod", revision);
+    container_serv[1] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo2_mod", revision);
+    container_serv[2] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo3_mod", revision);
+    container_serv[3] = Luos_CreateContainer(Servo_MsgHandler, SERVO_TYPE, "servo4_mod", revision);
     servo_parameters_t param;
     param.max_angle      = 180.0;
     param.max_pulse_time = 1.5 / 1000.0;

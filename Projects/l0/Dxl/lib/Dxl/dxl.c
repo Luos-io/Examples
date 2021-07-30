@@ -101,7 +101,7 @@ static void Dxl_MsgHandler(container_t *container, msg_t *msg)
 {
     int index = find_id(container);
 
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         // if a temperature have been send stop temperature transmission to make it one shot
         dxl[index].dxl_motor->motor.mode.temperature = 0;
@@ -415,7 +415,7 @@ static void discover_dxl(void)
     if (y == 0)
     {
         // there is no motor detected, create a Void container to only manage l0 things
-        Luos_CreateContainer(Dxl_MsgHandler, VOID_MOD, "void_dxl", revision);
+        Luos_CreateContainer(Dxl_MsgHandler, VOID_TYPE, "void_dxl", revision);
     }
 }
 

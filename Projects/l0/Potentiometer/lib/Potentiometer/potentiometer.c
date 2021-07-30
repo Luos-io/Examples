@@ -99,7 +99,7 @@ void Potentiometer_Init(void)
     HAL_ADC_Start_DMA(&Potentiometer_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 
     // ******************* container creation *******************
-    Luos_CreateContainer(Potentiometer_MsgHandler, ANGLE_MOD, "potentiometer_mod", revision);
+    Luos_CreateContainer(Potentiometer_MsgHandler, ANGLE_TYPE, "potentiometer_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -118,7 +118,7 @@ void Potentiometer_Loop(void)
  ******************************************************************************/
 static void Potentiometer_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         msg_t pub_msg;
         // fill the message infos

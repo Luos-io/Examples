@@ -130,7 +130,7 @@ void StartController_Loop(void)
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id           = RoutingTB_IDFromType(COLOR_MOD);
+        id           = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -202,7 +202,7 @@ void StartController_Loop(void)
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id                 = RoutingTB_IDFromType(COLOR_MOD);
+        int id                 = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -238,7 +238,7 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg)
     {
         if (control_app.flux == PLAY)
         {
-            if (RoutingTB_TypeFromID(msg->header.source) == STATE_MOD)
+            if (RoutingTB_TypeFromID(msg->header.source) == STATE_TYPE)
             {
                 // this is the button reply we have filter it to manage monostability
                 if ((!last_btn_state) & (last_btn_state != msg->data[0]))

@@ -334,7 +334,7 @@ void ControllerMotor_Loop(void)
  ******************************************************************************/
 static void ControllerMotor_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         return;
     }

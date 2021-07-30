@@ -28,7 +28,7 @@ static void Led_MsgHandler(container_t *container, msg_t *msg);
 void Led_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(Led_MsgHandler, STATE_MOD, "led_mod", revision);
+    Luos_CreateContainer(Led_MsgHandler, STATE_TYPE, "led_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop

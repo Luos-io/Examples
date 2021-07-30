@@ -38,7 +38,7 @@ static void image_size(int size);
 void LedStrip_Init(void)
 {
     revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(LedStrip_MsgHandler, COLOR_MOD, "led_strip_mod", revision);
+    Luos_CreateContainer(LedStrip_MsgHandler, COLOR_TYPE, "led_strip_mod", revision);
     TIM2->CCR1 = 0;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
     HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);

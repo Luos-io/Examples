@@ -17,7 +17,7 @@ void DataManager_collect(container_t *service)
 {
     msg_t update_msg;
 #ifdef GATE_POLLING
-    update_msg.header.cmd         = ASK_PUB_CMD;
+    update_msg.header.cmd         = GET_CMD;
     update_msg.header.target_mode = ID;
     update_msg.header.size        = 0;
 #else

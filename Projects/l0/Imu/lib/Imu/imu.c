@@ -37,7 +37,7 @@ void Imu_Init(void)
     revision_t revision = {.unmap = REV};
     mpu_setup();
     hal.report.quat = 1;
-    Luos_CreateContainer(Imu_MsgHandler, IMU_MOD, "Imu_mod", revision);
+    Luos_CreateContainer(Imu_MsgHandler, IMU_TYPE, "Imu_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -240,7 +240,7 @@ void Imu_Loop(void)
  ******************************************************************************/
 static void Imu_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         // fill the message infos
         hal.update_request = 1;

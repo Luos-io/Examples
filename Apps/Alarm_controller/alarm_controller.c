@@ -109,7 +109,7 @@ void AlarmController_Loop(void)
         {
             // Make containers configurations
             // try to find a RGB led and set light transition time just to be fancy
-            int id = RoutingTB_IDFromType(COLOR_MOD);
+            int id = RoutingTB_IDFromType(COLOR_TYPE);
             if (id > 0)
             {
                 msg_t msg;
@@ -124,7 +124,7 @@ void AlarmController_Loop(void)
             report.gyro  = 1;
             report.euler = 1;
             report.quat  = 0;
-            id           = RoutingTB_IDFromType(IMU_MOD);
+            id           = RoutingTB_IDFromType(IMU_TYPE);
             if (id > 0)
             {
                 msg_t msg;
@@ -173,7 +173,7 @@ void AlarmController_Loop(void)
             if ((HAL_GetTick() - last_blink) >= 500)
             {
                 blink_nb++;
-                int id = RoutingTB_IDFromType(COLOR_MOD);
+                int id = RoutingTB_IDFromType(COLOR_TYPE);
                 if (id > 0)
                 {
                     // we get a led alarm, set color

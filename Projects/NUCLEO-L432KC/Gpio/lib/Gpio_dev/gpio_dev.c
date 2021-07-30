@@ -43,15 +43,15 @@ void GpioDev_Init(void)
     revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
     // ************* containers creation *******************
-    pin[P1] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P1", revision);
-    pin[P7] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P7", revision);
-    pin[P8] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P8", revision);
-    pin[P9] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P9", revision);
-    pin[P5] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P5", revision);
-    pin[P6] = Luos_CreateContainer(rx_digit_read_cb, STATE_MOD, "digit_read_P6", revision);
-    pin[P2] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P2", revision);
-    pin[P3] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P3", revision);
-    pin[P4] = Luos_CreateContainer(rx_digit_write_cb, STATE_MOD, "digit_write_P4", revision);
+    pin[P1] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P1", revision);
+    pin[P7] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P7", revision);
+    pin[P8] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P8", revision);
+    pin[P9] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P9", revision);
+    pin[P5] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P5", revision);
+    pin[P6] = Luos_CreateContainer(rx_digit_read_cb, STATE_TYPE, "digit_read_P6", revision);
+    pin[P2] = Luos_CreateContainer(rx_digit_write_cb, STATE_TYPE, "digit_write_P2", revision);
+    pin[P3] = Luos_CreateContainer(rx_digit_write_cb, STATE_TYPE, "digit_write_P3", revision);
+    pin[P4] = Luos_CreateContainer(rx_digit_write_cb, STATE_TYPE, "digit_write_P4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -64,7 +64,7 @@ void GpioDev_Loop(void)
 
 static void rx_digit_read_cb(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         msg_t pub_msg;
         // fill the message infos

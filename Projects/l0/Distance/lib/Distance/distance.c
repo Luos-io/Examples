@@ -57,7 +57,7 @@ void Distance_Init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
-    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_MOD, "distance_mod", revision);
+    Luos_CreateContainer(Distance_MsgHandler, DISTANCE_TYPE, "distance_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -83,7 +83,7 @@ void Distance_Loop(void)
  ******************************************************************************/
 static void Distance_MsgHandler(container_t *container, msg_t *msg)
 {
-    if ((msg->header.cmd == ASK_PUB_CMD) & (new_data_ready))
+    if ((msg->header.cmd == GET_CMD) & (new_data_ready))
     {
         msg_t pub_msg;
 

@@ -102,7 +102,7 @@ void LightSensor_Init(void)
     // ******************* Analog measurement *******************
 
     // ******************* container creation *******************
-    Luos_CreateContainer(LightSensor_MsgHandler, LIGHT_MOD, "light_sensor_mod", revision);
+    Luos_CreateContainer(LightSensor_MsgHandler, LIGHT_TYPE, "light_sensor_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -121,7 +121,7 @@ void LightSensor_Loop(void)
  ******************************************************************************/
 static void LightSensor_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         msg_t pub_msg;
         // fill the message infos

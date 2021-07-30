@@ -32,7 +32,7 @@ void Button_Init(void)
 {
     revision_t revision = {.unmap = REV};
     pinMode(BTN_PIN, INPUT);
-    Luos_CreateContainer(Button_MsgHandler, STATE_MOD, "button_mod", revision);
+    Luos_CreateContainer(Button_MsgHandler, STATE_TYPE, "button_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -50,7 +50,7 @@ void Button_Loop(void)
  ******************************************************************************/
 static void Button_MsgHandler(container_t *container, msg_t *msg)
 {
-    if (msg->header.cmd == ASK_PUB_CMD)
+    if (msg->header.cmd == GET_CMD)
     {
         // fill the message infos
         msg_t pub_msg;

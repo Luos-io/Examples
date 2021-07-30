@@ -41,7 +41,7 @@ void Led_Init(void)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    Luos_CreateContainer(Led_MsgHandler, COLOR_MOD, "rgb_led_mod", revision);
+    Luos_CreateContainer(Led_MsgHandler, COLOR_TYPE, "rgb_led_mod", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
