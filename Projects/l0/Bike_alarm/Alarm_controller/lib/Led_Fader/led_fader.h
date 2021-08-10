@@ -4,8 +4,8 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#ifndef LED_H
-#define LED_H
+#ifndef LED_FADER_H
+#define LED_FADER_H
 
 #include "luos.h"
 
@@ -20,7 +20,7 @@
 /*******************************************************************************
  * Function
  ******************************************************************************/
-void Led_Init(void);
-void Led_Loop(void);
+void LedFader_Init(void);
+void LedFader_Loop(void);
 
-#endif /* LED_H */
+#endif /* LED_FADER_H */
