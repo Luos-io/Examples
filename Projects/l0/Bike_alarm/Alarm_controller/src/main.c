@@ -20,14 +20,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "tim.h"
-#include "usart.h"
-#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "luos.h"
-#include "led.h"
+#include "led_fader.h"
 #include "alarm_controller.h"
 /* USER CODE END Includes */
 
@@ -90,13 +87,10 @@ int main(void)
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
-    MX_GPIO_Init();
-    MX_USART1_UART_Init();
-    MX_TIM3_Init();
-    MX_TIM2_Init();
+  
     /* USER CODE BEGIN 2 */
     Luos_Init();
-    Led_Init();
+    LedFader_Init();
     AlarmController_Init();
     /* USER CODE END 2 */
 
@@ -105,7 +99,7 @@ int main(void)
     while (1)
     {
         Luos_Loop();
-        Led_Loop();
+        LedFader_Loop();
         AlarmController_Loop();
         /* USER CODE END WHILE */
 

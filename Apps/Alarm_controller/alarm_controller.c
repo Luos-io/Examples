@@ -11,40 +11,6 @@
  * Definitions
  ******************************************************************************/
 
-#define UPDATE_PERIOD_MS 10
-#define BLINK_NUMBER     3
-
-#define LIGHT_INTENSITY      255
-#define MOVEMENT_SENSIBILITY 20
-
-// Imu report struct
-typedef struct __attribute__((__packed__))
-{
-    union
-    {
-        struct __attribute__((__packed__))
-        {
-            unsigned short accell : 1;
-            unsigned short gyro : 1;
-            unsigned short quat : 1;
-            unsigned short compass : 1;
-            unsigned short euler : 1;
-            unsigned short rot_mat : 1;
-            unsigned short pedo : 1;
-            unsigned short linear_accel : 1;
-            unsigned short gravity_vector : 1;
-            unsigned short heading : 1;
-        };
-        unsigned char unmap[2];
-    };
-} imu_report_t;
-
-typedef enum
-{
-    ALARM_CONTROLLER_APP = LUOS_LAST_TYPE,
-    START_CONTROLLER_APP
-} alarm_apps_type_t;
-
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -63,7 +29,7 @@ static void AlarmController_MsgHandler(service_t *service, msg_t *msg);
  ******************************************************************************/
 void AlarmController_Init(void)
 {
-    revision_t revision = {.major = 0, .minor = 1, .build = 1};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // By default this app running
     control_app.flux = PLAY;
     // Create App
@@ -108,8 +74,8 @@ void AlarmController_Loop(void)
         else
         {
             // Make services configurations
-            // try to find a RGB led and set light transition time just to be fancy
-            int id = RoutingTB_IDFromType(COLOR_TYPE);
+            // try to find a Fader app and set light transition time just to be fancy
+            int id = RoutingTB_IDFromType(LED_FADER_TYPE);
             if (id > 0)
             {
                 msg_t msg;
@@ -173,7 +139,7 @@ void AlarmController_Loop(void)
             if ((HAL_GetTick() - last_blink) >= 500)
             {
                 blink_nb++;
-                int id = RoutingTB_IDFromType(COLOR_TYPE);
+                int id = RoutingTB_IDFromType(LED_FADER_TYPE);
                 if (id > 0)
                 {
                     // we get a led alarm, set color
