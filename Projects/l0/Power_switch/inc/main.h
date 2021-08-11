@@ -69,8 +69,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define SWITCH_Pin GPIO_PIN_0
-#define SWITCH_GPIO_Port GPIOA
+
 #define POWER_SENSOR_Pin GPIO_PIN_2
 #define POWER_SENSOR_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_3
