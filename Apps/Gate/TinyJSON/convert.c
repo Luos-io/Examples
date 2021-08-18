@@ -177,7 +177,7 @@ void Convert_DataToLuos(service_t *service, char *data)
 
     // bootloader commands
     json_t const *bootloader_json = json_getProperty(root, "bootloader");
-    if (json_getType(bootloader_json) == JSON_OBJ)
+    if (bootloader_json != 0)
     {
         Bootloader_JsonToLuos(service, (char *)data, bootloader_json);
         return;
@@ -185,7 +185,7 @@ void Convert_DataToLuos(service_t *service, char *data)
 
     json_t const *services = json_getProperty(root, "services");
     // Get services
-    if (json_getType(services) == JSON_OBJ)
+    if (services != 0)
     {
         // Loop into services
         json_t const *service_jsn = json_getChild(services);
