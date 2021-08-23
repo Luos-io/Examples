@@ -228,7 +228,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     item = json_getProperty(jobj, "target_rot_position");
     if ((item != NULL) && (json_getType(item) == JSON_REAL))
     {
-        angular_position_t angular_position = (angular_position_t)json_getReal(item);
+        angular_position_t angular_position = AngularOD_PositionFrom_deg(json_getReal(item));
         AngularOD_PositionToMsg(&angular_position, msg);
         Luos_SendMsg(service, msg);
     }
