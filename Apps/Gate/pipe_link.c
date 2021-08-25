@@ -46,19 +46,20 @@ short PipeLink_Find(service_t *service)
         msg.header.cmd = UPDATE_PUB;
         while (Luos_SendMsg(service, &msg) != SUCCEED)
             ;
-    }
-    // Check if pipe is localhost
-    if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_service->id))
-    {
-        // This is a localhost pipe
-        // Ask for a Streaming channel
-        msg_t msg;
-        msg.header.target      = pipe_id;
-        msg.header.target_mode = IDACK;
-        msg.header.cmd         = PARAMETERS;
-        msg.header.size        = 0;
-        while (Luos_SendMsg(service, &msg) != SUCCEED)
-            ;
+
+        // Check if pipe is localhost
+        if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_service->id))
+        {
+            // This is a localhost pipe
+            // Ask for a Streaming channel
+            msg_t msg;
+            msg.header.target      = pipe_id;
+            msg.header.target_mode = IDACK;
+            msg.header.cmd         = PARAMETERS;
+            msg.header.size        = 0;
+            while (Luos_SendMsg(service, &msg) != SUCCEED)
+                ;
+        }
     }
     return pipe_id;
 }
