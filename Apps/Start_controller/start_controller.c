@@ -125,6 +125,7 @@ void StartController_Loop(void)
                 alarm_control.flux = STOP;
             }
             // send message
+            msg.header.target = id;
             ControlOD_ControlToMsg(&alarm_control, &msg);
             Luos_SendMsg(app, &msg);
         }
