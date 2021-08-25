@@ -17,7 +17,7 @@
 
 #define MAX_JSON_FIELDS 50
 
-static void Convert_SplitFloat(float value, int32_t *integerPart, uint32_t *decimalPart);
+static const char *Convert_Float(float value);
 static void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const json_t *jobj, msg_t *msg, char *bin_data);
 
 /*******************************************************************************
@@ -25,20 +25,21 @@ static void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type,
  ******************************************************************************/
 // This function reduce Float to string convertion without FPU to 1/3 of normal time.
 // This function have been inspired by Benoit Blanchon Blog : https://blog.benoitblanchon.fr/lightweight-float-to-string/
-void Convert_SplitFloat(float value, int32_t *integerPart, uint32_t *decimalPart)
+const char *Convert_Float(float value)
 {
     float remainder;
-    *integerPart = (int32_t)value;
-    if (value >= 0.0)
+    static char output[39];
+    output[0] = 0;
+    if (value > -0.0001)
     {
-        remainder = (value - *integerPart) * 1000.0;
+        remainder = (value - (int32_t)value) * 1000.0;
+        sprintf(output, "%" PRId32 ".%03" PRIu32 "", (int32_t)value, (uint32_t)remainder);
     }
     else
     {
-        remainder = (-(value - *integerPart)) * 1000.0;
+        remainder = (-(value - (int32_t)value)) * 1000.0;
+        sprintf(output, "-%" PRId32 ".%03" PRIu32 "", (int32_t)value, (uint32_t)remainder);
     }
-
-    *decimalPart = (uint32_t)remainder;
 
     // rounding values
     // remainder -= *decimalPart;
@@ -46,6 +47,7 @@ void Convert_SplitFloat(float value, int32_t *integerPart, uint32_t *decimalPart
     // {
     //     (*decimalPart)++;
     // }
+    return output;
 }
 
 /*******************************************************************************
@@ -156,14 +158,8 @@ void Convert_DataToLuos(service_t *service, char *data)
                     float data_rate                                  = (float)size * (float)(repetition - failed_msg_nb) / (((float)end_systick - (float)begin_systick) / 1000.0) * 8;
                     float fail_rate                                  = (float)failed_msg_nb * 100.0 / (float)repetition;
                     char tx_json[512];
-                    int32_t dataIntegerPart;
-                    uint32_t dataDecimalPart;
-                    int32_t failIntegerPart;
-                    uint32_t failDecimalPart;
 
-                    Convert_SplitFloat(data_rate, &dataIntegerPart, &dataDecimalPart);
-                    Convert_SplitFloat(fail_rate, &failIntegerPart, &failDecimalPart);
-                    sprintf(tx_json, "{\"benchmark\":{\"data_rate\":%" PRId32 ".%" PRIu32 ",\"fail_rate\":%" PRId32 ".%" PRIu32 "}}\n", dataIntegerPart, dataDecimalPart, failIntegerPart, failDecimalPart);
+                    sprintf(tx_json, "{\"benchmark\":{\"data_rate\":%s \",\"fail_rate\":%s}}\n", Convert_Float(data_rate), Convert_Float(fail_rate));
                     PipeLink_Send(service, tx_json, strlen(tx_json));
 
                     // restart sensor polling
@@ -711,64 +707,51 @@ uint16_t Convert_StartServiceData(char *data, char *alias)
 uint16_t Convert_MsgToData(msg_t *msg, char *data)
 {
     float fdata;
-    int32_t integerPart;
-    uint32_t decimalPart;
     switch (msg->header.cmd)
     {
         case LINEAR_POSITION:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"trans_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"trans_position\":%s,", Convert_Float(fdata));
             break;
         case LINEAR_SPEED:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"trans_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"trans_speed\":%s,", Convert_Float(fdata));
             break;
         case ANGULAR_POSITION:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"rot_position\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"rot_position\":%s,", Convert_Float(fdata));
             break;
         case ANGULAR_SPEED:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"rot_speed\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"rot_speed\":%s,", Convert_Float(fdata));
             break;
         case CURRENT:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"current\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"current\":%s,", Convert_Float(fdata));
             break;
         case ILLUMINANCE:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"lux\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"lux\":%s,", Convert_Float(fdata));
             break;
         case TEMPERATURE:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"temperature\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"temperature\":%s,", Convert_Float(fdata));
             break;
         case FORCE:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"force\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"force\":%s,", Convert_Float(fdata));
             break;
         case MOMENT:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"moment\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"moment\":%s,", Convert_Float(fdata));
             break;
         case VOLTAGE:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"volt\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"volt\":%s,", Convert_Float(fdata));
             break;
         case POWER:
             memcpy(&fdata, msg->data, sizeof(float));
-            Convert_SplitFloat(fdata, &integerPart, &decimalPart);
-            sprintf(data, "\"power\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+            sprintf(data, "\"power\":%s,", Convert_Float(fdata));
             break;
         case NODE_UUID:
             if (msg->header.size == sizeof(luos_uuid_t))
@@ -836,8 +819,6 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             {
                 // Size ok, now fill the struct from msg data
                 float value[3];
-                int32_t integerPart[3];
-                uint32_t decimalPart[3];
                 memcpy(value, msg->data, msg->header.size);
                 char name[20] = {0};
                 switch (msg->header.cmd)
@@ -862,15 +843,11 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                         break;
                 }
                 // Create the Json content
-                // Convert floats
-                Convert_SplitFloat(value[0], &integerPart[0], &decimalPart[0]);
-                Convert_SplitFloat(value[1], &integerPart[1], &decimalPart[1]);
-                Convert_SplitFloat(value[2], &integerPart[2], &decimalPart[2]);
-                sprintf(data, "\"%s\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
+                sprintf(data, "\"%s\":[%s,%s,%s],",
                         name,
-                        integerPart[0], decimalPart[0],
-                        integerPart[1], decimalPart[1],
-                        integerPart[2], decimalPart[2]);
+                        Convert_Float(value[0]),
+                        Convert_Float(value[1]),
+                        Convert_Float(value[2]));
             }
             break;
         case QUATERNION:
@@ -879,20 +856,13 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             {
                 // Size ok, now fill the struct from msg data
                 float value[4];
-                int32_t integerPart[4];
-                uint32_t decimalPart[4];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                // Convert floats
-                Convert_SplitFloat(value[0], &integerPart[0], &decimalPart[0]);
-                Convert_SplitFloat(value[1], &integerPart[1], &decimalPart[1]);
-                Convert_SplitFloat(value[2], &integerPart[2], &decimalPart[2]);
-                Convert_SplitFloat(value[3], &integerPart[3], &decimalPart[3]);
-                sprintf(data, "\"quaternion\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
-                        integerPart[0], decimalPart[0],
-                        integerPart[1], decimalPart[1],
-                        integerPart[2], decimalPart[2],
-                        integerPart[3], decimalPart[3]);
+                sprintf(data, "\"quaternion\":[%s,%s,%s,%s],",
+                        Convert_Float(value[0]),
+                        Convert_Float(value[1]),
+                        Convert_Float(value[2]),
+                        Convert_Float(value[3]));
             }
             break;
         case ROT_MAT:
@@ -901,29 +871,18 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             {
                 // Size ok, now fill the struct from msg data
                 float value[9];
-                int32_t integerPart[9];
-                uint32_t decimalPart[9];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                Convert_SplitFloat(value[0], &integerPart[0], &decimalPart[0]);
-                Convert_SplitFloat(value[1], &integerPart[1], &decimalPart[1]);
-                Convert_SplitFloat(value[2], &integerPart[2], &decimalPart[2]);
-                Convert_SplitFloat(value[3], &integerPart[3], &decimalPart[3]);
-                Convert_SplitFloat(value[4], &integerPart[4], &decimalPart[4]);
-                Convert_SplitFloat(value[5], &integerPart[5], &decimalPart[5]);
-                Convert_SplitFloat(value[6], &integerPart[6], &decimalPart[6]);
-                Convert_SplitFloat(value[7], &integerPart[7], &decimalPart[7]);
-                Convert_SplitFloat(value[8], &integerPart[8], &decimalPart[8]);
-                sprintf(data, "\"rotational_matrix\":[%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 ",%" PRId32 ".%" PRIu32 "],",
-                        integerPart[0], decimalPart[0],
-                        integerPart[1], decimalPart[1],
-                        integerPart[2], decimalPart[2],
-                        integerPart[3], decimalPart[3],
-                        integerPart[4], decimalPart[4],
-                        integerPart[5], decimalPart[5],
-                        integerPart[6], decimalPart[6],
-                        integerPart[7], decimalPart[7],
-                        integerPart[8], decimalPart[8]);
+                sprintf(data, "\"rotational_matrix\":[%s,%s,%s,%s,%s,%s,%s,%s,%s],",
+                        Convert_Float(value[0]),
+                        Convert_Float(value[1]),
+                        Convert_Float(value[2]),
+                        Convert_Float(value[3]),
+                        Convert_Float(value[4]),
+                        Convert_Float(value[5]),
+                        Convert_Float(value[6]),
+                        Convert_Float(value[7]),
+                        Convert_Float(value[8]));
             }
             break;
         case HEADING:
@@ -932,13 +891,9 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             {
                 // Size ok, now fill the struct from msg data
                 float value;
-                int32_t integerPart;
-                uint32_t decimalPart;
                 memcpy(&value, msg->data, msg->header.size);
                 //create the Json content
-
-                Convert_SplitFloat(value, &integerPart, &decimalPart);
-                sprintf(data, "\"heading\":%" PRId32 ".%" PRIu32 ",", integerPart, decimalPart);
+                sprintf(data, "\"heading\":%s,", Convert_Float(value));
             }
             break;
         case PEDOMETER:
