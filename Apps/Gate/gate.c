@@ -53,29 +53,24 @@ void Gate_Loop(void)
     // Check the detection status.
     if (RoutingTB_IDFromService(gate) == 0)
     {
+#ifndef NODETECTION
         // We don't have any ID, meaning no detection occure or detection is occuring.
         if (previous_id == -1)
         {
             // This is the start period, we have to make a detection.
             // Be sure the network is powered up 20 ms before starting a detection
-#ifndef NODETECTION
             if (Luos_GetSystick() > 20)
             {
                 // No detection occure, do it
                 RoutingTB_DetectServices(gate);
+                previous_id = 0;
 #ifndef GATE_POLLING
                 first_conversion = 1;
                 update_time      = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
 #endif
             }
+        }
 #endif
-        }
-        else
-        {
-            // someone is making a detection, let it finish.
-            // reset the previous_id state to be ready to setup service at the end of detection
-            previous_id = 0;
-        }
         pipe_id = 0;
     }
     else
