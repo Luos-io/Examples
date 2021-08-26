@@ -7,7 +7,8 @@
 #ifndef __ANALOG_H
 #define __ANALOG_H
 
-#include "main.h"
+#include "stm32f0xx_hal_adc.h"
+#include "stm32f0xx_hal_dma.h"
 
 /*******************************************************************************
  * Definitions
