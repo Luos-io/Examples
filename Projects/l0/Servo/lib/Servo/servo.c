@@ -4,32 +4,21 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#include "main.h"
-#include "servo.h"
-#include "tim.h"
+#include "servo_drv.h"
 
+#include "servo.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define SERVONUMBER 4
 
-typedef struct
-{
-    angular_position_t angle;
-    servo_parameters_t param;
-} servo_t;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static service_t *service_serv[SERVONUMBER];
-volatile servo_t servo[SERVONUMBER];
-
+static service_t *service_servo[SERVONUMBER];
 /*******************************************************************************
  * Function
  ******************************************************************************/
 static void Servo_MsgHandler(service_t *service, msg_t *msg);
-static void set_position(uint8_t motor_id);
-static uint8_t find_id(service_t *my_service);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -38,24 +27,14 @@ static uint8_t find_id(service_t *my_service);
  ******************************************************************************/
 void Servo_Init(void)
 {
-    revision_t revision = {.unmap = REV};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
 
-    service_serv[0] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo1", revision);
-    service_serv[1] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo2", revision);
-    service_serv[2] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo3", revision);
-    service_serv[3] = Luos_CreateService(Servo_MsgHandler, SERVO_TYPE, "servo4", revision);
-    servo_parameters_t param;
-    param.max_angle      = 180.0;
-    param.max_pulse_time = 1.5 / 1000.0;
-    param.min_pulse_time = 0.5 / 1000.0;
-    servo[0].param       = param;
-    servo[0].angle       = 0.0;
-    servo[1].param       = param;
-    servo[1].angle       = 0.0;
-    servo[2].param       = param;
-    servo[2].angle       = 0.0;
-    servo[3].param       = param;
-    servo[3].angle       = 0.0;
+    Servo_DRVInit();
+
+    service_servo[0] = Luos_CreateService(Servo_MsgHandler, ANGLE_TYPE, "servo1", revision);
+    service_servo[1] = Luos_CreateService(Servo_MsgHandler, ANGLE_TYPE, "servo2", revision);
+    service_servo[2] = Luos_CreateService(Servo_MsgHandler, ANGLE_TYPE, "servo3", revision);
+    service_servo[3] = Luos_CreateService(Servo_MsgHandler, ANGLE_TYPE, "servo4", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -73,88 +52,32 @@ void Servo_Loop(void)
  ******************************************************************************/
 static void Servo_MsgHandler(service_t *service, msg_t *msg)
 {
+    uint8_t i = 0;
+    servo_t servo;
     if (msg->header.cmd == ANGULAR_POSITION)
     {
         // set the motor position
-        uint8_t motor_id = find_id(service);
-        AngularOD_PositionFromMsg((angular_position_t *)&servo[motor_id].angle, msg);
-        set_position(motor_id);
-        return;
+        AngularOD_PositionFromMsg((angular_position_t *)&servo.angle, msg);
+        for (i = 0; i <= SERVONUMBER; i++)
+        {
+            if ((int)service == (int)service_servo[i])
+            {
+                Servo_DRVSetPosition(servo.angle, i);
+                break;
+            }
+        }
     }
-    if (msg->header.cmd == PARAMETERS)
+    else if (msg->header.cmd == PARAMETERS)
     {
         // set the servo parameters
-        uint8_t motor_id = find_id(service);
-        memcpy((void *)servo[motor_id].param.unmap, msg->data, sizeof(servo_parameters_t));
-        set_position(motor_id);
-        return;
+        memcpy((void *)servo.param.unmap, msg->data, sizeof(servo_parameters_t));
+        for (i = 0; i <= SERVONUMBER; i++)
+        {
+            if ((int)service == (int)service_servo[i])
+            {
+                Servo_DRVParameter(servo.param, i);
+                break;
+            }
+        }
     }
-}
-
-static void set_position(uint8_t motor_id)
-{
-    static char chan1 = 0;
-    static char chan2 = 0;
-    static char chan3 = 0;
-    static char chan4 = 0;
-    // limit angle value
-    if (servo[motor_id].angle < 0.0)
-        servo[motor_id].angle = 0.0;
-    if (servo[motor_id].angle > servo[motor_id].param.max_angle)
-        servo[motor_id].angle = servo[motor_id].param.max_angle;
-    // transform angle to timer value
-    //const uint32_t min = 400; // min pulse to have 0,5ms
-    //const uint32_t max = 800; // max pulse to have 1,5ms
-    uint32_t pulse_min = (uint32_t)(servo[motor_id].param.min_pulse_time * (float)(48000000 / htim2.Init.Prescaler));
-    uint32_t pulse_max = (uint32_t)(servo[motor_id].param.max_pulse_time * (float)(48000000 / htim2.Init.Prescaler));
-    uint32_t pulse     = pulse_min + (uint32_t)(servo[motor_id].angle / servo[motor_id].param.max_angle * (pulse_max - pulse_min));
-
-    switch (motor_id)
-    {
-        case 0:
-            if (!chan1)
-            {
-                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-                chan1 = 1;
-            }
-            TIM2->CCR1 = pulse;
-            break;
-        case 1:
-            if (!chan2)
-            {
-                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-                chan2 = 1;
-            }
-            TIM2->CCR2 = pulse;
-            break;
-        case 2:
-            if (!chan3)
-            {
-                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-                chan3 = 1;
-            }
-            TIM2->CCR3 = pulse;
-            break;
-        case 3:
-            if (!chan4)
-            {
-                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-                chan4 = 1;
-            }
-            TIM2->CCR4 = pulse;
-            break;
-        default:
-            break;
-    }
-}
-
-static uint8_t find_id(service_t *my_service)
-{
-    uint8_t i = 0;
-    for (i = 0; i <= SERVONUMBER; i++)
-    {
-        if ((int)my_service == (int)service_serv[i])
-            return i;
-    }
-    return i;
 }

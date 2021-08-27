@@ -7,27 +7,10 @@
 #ifndef SERVO_H
 #define SERVO_H
 
-#include "luos.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-/*
- * Servo
- */
-typedef struct
-{
-    union
-    {
-        struct __attribute__((__packed__))
-        {
-            angular_position_t max_angle;
-            float min_pulse_time;
-            float max_pulse_time;
-        };
-        unsigned char unmap[3 * sizeof(float)];
-    };
-} servo_parameters_t;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
