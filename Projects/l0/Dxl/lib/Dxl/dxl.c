@@ -10,7 +10,7 @@
 #include "math.h"
 #include "stdio.h"
 #include <float.h>
-#include "template_servo_motor.h"
+#include "profile_servo_motor.h"
 
 /*******************************************************************************
  * Definitions
@@ -22,12 +22,11 @@
 
 typedef struct
 {
-    profile_servo_motor_t *dxl_motor;
+    profile_servo_motor_t dxl_motor;
     dxl_models_t model;
     unsigned char id;
 } dxl_t;
 
-template_servo_motor_t dxl_motor_template[MAX_SERVICE_NUMBER];
 dxl_t dxl[MAX_SERVICE_NUMBER];
 
 // volatile char publish = 0;
@@ -70,11 +69,11 @@ void Dxl_Loop(void)
         {
             if (dxl[index].model == AX12 || dxl[index].model == AX18 || dxl[index].model == XL320)
             {
-                dxl[index].dxl_motor->angular_position = AngularOD_PositionFrom_deg(((300.0 * (float)tmp_val) / (1024.0 - 1.0)) - (300.0 / 2));
+                dxl[index].dxl_motor.angular_position = AngularOD_PositionFrom_deg(((300.0 * (float)tmp_val) / (1024.0 - 1.0)) - (300.0 / 2));
             }
             else
             {
-                dxl[index].dxl_motor->angular_position = AngularOD_PositionFrom_deg(((360.0 * (float)tmp_val) / (4096.0 - 1.0)) - (360.0 / 2));
+                dxl[index].dxl_motor.angular_position = AngularOD_PositionFrom_deg(((360.0 * (float)tmp_val) / (4096.0 - 1.0)) - (360.0 / 2));
             }
         }
         if (HAL_GetTick() - last_temp[index] > TEMP_REFRESH_MS)
@@ -82,11 +81,11 @@ void Dxl_Loop(void)
             errors = servo_get_raw_word(dxl[index].id, SERVO_REGISTER_PRESENT_TEMPERATURE, &tmp_val, DXL_TIMEOUT);
             if ((errors != SERVO_ERROR_TIMEOUT) & (errors != SERVO_ERROR_INVALID_RESPONSE))
             {
-                dxl[index].dxl_motor->motor.temperature = TemperatureOD_TemperatureFrom_deg_c(tmp_val);
-                last_temp[index]                        = HAL_GetTick();
+                dxl[index].dxl_motor.motor.temperature = TemperatureOD_TemperatureFrom_deg_c(tmp_val);
+                last_temp[index]                       = HAL_GetTick();
             }
             // setup the motor to send a one shot temperature each TEMP_REFRESH_MS
-            dxl[index].dxl_motor->motor.mode.temperature = dxl[index].dxl_motor->mode.temperature;
+            dxl[index].dxl_motor.motor.mode.temperature = dxl[index].dxl_motor.mode.temperature;
         }
     }
     index++;
@@ -104,7 +103,7 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
     if (msg->header.cmd == GET_CMD)
     {
         // if a temperature have been send stop temperature transmission to make it one shot
-        dxl[index].dxl_motor->motor.mode.temperature = 0;
+        dxl[index].dxl_motor.motor.mode.temperature = 0;
     }
     if (msg->header.cmd == REGISTER)
     {
@@ -233,11 +232,11 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
         int pos;
         if (dxl[index].model == AX12 || dxl[index].model == AX18 || dxl[index].model == XL320)
         {
-            pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor->target_angular_position) / 300));
+            pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor.target_angular_position) / 300));
         }
         else
         {
-            pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor->target_angular_position) / 360));
+            pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor.target_angular_position) / 360));
         }
         int retry = 0;
         while ((servo_set_raw_word(dxl[index].id, SERVO_REGISTER_GOAL_ANGLE, pos, DXL_TIMEOUT) != SERVO_NO_ERROR) && (retry < 10))
@@ -248,7 +247,7 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
     }
     if (msg->header.cmd == RATIO_LIMIT)
     {
-        unsigned short limit = (unsigned short)(dxl[index].dxl_motor->motor.power * 1023.0 / 100.0);
+        unsigned short limit = (unsigned short)(dxl[index].dxl_motor.motor.power * 1023.0 / 100.0);
         servo_set_raw_word(dxl[index].id, SERVO_REGISTER_TORQUE_LIMIT, limit, DXL_TIMEOUT);
         return;
     }
@@ -259,14 +258,14 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
             // clamp PID values
             for (int i = 0; i < 3; i++)
             {
-                if (dxl[index].dxl_motor->position_pid.table[i] > 254.0)
-                    dxl[index].dxl_motor->position_pid.table[i] = 254.0;
-                if (dxl[index].dxl_motor->position_pid.table[i] < 0.0)
-                    dxl[index].dxl_motor->position_pid.table[i] = 0.0;
+                if (dxl[index].dxl_motor.position_pid.table[i] > 254.0)
+                    dxl[index].dxl_motor.position_pid.table[i] = 254.0;
+                if (dxl[index].dxl_motor.position_pid.table[i] < 0.0)
+                    dxl[index].dxl_motor.position_pid.table[i] = 0.0;
             }
-            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_P_GAIN, (char)dxl[index].dxl_motor->position_pid.p, DXL_TIMEOUT);
-            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_I_GAIN, (char)dxl[index].dxl_motor->position_pid.i, DXL_TIMEOUT);
-            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_D_GAIN, (char)dxl[index].dxl_motor->position_pid.d, DXL_TIMEOUT);
+            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_P_GAIN, (char)dxl[index].dxl_motor.position_pid.p, DXL_TIMEOUT);
+            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_I_GAIN, (char)dxl[index].dxl_motor.position_pid.i, DXL_TIMEOUT);
+            servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_D_GAIN, (char)dxl[index].dxl_motor.position_pid.d, DXL_TIMEOUT);
         }
         return;
     }
@@ -275,18 +274,18 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
 
         if (dxl[index].model == AX12 || dxl[index].model == AX18 || dxl[index].model == XL320)
         {
-            int pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor->limit_angular_position[0]) / 300));
+            int pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor.limit_angular_position[0]) / 300));
             servo_set_raw_word(dxl[index].id, SERVO_REGISTER_MIN_ANGLE, pos, DXL_TIMEOUT);
             HAL_Delay(1);
-            pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor->limit_angular_position[1]) / 300));
+            pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor.limit_angular_position[1]) / 300));
             servo_set_raw_word(dxl[index].id, SERVO_REGISTER_MAX_ANGLE, pos, DXL_TIMEOUT);
         }
         else
         {
-            int pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor->limit_angular_position[0]) / 360));
+            int pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor.limit_angular_position[0]) / 360));
             servo_set_raw_word(dxl[index].id, SERVO_REGISTER_MIN_ANGLE, pos, DXL_TIMEOUT);
             HAL_Delay(1);
-            pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor->limit_angular_position[1]) / 360));
+            pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor.limit_angular_position[1]) / 360));
             servo_set_raw_word(dxl[index].id, SERVO_REGISTER_MAX_ANGLE, pos, DXL_TIMEOUT);
         }
         return;
@@ -295,7 +294,7 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
     {
 
         // Set the direction bit
-        int direction = (dxl[index].dxl_motor->target_angular_speed < 0) << 10;
+        int direction = (dxl[index].dxl_motor.target_angular_speed < 0) << 10;
         // find the speed factor and compute the max speed
         float speed_factor = 0.111;
         if (dxl[index].model == MX12 || dxl[index].model == MX64 || dxl[index].model == MX106)
@@ -304,8 +303,8 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
         }
         float speed_max = 1023.0 * speed_factor * 360.0 / 60.0;
         // Maximisation
-        dxl[index].dxl_motor->target_angular_speed = fminf(fmaxf(dxl[index].dxl_motor->target_angular_speed, -speed_max), speed_max);
-        int speed                                  = direction + (int)(fabs(dxl[index].dxl_motor->target_angular_speed) / (speed_factor * 360.0 / 60.0));
+        dxl[index].dxl_motor.target_angular_speed = fminf(fmaxf(dxl[index].dxl_motor.target_angular_speed, -speed_max), speed_max);
+        int speed                                 = direction + (int)(fabs(dxl[index].dxl_motor.target_angular_speed) / (speed_factor * 360.0 / 60.0));
         servo_set_raw_word(dxl[index].id, SERVO_REGISTER_MOVING_SPEED, speed, DXL_TIMEOUT);
         return;
     }
@@ -314,22 +313,22 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
         // Some motors need some time to manage all of those. Just try it multiple times.
         // set compliance
         uint8_t retry = 0;
-        while ((servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_TORQUE_ENABLE, (dxl[index].dxl_motor->mode.mode_compliant == 0), DXL_TIMEOUT) != SERVO_NO_ERROR) && (retry < 10))
+        while ((servo_set_raw_byte(dxl[index].id, SERVO_REGISTER_TORQUE_ENABLE, (dxl[index].dxl_motor.mode.mode_compliant == 0), DXL_TIMEOUT) != SERVO_NO_ERROR) && (retry < 10))
         {
             retry++;
         }
-        if (!dxl[index].dxl_motor->mode.mode_compliant)
+        if (!dxl[index].dxl_motor.mode.mode_compliant)
         {
             // If we are not compliant set current position as target position
-            dxl[index].dxl_motor->target_angular_position = dxl[index].dxl_motor->angular_position;
+            dxl[index].dxl_motor.target_angular_position = dxl[index].dxl_motor.angular_position;
             int pos;
             if (dxl[index].model == AX12 || dxl[index].model == AX18 || dxl[index].model == XL320)
             {
-                pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor->target_angular_position) / 300));
+                pos = (int)((1024 - 1) * ((300 / 2 + dxl[index].dxl_motor.target_angular_position) / 300));
             }
             else
             {
-                pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor->target_angular_position) / 360));
+                pos = (int)((4096 - 1) * ((360 / 2 + dxl[index].dxl_motor.target_angular_position) / 360));
             }
             retry = 0;
             while ((servo_set_raw_word(dxl[index].id, SERVO_REGISTER_GOAL_ANGLE, pos, DXL_TIMEOUT) != SERVO_NO_ERROR) && (retry < 10))
@@ -352,8 +351,7 @@ static void discover_dxl(void)
     memset((void *)dxl, 0, sizeof(dxl_t) * MAX_SERVICE_NUMBER);
     for (int i = 0; i < MAX_SERVICE_NUMBER; i++)
     {
-        dxl[i].dxl_motor = &dxl_motor_template[i].profile;
-        memset(dxl[i].dxl_motor, 0, sizeof(profile_servo_motor_t));
+        memset(&dxl[i].dxl_motor, 0, sizeof(profile_servo_motor_t));
     }
 
     HAL_NVIC_DisableIRQ(USART3_4_IRQn);
@@ -376,31 +374,31 @@ static void discover_dxl(void)
 
             // ************** Default configuration settings *****************
             // motor mode by default
-            dxl[y].dxl_motor->mode.mode_compliant        = 1;
-            dxl[y].dxl_motor->mode.current               = 0;
-            dxl[y].dxl_motor->mode.mode_power            = 0;
-            dxl[y].dxl_motor->mode.mode_angular_position = 1;
-            dxl[y].dxl_motor->mode.mode_angular_speed    = 0;
-            dxl[y].dxl_motor->mode.mode_linear_position  = 0;
-            dxl[y].dxl_motor->mode.mode_linear_speed     = 0;
-            dxl[y].dxl_motor->mode.angular_position      = 1;
-            dxl[y].dxl_motor->mode.angular_speed         = 0;
-            dxl[y].dxl_motor->mode.linear_position       = 0;
-            dxl[y].dxl_motor->mode.linear_speed          = 0;
-            dxl[y].dxl_motor->mode.temperature           = 1;
+            dxl[y].dxl_motor.mode.mode_compliant        = 1;
+            dxl[y].dxl_motor.mode.current               = 0;
+            dxl[y].dxl_motor.mode.mode_power            = 0;
+            dxl[y].dxl_motor.mode.mode_angular_position = 1;
+            dxl[y].dxl_motor.mode.mode_angular_speed    = 0;
+            dxl[y].dxl_motor.mode.mode_linear_position  = 0;
+            dxl[y].dxl_motor.mode.mode_linear_speed     = 0;
+            dxl[y].dxl_motor.mode.angular_position      = 1;
+            dxl[y].dxl_motor.mode.angular_speed         = 0;
+            dxl[y].dxl_motor.mode.linear_position       = 0;
+            dxl[y].dxl_motor.mode.linear_speed          = 0;
+            dxl[y].dxl_motor.mode.temperature           = 1;
 
             // default motor configuration
-            dxl[y].dxl_motor->wheel_diameter = 0.100f;
+            dxl[y].dxl_motor.wheel_diameter = 0.100f;
 
             // default motor limits
-            dxl[y].dxl_motor->motor.limit_ratio            = 100.0;
-            dxl[y].dxl_motor->limit_angular_position[MINI] = -FLT_MAX;
-            dxl[y].dxl_motor->limit_angular_position[MAXI] = FLT_MAX;
+            dxl[y].dxl_motor.motor.limit_ratio            = 100.0;
+            dxl[y].dxl_motor.limit_angular_position[MINI] = -FLT_MAX;
+            dxl[y].dxl_motor.limit_angular_position[MAXI] = FLT_MAX;
 
             dxl[y].id = i;
 
             // ************** Service creation *****************
-            TemplateServoMotor_CreateService(Dxl_MsgHandler, &dxl_motor_template[y], alias, revision);
+            ProfileServo_CreateService(&dxl[y].dxl_motor, Dxl_MsgHandler, alias, revision);
             servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl[y].model, DXL_TIMEOUT);
             // put a delay on motor response
             servo_set_raw_byte(i, SERVO_REGISTER_RETURN_DELAY_TIME, 10, DXL_TIMEOUT);
@@ -421,10 +419,11 @@ static void discover_dxl(void)
 
 static int find_id(service_t *service)
 {
-    int i = 0;
+    profile_core_t *profile = (profile_core_t *)service->profile_context;
+    int i                   = 0;
     for (i = 0; i <= MAX_SERVICE_NUMBER; i++)
     {
-        if ((int)service->template_context == (int)&dxl_motor_template[i])
+        if ((uint32_t)profile->profile_data == (uint32_t)&dxl[i].dxl_motor)
             return i;
     }
     return i;
