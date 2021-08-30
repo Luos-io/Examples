@@ -43,7 +43,7 @@
  *    NBR_PORT              |              2             | PTP Branch number Max 8
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
-#define MAX_SERVICE_NUMBER 1
+#define MAX_SERVICE_NUMBER 2
 #define MAX_MSG_NB         5
 #define MSG_BUFFER_SIZE    512
 

@@ -28,6 +28,7 @@ static void Led_MsgHandler(service_t *service, msg_t *msg);
 void Led_Init(void)
 {
     revision_t revision = {.unmap = REV};
+
     Luos_CreateService(Led_MsgHandler, STATE_TYPE, "led", revision);
 }
 /******************************************************************************

@@ -4,10 +4,10 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#include "main.h"
 #include "load.h"
 #include "HX711.h"
 #include "string.h"
+#include "stdbool.h"
 
 /*******************************************************************************
  * Definitions
@@ -16,9 +16,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-uint8_t new_data_ready = 0;
-volatile force_t load  = 0.0;
-char have_to_tare      = 0;
+force_t load        = 0.0;
+bool new_data_ready = false;
 
 /*******************************************************************************
  * Function
@@ -32,9 +31,9 @@ static void Load_MsgHandler(service_t *service, msg_t *msg);
  ******************************************************************************/
 void Load_Init(void)
 {
-    revision_t revision = {.unmap = REV};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
 
-    hx711_init(128);
+    hx711_Init();
     Luos_CreateService(Load_MsgHandler, LOAD_TYPE, "load", revision);
 }
 /******************************************************************************
@@ -44,15 +43,9 @@ void Load_Init(void)
  ******************************************************************************/
 void Load_Loop(void)
 {
-    if (hx711_is_ready())
+    if (hx711_ReadValue(&load) == SUCCEED)
     {
-        load           = hx711_get_units(1);
-        new_data_ready = 1;
-    }
-    if (have_to_tare)
-    {
-        hx711_tare(10);
-        have_to_tare = 0;
+        new_data_ready = true;
     }
 }
 /******************************************************************************
@@ -73,14 +66,13 @@ static void Load_MsgHandler(service_t *service, msg_t *msg)
             pub_msg.header.target      = msg->header.source;
             ForceOD_ForceToMsg((force_t *)&load, &pub_msg);
             Luos_SendMsg(service, &pub_msg);
-            new_data_ready = 0;
+            new_data_ready = false;
         }
         return;
     }
     if (msg->header.cmd == REINIT)
     {
-        // tare
-        have_to_tare = 1;
+        hx711_tare(DEFAULT_TARE_TIME);
         return;
     }
     if (msg->header.cmd == RESOLUTION)
@@ -93,7 +85,6 @@ static void Load_MsgHandler(service_t *service, msg_t *msg)
     }
     if (msg->header.cmd == OFFSET)
     {
-        // offset the load measurement using the scale parameter
         force_t value = 0.0;
         ForceOD_ForceFromMsg(&value, msg);
         hx711_set_offset((long)(value * hx711_get_scale()));

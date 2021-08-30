@@ -137,7 +137,6 @@ void PipeCom_SendL2P(uint8_t *data, uint16_t size)
     LUOS_ASSERT(size > 0);
     is_sending   = true;
     size_to_send = size;
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
     LL_DMA_DisableStream(L2P_DMA, L2P_DMA_CHANNEL);
     LL_DMA_SetMemoryAddress(L2P_DMA, L2P_DMA_CHANNEL, (uint32_t)data);
     LL_DMA_SetDataLength(L2P_DMA, L2P_DMA_CHANNEL, size);
@@ -200,14 +199,11 @@ void L2P_DMA_IRQHANDLER()
         size = Stream_GetAvailableSampleNBUntilEndBuffer(get_L2P_StreamChannel());
         if (size > 0)
         {
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
             PipeCom_SendL2P(get_L2P_StreamChannel()->sample_ptr, size);
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
         }
         else
         {
             is_sending = false;
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
         }
     }
 }
