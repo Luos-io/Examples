@@ -42,6 +42,7 @@ void GpioDev_Init(void)
 {
     revision_t revision = {.unmap = REV};
     // ******************* Analog measurement *******************
+
     // ************* services creation *******************
     pin[P1] = Luos_CreateService(rx_digit_read_cb, STATE_TYPE, "digit_read_P1", revision);
     pin[P7] = Luos_CreateService(rx_digit_read_cb, STATE_TYPE, "digit_read_P7", revision);

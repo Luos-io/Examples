@@ -29,8 +29,10 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg);
 void Pipe_Init(void)
 {
     revision_t revision = {.major = 0, .minor = 0, .build = 0};
-    Luos_CreateService(Pipe_MsgHandler, PIPE_TYPE, "Pipe", revision);
+
     PipeCom_Init();
+    Luos_CreateService(Pipe_MsgHandler, PIPE_TYPE, "Pipe", revision);
+
     P2L_StreamChannel = Stream_CreateStreamingChannel(PipeBuffer_GetP2LBuffer(), PIPE_TO_LUOS_BUFFER_SIZE, 1);
     L2P_StreamChannel = Stream_CreateStreamingChannel(PipeBuffer_GetL2PBuffer(), LUOS_TO_PIPE_BUFFER_SIZE, 1);
 }

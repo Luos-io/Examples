@@ -57,6 +57,7 @@ void Distance_Init(void)
 
     VL53L0X_SetDeviceMode(&dev, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
     VL53L0X_StartMeasurement(&dev);
+
     Luos_CreateService(Distance_MsgHandler, DISTANCE_TYPE, "distance", revision);
 }
 /******************************************************************************
