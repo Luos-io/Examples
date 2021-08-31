@@ -73,7 +73,6 @@ uint8_t Servo_DRVSetPosition(angular_position_t angle, uint8_t motor_id)
         servo[motor_id].angle = servo[motor_id].param.max_angle;
     }
 
-
     uint32_t pulse_min = (uint32_t)(servo[motor_id].param.min_pulse_time * (float)(MCUFREQ / DEFAULT_PRESACALER));
     uint32_t pulse_max = (uint32_t)(servo[motor_id].param.max_pulse_time * (float)(MCUFREQ / DEFAULT_PRESACALER));
     uint32_t pulse     = pulse_min + (uint32_t)(servo[motor_id].angle / servo[motor_id].param.max_angle * (pulse_max - pulse_min));
@@ -81,21 +80,21 @@ uint8_t Servo_DRVSetPosition(angular_position_t angle, uint8_t motor_id)
     LL_TIM_EnableCounter(servo[motor_id].control.Timer);
     LL_TIM_CC_EnableChannel(servo[motor_id].control.Timer, servo[motor_id].control.Channel);
 
-    if(servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH1)
+    if (servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH1)
     {
-    	LL_TIM_OC_SetCompareCH1(servo[motor_id].control.Timer, pulse);
+        LL_TIM_OC_SetCompareCH1(servo[motor_id].control.Timer, pulse);
     }
-    else if(servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH2)
+    else if (servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH2)
     {
-    	LL_TIM_OC_SetCompareCH2(servo[motor_id].control.Timer, pulse);
+        LL_TIM_OC_SetCompareCH2(servo[motor_id].control.Timer, pulse);
     }
-    else if(servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH3)
+    else if (servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH3)
     {
-    	LL_TIM_OC_SetCompareCH3(servo[motor_id].control.Timer, pulse);
+        LL_TIM_OC_SetCompareCH3(servo[motor_id].control.Timer, pulse);
     }
-    else if(servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH4)
+    else if (servo[motor_id].control.Channel == LL_TIM_CHANNEL_CH4)
     {
-    	LL_TIM_OC_SetCompareCH4(servo[motor_id].control.Timer, pulse);
+        LL_TIM_OC_SetCompareCH4(servo[motor_id].control.Timer, pulse);
     }
 
     return SUCCEED;
@@ -169,7 +168,7 @@ static void Servo_DRVHWInit(void)
     while (LL_TIM_Init(S4_TIMER, &TimerInit) != SUCCESS)
         ;
 
-    TimerConfigOC.OCMode = LL_TIM_OCMODE_PWM1;
+    TimerConfigOC.OCMode       = LL_TIM_OCMODE_PWM1;
     TimerConfigOC.CompareValue = 400;
     while (LL_TIM_OC_Init(S1_TIMER, S1_CHANNEL, &TimerConfigOC) != SUCCESS)
         ;

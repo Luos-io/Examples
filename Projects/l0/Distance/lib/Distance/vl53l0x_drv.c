@@ -72,7 +72,7 @@ uint8_t vl53l0x_DrvRead(linear_position_t *distance)
         VL53L0X_GetMeasurementDataReady(&dev, &data_ready);
         if (data_ready)
         {
-        	mesure_pending = true;
+            mesure_pending = true;
             VL53L0X_GetRangingMeasurementData(&dev, &ranging_data);
             VL53L0X_ClearInterruptMask(&dev, VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
         }
@@ -81,11 +81,11 @@ uint8_t vl53l0x_DrvRead(linear_position_t *distance)
     {
         if (ranging_data.RangeStatus == 0)
         {
-            *distance      = LinearOD_PositionFrom_mm((float)ranging_data.RangeMilliMeter);
+            *distance = LinearOD_PositionFrom_mm((float)ranging_data.RangeMilliMeter);
         }
         else
         {
-        	 *distance  = -0.001;
+            *distance = -0.001;
         }
         mesure_pending = false;
         result         = SUCCEED;
@@ -105,15 +105,15 @@ void vl53l0x_HW_Init(void)
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    GPIO_InitStruct.Pin = INT_PIN;
+    GPIO_InitStruct.Pin  = INT_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(INT_PORT, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin              = SHUTDOWN_PIN;
-    GPIO_InitStruct.Mode             = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull             = GPIO_PULLUP;
-    GPIO_InitStruct.Speed            = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Pin   = SHUTDOWN_PIN;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(SHUTDOWN_PORT, &GPIO_InitStruct);
 
     GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
