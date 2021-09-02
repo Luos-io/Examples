@@ -117,8 +117,9 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
             if (dxl[0].id == 0)
             {
                 // we are on a void configuration
-                servo_init(57600);
+                servo_init(val);
                 HAL_Delay(500);
+                // Change motors baudrate to 1000000
                 servo_set_raw_byte(SERVO_BROADCAST_ID, SERVO_REGISTER_BAUD_RATE, 1, DXL_TIMEOUT);
             }
             else
@@ -126,7 +127,7 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
                 volatile char baud = 3; // Default value for 1000000 for MX/XL
                 if (dxl[index].model == AX12 || dxl[index].model == AX18)
                 {
-                    baud = 1; // Default value for 1000000
+                    baud = 1; // Default value for 1000000 for AX
                     switch (val)
                     {
                         case 9600:
@@ -159,17 +160,37 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
                 }
                 else
                 {
-                    // void service will use this mode
                     switch (val)
                     {
-                        case 9600:
+                        case 2000000:
                             baud = 0;
                             break;
-                        case 57600:
+                        case 1000000:
                             baud = 1;
                             break;
+                        case 500000:
+                            baud = 3;
+                            break;
+                        case 400000:
+                            baud = 4;
+                            break;
+                        case 250000:
+                            baud = 7;
+                            break;
+                        case 200000:
+                            baud = 9;
+                            break;
                         case 115200:
-                            baud = 2;
+                            baud = 16;
+                            break;
+                        case 57600:
+                            baud = 34;
+                            break;
+                        case 19200:
+                            baud = 103;
+                            break;
+                        case 9600:
+                            baud = 207;
                             break;
                         default:
                             break;
