@@ -38,7 +38,14 @@ const char *Convert_Float(float value)
     else
     {
         remainder = (-(value - (int32_t)value)) * 1000.0;
-        sprintf(output, "-%" PRId32 ".%03" PRIu32 "", (int32_t)value, (uint32_t)remainder);
+        if ((int32_t)value == 0)
+        {
+            sprintf(output, "-%" PRId32 ".%03" PRIu32 "", (int32_t)value, (uint32_t)remainder);
+        }
+        else
+        {
+            sprintf(output, "%" PRId32 ".%03" PRIu32 "", (int32_t)value, (uint32_t)remainder);
+        }
     }
 
     // rounding values
