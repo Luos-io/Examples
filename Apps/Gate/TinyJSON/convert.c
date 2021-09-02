@@ -80,6 +80,11 @@ void Convert_DataToLuos(service_t *service, char *data)
         detection_ask++;
         return;
     }
+    if (json_getProperty(root, "discover") != NULL)
+    {
+        PipeLink_Send(service, "{\"gate\":{}}\n", strlen("{\"gate\":{}}\n"));
+        return;
+    }
     if (json_getProperty(root, "baudrate") != NULL)
     {
         //create a message to setup the new baudrate
