@@ -4,8 +4,9 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-#include "main.h"
 #include "power_switch.h"
+#include "ll_power_switch.h"
+
 #include "profile_state.h"
 
 /*******************************************************************************
@@ -27,6 +28,9 @@ profile_state_t power_switch;
  ******************************************************************************/
 void PowerSwitch_Init(void)
 {
+    // hardware initialization
+    ll_power_switch_init();
+
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // Profile configuration
     power_switch.access = WRITE_ONLY_ACCESS;
@@ -40,5 +44,6 @@ void PowerSwitch_Init(void)
  ******************************************************************************/
 void PowerSwitch_Loop(void)
 {
-    HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, power_switch.state);
+    // write power switch state to the driver
+    ll_power_switch_write(&power_switch.state);
 }

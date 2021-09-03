@@ -24,7 +24,8 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -41,75 +42,65 @@ extern "C" {
 
 #include "stm32f0xx_ll_exti.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+    /* Private includes ----------------------------------------------------------*/
+    /* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
+    /* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+    /* Exported types ------------------------------------------------------------*/
+    /* USER CODE BEGIN ET */
 
-/* USER CODE END ET */
+    /* USER CODE END ET */
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+    /* Exported constants --------------------------------------------------------*/
+    /* USER CODE BEGIN EC */
 
-/* USER CODE END EC */
+    /* USER CODE END EC */
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+    /* Exported macro ------------------------------------------------------------*/
+    /* USER CODE BEGIN EM */
 
-/* USER CODE END EM */
+    /* USER CODE END EM */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+    /* Exported functions prototypes ---------------------------------------------*/
+    void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define P1_Pin GPIO_PIN_0
-#define P1_GPIO_Port GPIOA
-#define P9_Pin GPIO_PIN_1
-#define P9_GPIO_Port GPIOA
-#define POWER_SENSOR_Pin GPIO_PIN_2
+#define P1_Pin                 GPIO_PIN_0
+#define P1_GPIO_Port           GPIOA
+#define P9_Pin                 GPIO_PIN_1
+#define P9_GPIO_Port           GPIOA
+#define POWER_SENSOR_Pin       GPIO_PIN_2
 #define POWER_SENSOR_GPIO_Port GPIOA
-#define LED_Pin GPIO_PIN_3
-#define LED_GPIO_Port GPIOA
-#define COM_LVL_DOWN_Pin GPIO_PIN_5
+#define LED_Pin                GPIO_PIN_3
+#define LED_GPIO_Port          GPIOA
+#define COM_LVL_DOWN_Pin       GPIO_PIN_5
 #define COM_LVL_DOWN_GPIO_Port GPIOA
-#define COM_LVL_UP_Pin GPIO_PIN_6
-#define COM_LVL_UP_GPIO_Port GPIOA
-#define P8_Pin GPIO_PIN_0
-#define P8_GPIO_Port GPIOB
-#define P7_Pin GPIO_PIN_1
-#define P7_GPIO_Port GPIOB
-#define P6_Pin GPIO_PIN_10
-#define P6_GPIO_Port GPIOB
-#define P5_Pin GPIO_PIN_11
-#define P5_GPIO_Port GPIOB
-#define PTPB_Pin GPIO_PIN_13
-#define PTPB_GPIO_Port GPIOB
-#define RX_EN_Pin GPIO_PIN_14
-#define RX_EN_GPIO_Port GPIOB
-#define TX_EN_Pin GPIO_PIN_15
-#define TX_EN_GPIO_Port GPIOB
-#define PTPA_Pin GPIO_PIN_8
-#define PTPA_GPIO_Port GPIOA
-#define COM_TX_Pin GPIO_PIN_9
-#define COM_TX_GPIO_Port GPIOA
-#define COM_RX_Pin GPIO_PIN_10
-#define COM_RX_GPIO_Port GPIOA
-#define P4_Pin GPIO_PIN_3
-#define P4_GPIO_Port GPIOB
-#define P3_Pin GPIO_PIN_4
-#define P3_GPIO_Port GPIOB
-#define P2_Pin GPIO_PIN_5
-#define P2_GPIO_Port GPIOB
-/* USER CODE BEGIN Private defines */
+#define COM_LVL_UP_Pin         GPIO_PIN_6
+#define COM_LVL_UP_GPIO_Port   GPIOA
+#define P8_Pin                 GPIO_PIN_0
+#define P8_GPIO_Port           GPIOB
+#define P7_Pin                 GPIO_PIN_1
+#define P7_GPIO_Port           GPIOB
+#define PTPB_Pin               GPIO_PIN_13
+#define PTPB_GPIO_Port         GPIOB
+#define RX_EN_Pin              GPIO_PIN_14
+#define RX_EN_GPIO_Port        GPIOB
+#define TX_EN_Pin              GPIO_PIN_15
+#define TX_EN_GPIO_Port        GPIOB
+#define PTPA_Pin               GPIO_PIN_8
+#define PTPA_GPIO_Port         GPIOA
+#define COM_TX_Pin             GPIO_PIN_9
+#define COM_TX_GPIO_Port       GPIOA
+#define COM_RX_Pin             GPIO_PIN_10
+#define COM_RX_GPIO_Port       GPIOA
+    /* USER CODE BEGIN Private defines */
 
-/* USER CODE END Private defines */
+    /* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

@@ -1,14 +1,11 @@
 /******************************************************************************
- * @file button
- * @brief driver example a simple button
+ * @file low-level Power switch
+ * @brief driver example a simple Power switch
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
-
-#include "button.h"
-#include "ll_button.h"
+#include "ll_power_switch.h"
 #include "profile_state.h"
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -16,34 +13,33 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-profile_state_t button;
+
 /*******************************************************************************
  * Function
  ******************************************************************************/
+void ll_power_switch_init(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, GPIO_PIN_RESET);
+
+    GPIO_InitStruct.Pin   = SWITCH_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+};
 
 /******************************************************************************
- * @brief init must be call in project init
+ * @brief read digital GPIO
  * @param None
  * @return None
  ******************************************************************************/
-void Button_Init(void)
+uint8_t ll_power_switch_write(bool *state)
 {
-    // low level initialization
-    ll_button_init();
-    // service initialization
-    revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    // Profile configuration
-    button.access = READ_ONLY_ACCESS;
-    // Service creation following state profile
-    ProfileState_CreateService(&button, 0, "button", revision);
-}
+    HAL_GPIO_WritePin(GPIOA, SWITCH_Pin, *state);
 
-/******************************************************************************
- * @brief loop must be call in project loop
- * @param None
- * @return None
- ******************************************************************************/
-void Button_Loop(void)
-{
-    ll_button_read(&button.state);
-}
+    return true;
+};
