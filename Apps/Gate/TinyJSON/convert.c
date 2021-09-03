@@ -222,7 +222,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     //********** global convertion***********
     // ratio
     item = json_getProperty(jobj, "power_ratio");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         ratio_t ratio = (ratio_t)json_getReal(item);
         RatioOD_RatioToMsg(&ratio, msg);
@@ -233,7 +233,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // target angular position
     item = json_getProperty(jobj, "target_rot_position");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         angular_position_t angular_position = AngularOD_PositionFrom_deg(json_getReal(item));
         AngularOD_PositionToMsg(&angular_position, msg);
@@ -317,7 +317,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // Limit ratio
     item = json_getProperty(jobj, "limit_power");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         ratio_t ratio = RatioOD_RatioFromPercent((float)json_getReal(item));
         RatioOD_RatioToMsg(&ratio, msg);
@@ -326,7 +326,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // Limit current
     item = json_getProperty(jobj, "limit_current");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         current_t current = ElectricOD_CurrentFrom_A(json_getReal(item));
         ElectricOD_CurrentToMsg(&current, msg);
@@ -334,7 +334,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // target Rotation speed
     item = json_getProperty(jobj, "target_rot_speed");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         angular_speed_t angular_speed = AngularOD_SpeedFrom_deg_s((float)json_getReal(item));
@@ -343,7 +343,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // target linear position
     item = json_getProperty(jobj, "target_trans_position");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         linear_position_t linear_position = LinearOD_PositionFrom_mm((float)json_getReal(item));
         LinearOD_PositionToMsg(&linear_position, msg);
@@ -372,7 +372,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // target Linear speed
     item = json_getProperty(jobj, "target_trans_speed");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         linear_speed_t linear_speed = LinearOD_Speedfrom_mm_s((float)json_getReal(item));
         LinearOD_SpeedToMsg(&linear_speed, msg);
@@ -380,20 +380,11 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // time
     item = json_getProperty(jobj, "time");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         time = TimeOD_TimeFrom_s((float)json_getReal(item));
         TimeOD_TimeToMsg(&time, msg);
-        Luos_SendMsg(service, msg);
-    }
-    // Compliance
-    item = json_getProperty(jobj, "compliant");
-    if ((item != NULL) && (json_getType(item) == JSON_BOOLEAN))
-    {
-        msg->data[0]     = json_getBoolean(item);
-        msg->header.cmd  = COMPLIANT;
-        msg->header.size = sizeof(char);
         Luos_SendMsg(service, msg);
     }
     // Pid
@@ -414,7 +405,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // resolution
     item = json_getProperty(jobj, "resolution");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         data = (float)json_getReal(item);
@@ -425,7 +416,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     //offset
     item = json_getProperty(jobj, "offset");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         data = (float)json_getReal(item);
@@ -436,7 +427,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // reduction ratio
     item = json_getProperty(jobj, "reduction");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         data = (float)json_getReal(item);
@@ -447,7 +438,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // dimension (m)
     item = json_getProperty(jobj, "dimension");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         linear_position_t linear_position = LinearOD_PositionFrom_mm((float)json_getReal(item));
         LinearOD_PositionToMsg(&linear_position, msg);
@@ -457,7 +448,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // voltage
     item = json_getProperty(jobj, "volt");
-    if ((item != NULL) && (json_getType(item) == JSON_REAL))
+    if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
         // this should be a function because it is frequently used
         voltage_t volt = ElectricOD_VoltageFrom_V((float)json_getReal(item));
@@ -528,7 +519,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
     }
     // update time
     item = json_getProperty(jobj, "update_time");
-    if ((json_getType(item) == JSON_REAL) & (type != GATE_TYPE))
+    if (((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)) && (type != GATE_TYPE))
     {
         // this should be a function because it is frequently used
         time = TimeOD_TimeFrom_s((float)json_getReal(item));
