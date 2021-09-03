@@ -20,7 +20,7 @@ unsigned char *mpl_key          = (unsigned char *)"eMPL 5.1";
 
 service_t *service_pointer;
 volatile msg_t pub_msg;
-volatile int pub = LUOS_PROTOCOL_NB;
+volatile int pub = LUOS_LAST_STD_CMD;
 
 /*******************************************************************************
  * Function
@@ -246,7 +246,7 @@ static void Imu_MsgHandler(service_t *service, msg_t *msg)
         hal.update_request = 1;
         service_pointer    = service;
         hal.source_id      = msg->header.source;
-        pub                = LUOS_PROTOCOL_NB;
+        pub                = LUOS_LAST_STD_CMD;
         return;
     }
     if (msg->header.cmd == PARAMETERS)
@@ -254,7 +254,7 @@ static void Imu_MsgHandler(service_t *service, msg_t *msg)
         service_pointer = service;
         // fill the message infos
         memcpy(&hal.report, msg->data, sizeof(short));
-        pub = LUOS_PROTOCOL_NB;
+        pub = LUOS_LAST_STD_CMD;
         return;
     }
 }
@@ -269,9 +269,9 @@ void gyro_data_ready_cb(void)
 
 void HAL_SYSTICK_Callback(void)
 {
-    if (pub != LUOS_PROTOCOL_NB)
+    if (pub != LUOS_LAST_STD_CMD)
     {
         Luos_SendMsg(service_pointer, (msg_t *)&pub_msg);
-        pub = LUOS_PROTOCOL_NB;
+        pub = LUOS_LAST_STD_CMD;
     }
 }
