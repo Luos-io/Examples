@@ -62,87 +62,79 @@ void LedStripPosition_Loop(void)
     //
     //Distance sensor message - demand the value of distance each 50 ms
     //
-    if (RoutingTB_IDFromService(app) <= 0)
+    if (RoutingTB_IDFromService(app) > 0)
     {
-        init_time = Luos_GetSystick();
-    }
-    else
-    {
-        if (Luos_GetSystick() - init_time <= 50)
+        int id = RoutingTB_IDFromType(DISTANCE_TYPE);
+        // check if there is a sensor detected
+        if (id > 0)
         {
-            return;
-        }
-    }
-    int id = RoutingTB_IDFromType(DISTANCE_TYPE);
-    // check if there is a sensor detected
-    if (id > 0)
-    {
-        if (Luos_GetSystick() - tickstart_dist >= 50)
-        {
-            tickstart_dist = Luos_GetSystick();
-
-            msg_t pub_msg;
-            pub_msg.header.target_mode = ID;
-            pub_msg.header.target      = id;
-            pub_msg.header.cmd         = GET_CMD;
-            pub_msg.header.size        = 0;
-            Luos_SendMsg(app, &pub_msg);
-            return;
-        }
-    }
-    //
-    // Led strip - change led strip value and define the motor position
-    //
-    id = RoutingTB_IDFromType(COLOR_TYPE);
-    // check if there is a led_strip detected and if the sensor value has changed
-    if ((id > 0) && (prev_distance != distance))
-    {
-        // keep the current sensor value
-        prev_distance = distance;
-        // check if the distance is in the led strip length
-        if (distance > 0)
-        {
-            if (distance <= LENGTH)
+            if (Luos_GetSystick() - tickstart_dist >= 50)
             {
-                // image to light the region of the object detected
-                memset((void *)&image[(uint8_t)(distance * 100)], 200, 20 * sizeof(color_t));
+                tickstart_dist = Luos_GetSystick();
+
+                msg_t pub_msg;
+                pub_msg.header.target_mode = ID;
+                pub_msg.header.target      = id;
+                pub_msg.header.cmd         = GET_CMD;
+                pub_msg.header.size        = 0;
+                Luos_SendMsg(app, &pub_msg);
+                return;
+            }
+        }
+        //
+        // Led strip - change led strip value and define the motor position
+        //
+        id = RoutingTB_IDFromType(COLOR_TYPE);
+        // check if there is a led_strip detected and if the sensor value has changed
+        if ((id > 0) && (prev_distance != distance))
+        {
+            // keep the current sensor value
+            prev_distance = distance;
+            // check if the distance is in the led strip length
+            if (distance > 0)
+            {
+                if (distance <= LENGTH)
+                {
+                    // image to light the region of the object detected
+                    memset((void *)&image[(uint8_t)(distance * 100)], 200, 20 * sizeof(color_t));
+                }
+                else
+                {
+                    // if the distance is longer than the length led strip will note be lightened
+                    position = 0;
+                }
+
+                //check in which region there is an object
+                if (distance <= (LENGTH / 3.0))
+                {
+                    position = 1;
+                }
+                else if (distance <= 2 * (LENGTH / 3.0))
+                {
+                    position = 2;
+                }
+                else if (distance <= LENGTH)
+                {
+                    position = 3;
+                }
             }
             else
             {
-                // if the distance is longer than the length led strip will note be lightened
+                // no region should be lighted - sensor has not detected sth
                 position = 0;
             }
-
-            //check in which region there is an object
-            if (distance <= (LENGTH / 3.0))
+            // send the created image to the led_strip
+            if (Luos_GetSystick() - tickstart_led >= 100)
             {
-                position = 1;
+                tickstart_led = Luos_GetSystick();
+                msg_t msg;
+                msg.header.target_mode = ID;
+                msg.header.target      = id;
+                msg.header.cmd         = COLOR;
+                Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
+                // reinitialize the image so that the led_strip is not lighted by default
+                memset((void *)image, 0, LED_NUMBER * 3);
             }
-            else if (distance <= 2 * (LENGTH / 3.0))
-            {
-                position = 2;
-            }
-            else if (distance <= LENGTH)
-            {
-                position = 3;
-            }
-        }
-        else
-        {
-            // no region should be lighted - sensor has not detected sth
-            position = 0;
-        }
-        // send the created image to the led_strip
-        if (Luos_GetSystick() - tickstart_led >= 100)
-        {
-            tickstart_led = Luos_GetSystick();
-            msg_t msg;
-            msg.header.target_mode = ID;
-            msg.header.target      = id;
-            msg.header.cmd         = COLOR;
-            Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
-            // reinitialize the image so that the led_strip is not lighted by default
-            memset((void *)image, 0, LED_NUMBER * 3);
         }
     }
 }
