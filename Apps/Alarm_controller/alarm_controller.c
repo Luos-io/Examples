@@ -58,7 +58,7 @@ void AlarmController_Loop(void)
             {
                 // This is the really first init, we have to make it.
                 // Be sure the network is powered up 1500 ms before starting a detection
-                if (HAL_GetTick() > 1500)
+                if (Luos_GetSystick() > 1500)
                 {
                     // No detection occure, do it
                     RoutingTB_DetectServices(app);
@@ -83,7 +83,10 @@ void AlarmController_Loop(void)
                 msg.header.target_mode = IDACK;
                 time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
                 TimeOD_TimeToMsg(&time, &msg);
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
             // try to find an IMU and set parameters to disable quaternion and send back Gyro acceleration and euler.
             imu_report_t report;
@@ -99,7 +102,10 @@ void AlarmController_Loop(void)
                 msg.header.target      = id;
                 msg.header.target_mode = IDACK;
                 memcpy(msg.data, &report, sizeof(imu_report_t));
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
 
                 // Setup auto update each UPDATE_PERIOD_MS on imu
                 // This value is resetted on all service at each detection
@@ -107,7 +113,10 @@ void AlarmController_Loop(void)
                 time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
                 TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
             previous_id = RoutingTB_IDFromService(app);
         }
@@ -131,12 +140,15 @@ void AlarmController_Loop(void)
                 msg.header.cmd         = IO_STATE;
                 msg.header.size        = 1;
                 msg.data[0]            = 0;
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
         }
         if (blink_nb < (BLINK_NUMBER * 2))
         {
-            if ((HAL_GetTick() - last_blink) >= 500)
+            if ((Luos_GetSystick() - last_blink) >= 500)
             {
                 blink_nb++;
                 int id = RoutingTB_IDFromType(LED_FADER_TYPE);
@@ -156,7 +168,10 @@ void AlarmController_Loop(void)
                     msg.header.target      = id;
                     msg.header.target_mode = IDACK;
                     IlluminanceOD_ColorToMsg(&color, &msg);
-                    Luos_SendMsg(app, &msg);
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
+                    {
+                        Luos_Loop();
+                    }
                 }
                 id = RoutingTB_IDFromAlias("horn");
                 if (id > 0)
@@ -174,10 +189,13 @@ void AlarmController_Loop(void)
                     msg.header.size        = sizeof(uint8_t);
                     msg.header.cmd         = IO_STATE;
                     msg.data[0]            = horn;
-                    Luos_SendMsg(app, &msg);
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
+                    {
+                        Luos_Loop();
+                    }
                 }
                 blink      = (!blink);
-                last_blink = HAL_GetTick();
+                last_blink = Luos_GetSystick();
             }
         }
     }
@@ -216,7 +234,7 @@ static void AlarmController_MsgHandler(service_t *service, msg_t *msg)
     }
     if (msg->header.cmd == CONTROL)
     {
-        ControlOD_ControlFromMsg(&control_app, msg);
+        ControlOD_ControlFromMsg((control_t *)&control_app, msg);
         return;
     }
 }

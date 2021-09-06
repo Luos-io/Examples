@@ -70,7 +70,7 @@ void StartController_Loop(void)
             {
                 // This is the really first init, we have to make it.
                 // Be sure the network is powered up 1000 ms before starting a detection
-                if (HAL_GetTick() > 1000)
+                if (Luos_GetSystick() > 1000)
                 {
                     // No detection occure, do it
                     RoutingTB_DetectServices(app);
@@ -98,7 +98,10 @@ void StartController_Loop(void)
                 time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
                 TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
             previous_id = RoutingTB_IDFromService(app);
         }
@@ -128,7 +131,10 @@ void StartController_Loop(void)
             // send message
             msg.header.target = id;
             ControlOD_ControlToMsg(&alarm_control, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         // The button state switch, change the led consequently
         state_switch = 0;
@@ -150,7 +156,10 @@ void StartController_Loop(void)
             }
             msg.header.target = id;
             IlluminanceOD_ColorToMsg(&color, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         id = RoutingTB_IDFromAlias("horn");
         if (id > 0)
@@ -161,7 +170,10 @@ void StartController_Loop(void)
             msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 1;
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         // try to reach a buzzer and drive it to make a happy sound
         if (!lock)
@@ -173,15 +185,18 @@ void StartController_Loop(void)
                 msg.header.cmd    = IO_STATE;
                 msg.header.size   = 1;
                 msg.data[0]       = 1;
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
         }
         // Save switch date
-        switch_date = HAL_GetTick();
+        switch_date = Luos_GetSystick();
         animation_state++;
     }
     // This part is a start stop animation using available services
-    if (((HAL_GetTick() - switch_date) > 100) & (animation_state == 1))
+    if (((Luos_GetSystick() - switch_date) > 100) & (animation_state == 1))
     {
         // 100ms after button turn of light and horn
         msg_t msg;
@@ -195,11 +210,14 @@ void StartController_Loop(void)
             msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 0;
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         animation_state++;
     }
-    if (((HAL_GetTick() - switch_date) > 600) & (animation_state == 2))
+    if (((Luos_GetSystick() - switch_date) > 600) & (animation_state == 2))
     {
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
@@ -223,7 +241,10 @@ void StartController_Loop(void)
             }
             msg.header.target = id;
             IlluminanceOD_ColorToMsg(&color, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         animation_state = 0;
     }

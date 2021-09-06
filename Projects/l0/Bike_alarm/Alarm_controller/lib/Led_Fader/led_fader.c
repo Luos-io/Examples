@@ -44,7 +44,7 @@ void LedFader_Init(void)
     // time initialization/ transform time using the Object Dictionary for time
     time = TimeOD_TimeFrom_ms(0.0);
     // create the Luos service for Led Fader
-    Luos_CreateService(LedFader_MsgHandler, LED_FADER_TYPE, "led_fader", revision);
+    Luos_CreateService(LedFader_MsgHandler, LED_FADER_TYPE, "alarm", revision);
     // initialize the Led driver
     LedFaderDrv_Init();
 }
