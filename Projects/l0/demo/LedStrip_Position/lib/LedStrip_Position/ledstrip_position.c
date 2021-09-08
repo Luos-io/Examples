@@ -7,14 +7,11 @@
 #include "ledstrip_position.h"
 #include "main.h"
 #include <math.h>
+#include "product_config.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-typedef enum
-{
-    LEDSTRIP_POSITION_APP = LUOS_LAST_TYPE,
-} ledstrip_position_t;
 
 #define FRAMERATE_MS       10
 #define STRIP_LENGTH       0.43
