@@ -7,25 +7,13 @@
 #include "run_motor.h"
 #include "profile_servo_motor.h"
 #include "od_ratio.h"
+#include "product_config.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-enum
-{
-    LED_STRIP = LUOS_LAST_TYPE,
-    RUN_MOTOR
-};
 
 #define MOTOR_ID_OFFSET 6
-
-enum
-{
-    NO_MOTOR,
-    MOTOR_1_POSITION,
-    MOTOR_2_POSITION,
-    MOTOR_3_POSITION,
-};
 
 enum
 {
