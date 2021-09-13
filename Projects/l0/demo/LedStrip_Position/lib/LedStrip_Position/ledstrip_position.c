@@ -272,6 +272,24 @@ void distance_frame_compute(void)
             image[i].r = (uint8_t)intensity;
         }
     }
+    // Add a light indicating the activ motor
+    float motor_position = (position * (STRIP_LENGTH / 3.0)) - (STRIP_LENGTH / 6.0);
+    if (motor_position > 0.0)
+    {
+        uint16_t motor_led = (uint16_t)(motor_position / SPACE_BETWEEN_LEDS);
+        image[motor_led].b = 0;
+        image[motor_led].g = 0;
+        image[motor_led].r = 200;
+        switch (position)
+        {
+            case 1:
+                /* code */
+                break;
+
+            default:
+                break;
+        }
+    }
 }
 
 void distance_based_display(int led_strip_id)
