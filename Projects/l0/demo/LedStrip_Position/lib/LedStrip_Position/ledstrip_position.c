@@ -8,33 +8,43 @@
 #include "main.h"
 #include <math.h>
 #include "product_config.h"
+#include <stdbool.h>
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define FRAMERATE_MS       10
-#define STRIP_LENGTH       0.43
-#define SPACE_BETWEEN_LEDS 0.0068
-#define LED_NUMBER         (uint16_t)(STRIP_LENGTH / SPACE_BETWEEN_LEDS)
-#define MAXRADIUS          0.05
+#define FRAMERATE_MS           10
+#define STRIP_LENGTH           0.433
+#define SPACE_BETWEEN_LEDS     0.0067
+#define LED_NUMBER             (uint16_t)(STRIP_LENGTH / SPACE_BETWEEN_LEDS)
+#define MAXRADIUS              0.05
+#define MAX_DISTANCE_UPDATE_MS 30
+#define DIST_OFFSET            0.03
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 service_t *app;
 uint8_t position = 0;
 // distance occupied from sensor variables
-linear_position_t distance = -0.001;
+linear_position_t distance     = -0.001;
+linear_position_t raw_distance = -0.001;
 // image variables
 volatile color_t image[LED_NUMBER];
+// Display modes
+ledstrip_position_OperationMode_t parameter = DISTANCE_DISPLAY;
+// Distance display mode variables
 float radius = 0.0;
+
 /*******************************************************************************
  * Function
  ******************************************************************************/
 static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg);
 static void distance_filtering(void);
-static void frame_compute(void);
+static void distance_frame_compute(void);
 static void glowing_fade(float target);
+static void distance_based_display(int led_strip_id);
+static bool detection_display(int led_strip_id);
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
@@ -57,6 +67,7 @@ void LedStripPosition_Loop(void)
 {
     static uint32_t lastframe_time_ms = 0;
     static short previous_id          = -1;
+    static bool detection_animation   = false;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
@@ -70,6 +81,7 @@ void LedStripPosition_Loop(void)
         }
         else
         {
+            // A detection just finished
             // Make services configurations
             // try to find a distance sensor
             int id = RoutingTB_IDFromType(DISTANCE_TYPE);
@@ -81,61 +93,40 @@ void LedStripPosition_Loop(void)
                 msg_t msg;
                 msg.header.target      = id;
                 msg.header.target_mode = IDACK;
-                time_luos_t time       = TimeOD_TimeFrom_ms(FRAMERATE_MS);
+                time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
                 TimeOD_TimeToMsg(&time, &msg);
                 msg.header.cmd = UPDATE_PUB;
                 while (Luos_SendMsg(app, &msg) != SUCCEED)
                 {
                     Luos_Loop();
                 }
+                // Reset detection animation
+                detection_display(0);
             }
             previous_id = RoutingTB_IDFromService(app);
+            // Start the detection animation
+            detection_animation = true;
         }
         return;
     }
 
     // ********** frame management ************
     // Update the frame
-    if (Luos_GetSystick() - lastframe_time_ms >= FRAMERATE_MS)
+    if ((Luos_GetSystick() - lastframe_time_ms >= FRAMERATE_MS) && (RoutingTB_IDFromService(app) != 0))
     {
+        distance_filtering();
         int id = RoutingTB_IDFromType(COLOR_TYPE);
         // Check if there is a led_strip detected
         if (id > 0)
         {
-            // Check if the distance is in the led strip length
-            if ((distance > 0) && (distance < STRIP_LENGTH))
+            if (detection_animation)
             {
-                // Image to light the region of the object detected
-                // Compute a frame
-                frame_compute();
-
-                // Check in which region there is an object
-                if (distance <= (STRIP_LENGTH / 3.0))
-                {
-                    position = 1;
-                }
-                else if (distance <= 2 * (STRIP_LENGTH / 3.0))
-                {
-                    position = 2;
-                }
-                else if (distance <= STRIP_LENGTH)
-                {
-                    position = 3;
-                }
+                detection_animation = detection_display(id);
             }
-            else
+            else if (parameter == DISTANCE_DISPLAY)
             {
-                // no region should be lighted - sensor has not detected sth
-                position = 0;
+                distance_based_display(id);
             }
-            // send the created image to the led_strip
-            msg_t msg;
-            msg.header.target_mode = ID;
-            msg.header.target      = id;
-            msg.header.cmd         = COLOR;
-            Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
-            // reinitialize the image so that the led_strip is not lighted by default
-            memset((void *)image, 0, LED_NUMBER * sizeof(color_t));
         }
         lastframe_time_ms = Luos_GetSystick();
     }
@@ -148,17 +139,21 @@ void LedStripPosition_Loop(void)
  ******************************************************************************/
 static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
 {
-    if (RoutingTB_TypeFromID(msg->header.source) == DISTANCE_TYPE)
+    if ((RoutingTB_TypeFromID(msg->header.source) == DISTANCE_TYPE)) // && (msg->header.cmd == LINEAR_POSITION))
     {
-        // receive the distance sensor value
-        LinearOD_PositionFromMsg(&distance, msg);
-        if (distance > STRIP_LENGTH)
+        if (msg->header.cmd == LINEAR_POSITION)
         {
-            distance = -0.001;
+            // receive the distance sensor value
+            LinearOD_PositionFromMsg(&raw_distance, msg);
+            raw_distance = raw_distance - DIST_OFFSET;
+            if (raw_distance > STRIP_LENGTH)
+            {
+                raw_distance = -0.001;
+            }
+            return;
         }
-        distance_filtering();
     }
-    else if (msg->header.cmd == GET_CMD)
+    else if ((msg->header.cmd == GET_CMD) && (RoutingTB_TypeFromID(msg->header.source) == RUN_MOTOR))
     {
         // motor application asks which position of the led_strip is lightened - respond
         msg_t pub_msg;
@@ -172,21 +167,25 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
             Luos_Loop();
         }
     }
+    else if (msg->header.cmd == PARAMETERS)
+    {
+        parameter = msg->data[0];
+    }
 }
 
 void distance_filtering(void)
 {
     // Linear movement
-    const float filtering_strength = 0.15;
-    const float inertia_strength   = 0.05;
-    const float max_speed          = 2.0;
+    const float filtering_strength = 0.04;
+    const float inertia_strength   = 0.03;
+    const float max_speed          = 0.3;
 
     // Filtering variables
     static linear_position_t prev_distance  = 0.0;
     static linear_position_t inertial_force = 0.0;
 
     // Clear filter when hand is removed
-    if (distance < 0.001)
+    if (raw_distance < 0.001)
     {
         distance       = prev_distance;
         inertial_force = 0.0;
@@ -196,7 +195,8 @@ void distance_filtering(void)
     // Start filter when hand is present
     else if (radius < 0.00001)
     {
-        prev_distance = distance;
+        prev_distance = raw_distance;
+        distance      = raw_distance;
         // Glowing fade in
         glowing_fade(MAXRADIUS);
     }
@@ -206,7 +206,7 @@ void distance_filtering(void)
         glowing_fade(MAXRADIUS);
 
         // Compute the error between the light and the real hand position
-        float position_err = distance - prev_distance;
+        float position_err = raw_distance - prev_distance;
 
         // Compute inertial delta force (integral)
         inertial_force += position_err;
@@ -224,10 +224,10 @@ void distance_filtering(void)
 
 void glowing_fade(float target)
 {
-    const float filtering_strength = 0.15;
-    const float inertia_strength   = 0.08;
+    const float filtering_strength = 0.06;
+    const float inertia_strength   = 0.04;
     // Radial glowing
-    const float max_radius_speed = 1.0;
+    const float max_radius_speed = 4.0;
 
     // Filtering variables
     static float inertial_force = 0.0;
@@ -250,7 +250,7 @@ void glowing_fade(float target)
     }
 }
 
-void frame_compute(void)
+void distance_frame_compute(void)
 {
     //memset((void *)&image[(uint16_t)(distance / SPACE_BETWEEN_LEDS)], 200, sizeof(color_t));
     const uint16_t radius_led_number = (uint16_t)round((radius) / SPACE_BETWEEN_LEDS) + 1;
@@ -271,4 +271,107 @@ void frame_compute(void)
             image[i].r = (uint8_t)intensity;
         }
     }
+}
+
+void distance_based_display(int led_strip_id)
+{
+    // Check if the distance is in the led strip length
+    if ((distance > 0) && (distance < STRIP_LENGTH))
+    {
+        // Image to light the region of the object detected
+        // Compute a frame
+        distance_frame_compute();
+
+        // Check in which region there is an object
+        if (distance <= (STRIP_LENGTH / 3.0))
+        {
+            position = MOTOR_1_POSITION;
+        }
+        else if (distance <= 2 * (STRIP_LENGTH / 3.0))
+        {
+            position = MOTOR_2_POSITION;
+        }
+        else if (distance <= STRIP_LENGTH)
+        {
+            position = MOTOR_3_POSITION;
+        }
+    }
+    else
+    {
+        // no region should be lighted - sensor has not detected sth
+        position = NO_MOTOR;
+    }
+    // send the created image to the led_strip
+    msg_t msg;
+    msg.header.target_mode = IDACK;
+    msg.header.target      = led_strip_id;
+    msg.header.cmd         = COLOR;
+    Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
+    // reinitialize the image so that the led_strip is not lighted by default
+    memset((void *)image, 0, LED_NUMBER * sizeof(color_t));
+}
+
+bool detection_display(int led_strip_id)
+{
+    const float start_speed            = 3.0;
+    const float minimal_speed          = 0.5;
+    const float speed_evolution_factor = 0.95;
+    const linear_position_t trail_size = 0.2;
+    const int max_intensity            = 200;
+
+    static linear_speed_t speed = start_speed;
+    static float light_position = 0.0;
+
+    if (led_strip_id == 0)
+    {
+        // This is not a good value just reset state
+        speed          = start_speed;
+        light_position = 0.0;
+        return;
+    }
+
+    // Compute the new light _position based on the current speed
+    light_position = light_position + (LinearOD_SpeedTo_m_s(speed) * ((float)FRAMERATE_MS / 1000.0));
+    // Compute new speed
+    speed = speed * speed_evolution_factor;
+    // Speed clamping
+    if (speed < minimal_speed)
+    {
+        speed = minimal_speed;
+    }
+
+    const uint16_t led_position = (uint16_t)(light_position / SPACE_BETWEEN_LEDS);
+
+    // Compute the image
+    for (int i = 0; i < (trail_size / SPACE_BETWEEN_LEDS); i++)
+    {
+        // Compute the real position in mm of this led
+        float real_position = (led_position - i) * SPACE_BETWEEN_LEDS;
+        // Linear
+        int intensity = max_intensity * (1 - (fabs(real_position - light_position) / (trail_size)));
+        if ((intensity > 0) && ((led_position - i) < LED_NUMBER) && ((led_position - i) > 0))
+        {
+            image[led_position - i].b = (uint8_t)intensity;
+            image[led_position - i].g = (uint8_t)intensity;
+            image[led_position - i].r = (uint8_t)intensity;
+        }
+    }
+    // send the created image to the led_strip
+    msg_t msg;
+    msg.header.target_mode = IDACK;
+    msg.header.target      = led_strip_id;
+    msg.header.cmd         = COLOR;
+    Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
+    // reinitialize the image so that the led_strip is not lighted by default
+    memset((void *)image, 0, LED_NUMBER * sizeof(color_t));
+
+    if ((light_position - trail_size) > STRIP_LENGTH)
+    {
+        // This is the end of this animation
+        // reset values
+        speed          = LinearOD_SpeedFrom_m_s(start_speed);
+        light_position = 0.0;
+        return false;
+    }
+    return true;
 }
