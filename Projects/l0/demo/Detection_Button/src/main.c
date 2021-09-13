@@ -93,8 +93,8 @@ int main(void)
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
     Luos_Init();
-    DetectionButton_Init();
     Button_Init();
+    DetectionButton_Init();
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -102,8 +102,8 @@ int main(void)
     while (1)
     {
         Luos_Loop();
-        DetectionButton_Loop();
         Button_Loop();
+        DetectionButton_Loop();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */

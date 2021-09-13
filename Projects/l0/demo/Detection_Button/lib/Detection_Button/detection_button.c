@@ -5,32 +5,26 @@
  * @version 0.0.0
  ******************************************************************************/
 #include "detection_button.h"
+#include "product_config.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define UPDATE_PERIOD_MS 20
-
-typedef enum
-{
-    LEDSTRIP_POSITION_APP = LUOS_LAST_TYPE,
-    DETECTION_BUTTON_APP,
-} alarm_t;
+#define UPDATE_PERIOD_MS          20
+#define MIN_TIME_BETWEEN_DETEC_MS 300
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 service_t *app;
-uint8_t detection_enable = 0;
-uint8_t reset            = 0;
-int previous_id          = -1;
-uint8_t last_btn_state   = 0;
+uint32_t last_detection_date_ms = 0;
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
 static void DetectionButton_MsgHandler(service_t *service, msg_t *msg);
+static void Setup_button(void);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -50,52 +44,40 @@ void DetectionButton_Init(void)
  ******************************************************************************/
 void DetectionButton_Loop(void)
 {
-    if (RoutingTB_IDFromService(app) == 0)
+    static int previous_id = -1;
+
+    // ********** hot plug management ************
+    // Check if we have done the first init or if service Id have changed
+    if (previous_id != RoutingTB_IDFromService(app))
     {
-        // We don't have any ID, meaning no detection occure or detection is occuring.
-        if (previous_id == -1)
+        if (RoutingTB_IDFromService(app) == 0)
         {
-            // This is the start period, we have to make a detection.
-            // Be sure the network is powered up 20 ms before starting a detection
-            if (Luos_GetSystick() > 200)
+            // We don't have any ID, meaning no detection occure or detection is occuring.
+            if (previous_id == -1)
             {
-                // No detection occured, do it
-                RoutingTB_DetectServices(app);
+                // This is the really first init, we have to make it.
+                // Be sure the network is powered up 1500 ms before starting a detection
+                if (Luos_GetSystick() > 100)
+                {
+                    // No detection occure, do it
+                    RoutingTB_DetectServices(app);
+                    last_detection_date_ms = Luos_GetSystick();
+                }
+            }
+            else
+            {
+                // someone is making a detection, let it finish.
+                // reset the init state to be ready to setup service at the end of detection
                 previous_id = 0;
-                // variable to reinit auto update
-                reset = 1;
             }
         }
-    }
-    else
-    {
-        // button is pressed so we launch a detection
-        if (detection_enable)
+        else
         {
-            RoutingTB_DetectServices(app);
-            //previous_id      = 0;
-            reset            = 1;
-            detection_enable = 0;
+            // Make services configurations
+            Setup_button();
+            previous_id = RoutingTB_IDFromService(app);
         }
-    }
-    // if a detection has occured we need to reinitialize the auto update of button
-    if (reset)
-    {
-        int id = RoutingTB_IDFromAlias("button");
-        if (id > 0)
-        {
-            msg_t msg;
-            msg.header.target      = id;
-            msg.header.target_mode = IDACK;
-            // Setup auto update each UPDATE_PERIOD_MS on button
-            // This value is resetted on all service at each detection
-            // It's important to setting it each time.
-            time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
-            TimeOD_TimeToMsg(&time, &msg);
-            msg.header.cmd = UPDATE_PUB;
-            Luos_SendMsg(app, &msg);
-            reset = 0;
-        }
+        return;
     }
 }
 /******************************************************************************
@@ -106,13 +88,38 @@ void DetectionButton_Loop(void)
  ******************************************************************************/
 static void DetectionButton_MsgHandler(service_t *service, msg_t *msg)
 {
-    if (msg->header.source == RoutingTB_IDFromType(STATE_TYPE))
+    static uint8_t last_btn_state = 0;
+    if (msg->header.cmd == IO_STATE)
     {
-        // change the detection enable value only if the state of button is different
-        if ((!last_btn_state) & (last_btn_state != msg->data[0]))
+        if (((!last_btn_state) & (last_btn_state != msg->data[0])) && ((Luos_GetSystick() - last_detection_date_ms) > MIN_TIME_BETWEEN_DETEC_MS))
         {
-            detection_enable = (!detection_enable);
+            last_btn_state         = msg->data[0];
+            last_detection_date_ms = Luos_GetSystick();
+            RoutingTB_DetectServices(app);
+            last_detection_date_ms = Luos_GetSystick();
+            Setup_button();
         }
         last_btn_state = msg->data[0];
+    }
+}
+
+void Setup_button(void)
+{
+    int id = RoutingTB_IDFromAlias("button");
+    if (id > 0)
+    {
+        msg_t msg;
+        msg.header.target      = id;
+        msg.header.target_mode = IDACK;
+        // Setup auto update each UPDATE_PERIOD_MS on button
+        // This value is resetted on all service at each detection
+        // It's important to setting it each time.
+        time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
+        TimeOD_TimeToMsg(&time, &msg);
+        msg.header.cmd = UPDATE_PUB;
+        while (Luos_SendMsg(app, &msg) != SUCCEED)
+        {
+            Luos_Loop();
+        }
     }
 }
