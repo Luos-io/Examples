@@ -187,7 +187,7 @@ void distance_filtering(void)
     // Clear filter when hand is removed
     if (raw_distance < 0.001)
     {
-        distance       = 0;
+        distance       = prev_distance;
         inertial_force = 0.0;
         // Glowing fade out
         glowing_fade(0.0);
@@ -246,7 +246,8 @@ void glowing_fade(float target)
     radius = radius + (filtering_strength * radius_err) + (inertia_strength * inertial_force);
     if (radius < 0.0)
     {
-        radius = 0.0;
+        radius   = 0.0;
+        distance = -0.01;
     }
 }
 
