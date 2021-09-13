@@ -146,7 +146,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
             // receive the distance sensor value
             LinearOD_PositionFromMsg(&raw_distance, msg);
             raw_distance = raw_distance - DIST_OFFSET;
-            if (raw_distance > STRIP_LENGTH)
+            if ((raw_distance > STRIP_LENGTH) || (raw_distance < 0))
             {
                 raw_distance = -0.001;
             }
@@ -187,7 +187,7 @@ void distance_filtering(void)
     // Clear filter when hand is removed
     if (raw_distance < 0.001)
     {
-        distance       = prev_distance;
+        distance       = 0;
         inertial_force = 0.0;
         // Glowing fade out
         glowing_fade(0.0);
