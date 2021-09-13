@@ -15,6 +15,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define BUFFER_SIZE 1000
 
 /*******************************************************************************
  * Variables
@@ -28,6 +29,9 @@ typedef struct
 } dxl_t;
 
 dxl_t dxl[MAX_SERVICE_NUMBER];
+
+volatile float trajectory_buf[BUFFER_SIZE];
+volatile float measurement_buf[BUFFER_SIZE];
 
 // volatile char publish = 0;
 /*******************************************************************************
@@ -55,8 +59,9 @@ void Dxl_Init(void)
  ******************************************************************************/
 void Dxl_Loop(void)
 {
-    static int index                              = 0;
-    static uint32_t last_temp[MAX_SERVICE_NUMBER] = {0};
+    static int index                                = 0;
+    static uint32_t last_temp[MAX_SERVICE_NUMBER]   = {0};
+    static uint32_t last_sample[MAX_SERVICE_NUMBER] = {0};
     // check motor values one by one
     //  Get motor info
     if (dxl[index].id == 0)
@@ -86,6 +91,42 @@ void Dxl_Loop(void)
             }
             // setup the motor to send a one shot temperature each TEMP_REFRESH_MS
             dxl[index].dxl_motor.motor.mode.temperature = dxl[index].dxl_motor.mode.temperature;
+        }
+
+        // ****** trajectory management *********
+        if (dxl[index].dxl_motor.control.flux == STOP)
+        {
+            Stream_ResetStreamingChannel(&dxl[index].dxl_motor.trajectory);
+        }
+        if ((Stream_GetAvailableSampleNB(&dxl[index].dxl_motor.trajectory) > 0) && ((Luos_GetSystick() - last_sample[index]) >= TimeOD_TimeTo_ms(dxl[index].dxl_motor.sampling_period)) && (dxl[index].dxl_motor.control.flux == PLAY))
+        {
+            if (dxl[index].dxl_motor.mode.mode_linear_position == 1)
+            {
+                linear_position_t linear_position_tmp;
+                Stream_GetSample(&dxl[index].dxl_motor.trajectory, &linear_position_tmp, 1);
+                dxl[index].dxl_motor.target_angular_position = (linear_position_tmp * 360.0) / (3.141592653589793 * dxl[index].dxl_motor.wheel_diameter);
+            }
+            else
+            {
+                Stream_GetSample(&dxl[index].dxl_motor.trajectory, (angular_position_t *)&dxl[index].dxl_motor.target_angular_position, 1);
+            }
+            last_sample[index] = Luos_GetSystick();
+
+            int pos;
+            if (dxl[0].model == AX12 || dxl[0].model == AX18 || dxl[0].model == XL320)
+            {
+                pos = (int)((1024 - 1) * ((300 / 2 + dxl[0].dxl_motor.target_angular_position) / 300));
+            }
+            else
+            {
+                pos = (int)((4096 - 1) * ((360 / 2 + dxl[0].dxl_motor.target_angular_position) / 360));
+            }
+
+            int retry = 0;
+            while ((servo_set_raw_word(dxl[0].id, SERVO_REGISTER_GOAL_ANGLE, pos, DXL_TIMEOUT) != SERVO_NO_ERROR) && (retry < 10))
+            {
+                retry++;
+            }
         }
     }
     index++;
@@ -364,74 +405,84 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
 static void discover_dxl(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    int y               = 0;
+    int dxl_index       = 0;
+    int dxl_id          = 0;
     char alias[15];
     // Clear service table
     Luos_ServicesClear();
     // Clear local tables
     memset((void *)dxl, 0, sizeof(dxl_t) * MAX_SERVICE_NUMBER);
-    for (int i = 0; i < MAX_SERVICE_NUMBER; i++)
+    for (dxl_id = 0; dxl_id < MAX_SERVICE_NUMBER; dxl_id++)
     {
-        memset(&dxl[i].dxl_motor, 0, sizeof(profile_servo_motor_t));
+        memset(&dxl[dxl_id].dxl_motor, 0, sizeof(profile_servo_motor_t));
     }
 
     HAL_NVIC_DisableIRQ(USART3_4_IRQn);
     HAL_NVIC_SetPriority(USART3_4_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART3_4_IRQn);
 
-    for (int i = 0; i < MAX_ID; i++)
+    for (dxl_id = 0; dxl_id < MAX_ID; dxl_id++)
     {
         servo_error_t error;
-        error = servo_ping(i, DXL_TIMEOUT);
+        error = servo_ping(dxl_id, DXL_TIMEOUT);
         if (error)
         {
             // The first try fail, retry
-            error = servo_ping(i, DXL_TIMEOUT);
+            error = servo_ping(dxl_id, DXL_TIMEOUT);
         }
         if (!error)
         {
             // no timeout occured, there is a servo here
-            sprintf(alias, "dxl_%d", i);
+            sprintf(alias, "dxl_%d", dxl_id);
 
             // ************** Default configuration settings *****************
             // motor mode by default
-            dxl[y].dxl_motor.mode.mode_compliant        = 1;
-            dxl[y].dxl_motor.mode.current               = 0;
-            dxl[y].dxl_motor.mode.mode_power            = 0;
-            dxl[y].dxl_motor.mode.mode_angular_position = 1;
-            dxl[y].dxl_motor.mode.mode_angular_speed    = 0;
-            dxl[y].dxl_motor.mode.mode_linear_position  = 0;
-            dxl[y].dxl_motor.mode.mode_linear_speed     = 0;
-            dxl[y].dxl_motor.mode.angular_position      = 1;
-            dxl[y].dxl_motor.mode.angular_speed         = 0;
-            dxl[y].dxl_motor.mode.linear_position       = 0;
-            dxl[y].dxl_motor.mode.linear_speed          = 0;
-            dxl[y].dxl_motor.mode.temperature           = 1;
+            dxl[dxl_index].dxl_motor.mode.mode_compliant        = 1;
+            dxl[dxl_index].dxl_motor.mode.current               = 0;
+            dxl[dxl_index].dxl_motor.mode.mode_power            = 0;
+            dxl[dxl_index].dxl_motor.mode.mode_angular_position = 1;
+            dxl[dxl_index].dxl_motor.mode.mode_angular_speed    = 0;
+            dxl[dxl_index].dxl_motor.mode.mode_linear_position  = 0;
+            dxl[dxl_index].dxl_motor.mode.mode_linear_speed     = 0;
+            dxl[dxl_index].dxl_motor.mode.angular_position      = 1;
+            dxl[dxl_index].dxl_motor.mode.angular_speed         = 0;
+            dxl[dxl_index].dxl_motor.mode.linear_position       = 0;
+            dxl[dxl_index].dxl_motor.mode.linear_speed          = 0;
+            dxl[dxl_index].dxl_motor.mode.temperature           = 1;
 
             // default motor configuration
-            dxl[y].dxl_motor.wheel_diameter = 0.100f;
+            dxl[dxl_index].dxl_motor.wheel_diameter = 0.100f;
 
             // default motor limits
-            dxl[y].dxl_motor.motor.limit_ratio            = 100.0;
-            dxl[y].dxl_motor.limit_angular_position[MINI] = -FLT_MAX;
-            dxl[y].dxl_motor.limit_angular_position[MAXI] = FLT_MAX;
+            dxl[dxl_index].dxl_motor.motor.limit_ratio            = 100.0;
+            dxl[dxl_index].dxl_motor.limit_angular_position[MINI] = -FLT_MAX;
+            dxl[dxl_index].dxl_motor.limit_angular_position[MAXI] = FLT_MAX;
 
-            dxl[y].id = i;
+            // save dxl id
+            dxl[dxl_index].id = dxl_id;
 
             // ************** Service creation *****************
-            ProfileServo_CreateService(&dxl[y].dxl_motor, Dxl_MsgHandler, alias, revision);
-            servo_get_raw_word(i, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl[y].model, DXL_TIMEOUT);
+            ProfileServo_CreateService(&dxl[dxl_index].dxl_motor, Dxl_MsgHandler, alias, revision);
+            servo_get_raw_word(dxl_id, SERVO_REGISTER_MODEL_NUMBER, (uint16_t *)&dxl[dxl_index].model, DXL_TIMEOUT);
             // put a delay on motor response
-            servo_set_raw_byte(i, SERVO_REGISTER_RETURN_DELAY_TIME, 10, DXL_TIMEOUT);
+            servo_set_raw_byte(dxl_id, SERVO_REGISTER_RETURN_DELAY_TIME, 10, DXL_TIMEOUT);
             // set limit temperature to 55°C
-            servo_set_raw_byte(i, SERVO_REGISTER_MAX_TEMPERATURE, 55, DXL_TIMEOUT);
-            y++;
+            servo_set_raw_byte(dxl_id, SERVO_REGISTER_MAX_TEMPERATURE, 55, DXL_TIMEOUT);
+            dxl_index++;
         }
     }
+
+    uint32_t nb_samples_in_frame = ceil(BUFFER_SIZE / dxl_index);
+    for (int i = 0; i < dxl_index; i++)
+    {
+        dxl[i].dxl_motor.trajectory  = Stream_CreateStreamingChannel((float *)&trajectory_buf[nb_samples_in_frame * (i + 1)], nb_samples_in_frame, sizeof(float));
+        dxl[i].dxl_motor.measurement = Stream_CreateStreamingChannel((float *)&measurement_buf[nb_samples_in_frame * (i + 1)], nb_samples_in_frame, sizeof(float));
+    }
+
     HAL_NVIC_DisableIRQ(USART3_4_IRQn);
     HAL_NVIC_SetPriority(USART3_4_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(USART3_4_IRQn);
-    if (y == 0)
+    if (dxl_index == 0)
     {
         // there is no motor detected, create a Void service to only manage l0 things
         Luos_CreateService(Dxl_MsgHandler, VOID_TYPE, "void_dxl", revision);
