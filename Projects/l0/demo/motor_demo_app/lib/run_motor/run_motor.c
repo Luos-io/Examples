@@ -13,7 +13,7 @@
  * Definitions
  ******************************************************************************/
 
-#define MOTOR_ID_OFFSET 6
+#define MOTOR_ID_OFFSET 5
 
 enum
 {
@@ -39,6 +39,8 @@ float target_position[3] = {
     LOWER_BOUND_POSITION,
     LOWER_BOUND_POSITION,
     LOWER_BOUND_POSITION};
+
+bool skip_motor = false;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -95,6 +97,11 @@ void RunMotor_Loop(void)
         if (next_motor_target != current_motor_target)
         {
             current_motor_target = next_motor_target;
+            skip_motor           = false;
+        }
+        else
+        {
+            skip_motor = true;
         }
 
         if (current_motor_target != NO_MOTOR)
@@ -121,23 +128,35 @@ void run_selected_motor(uint8_t motor_target)
     {
         case MOTOR_1_POSITION:
             motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
-            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0, 0);
-            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0, 0);
+            if (!skip_motor)
+            {
+                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+            }
             break;
         case MOTOR_2_POSITION:
-            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0, 0);
             motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
-            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0, 0);
+            if (!skip_motor)
+            {
+                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+            }
             break;
         case MOTOR_3_POSITION:
-            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0, 0);
-            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0, 0);
+            if (!skip_motor)
+            {
+                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+            }
             motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
             break;
         default:
-            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0, 0);
-            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0, 0);
-            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0, 0);
+            if (!skip_motor)
+            {
+                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
+            }
             break;
     }
 }
