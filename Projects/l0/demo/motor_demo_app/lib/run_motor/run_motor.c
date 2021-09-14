@@ -40,12 +40,12 @@ float target_position[3] = {
     LOWER_BOUND_POSITION,
     LOWER_BOUND_POSITION};
 
-bool skip_motor = false;
 /*******************************************************************************
  * Function
  ******************************************************************************/
 void RunMotor_EventHandler(service_t *service, msg_t *msg);
-void motor_set(uint8_t motor_target, float speed, float position);
+void motor_set(uint8_t motor_target, float position);
+void reset_unselected_motor(uint8_t motor_target);
 void run_selected_motor(uint8_t motor_target);
 
 /******************************************************************************
@@ -94,22 +94,21 @@ void RunMotor_Loop(void)
         // reset command_refresh
         command_refresh = Luos_GetSystick();
 
+        // if new target has been received, update selected motor
+        // and reset unselected motor to their default position
         if (next_motor_target != current_motor_target)
         {
             current_motor_target = next_motor_target;
-            skip_motor           = false;
-        }
-        else
-        {
-            skip_motor = true;
+            reset_unselected_motor(current_motor_target);
         }
 
+        // update target position if a valid motor is selected
         if (current_motor_target != NO_MOTOR)
         {
             target_position[current_motor_target - 1] = -target_position[current_motor_target - 1];
         }
 
-        // send position to motor
+        // send command to selected motor
         run_selected_motor(current_motor_target);
     }
 }
@@ -122,46 +121,49 @@ void RunMotor_EventHandler(service_t *service, msg_t *msg)
     }
 }
 
+void reset_unselected_motor(uint8_t motor_target)
+{
+    switch (motor_target)
+    {
+        case MOTOR_1_POSITION:
+            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0);
+            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0);
+            break;
+        case MOTOR_2_POSITION:
+            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0);
+            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0);
+            break;
+        case MOTOR_3_POSITION:
+            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0);
+            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0);
+            break;
+        default:
+            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, 0);
+            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, 0);
+            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, 0);
+            break;
+    }
+}
+
 void run_selected_motor(uint8_t motor_target)
 {
     switch (motor_target)
     {
         case MOTOR_1_POSITION:
-            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
-            if (!skip_motor)
-            {
-                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-            }
+            motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, target_position[current_motor_target - 1]);
             break;
         case MOTOR_2_POSITION:
-            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
-            if (!skip_motor)
-            {
-                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-            }
+            motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, target_position[current_motor_target - 1]);
             break;
         case MOTOR_3_POSITION:
-            if (!skip_motor)
-            {
-                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-            }
-            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, target_position[current_motor_target - 1]);
+            motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, target_position[current_motor_target - 1]);
             break;
         default:
-            if (!skip_motor)
-            {
-                motor_set(MOTOR_1_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-                motor_set(MOTOR_2_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-                motor_set(MOTOR_3_POSITION + MOTOR_ID_OFFSET, DEFAULT_ANGULAR_SPEED, 0);
-            }
             break;
     }
 }
 
-void motor_set(uint8_t motor_target, float speed, float position)
+void motor_set(uint8_t motor_target, float position)
 {
     // send a command to the motor
     servo_motor_mode_t servo_mode = {
@@ -180,7 +182,7 @@ void motor_set(uint8_t motor_target, float speed, float position)
     Luos_SendMsg(app, &msg);
 
     // send angular speed message
-    angular_speed_t angular_speed = speed;
+    angular_speed_t angular_speed = DEFAULT_ANGULAR_SPEED;
     msg.header.target             = motor_target;
     msg.header.cmd                = ANGULAR_SPEED;
     msg.header.target_mode        = IDACK;
