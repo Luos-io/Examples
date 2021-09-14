@@ -156,7 +156,7 @@ void ControllerMotor_Loop(void)
         last_angular_positions[SPEED_NB_INTEGRATION - 1] = servo_motor.angular_position;
         servo_motor.angular_speed                        = AngularOD_SpeedFrom_deg_s((last_angular_positions[SPEED_NB_INTEGRATION - 1] - last_angular_positions[0]) * 1000.0 / SPEED_PERIOD);
         // linear_speed => m/seconds
-        servo_motor.linear_speed = LinearOD_Speedfrom_m_s((servo_motor.angular_speed / 360.0) * M_PI * servo_motor.wheel_diameter);
+        servo_motor.linear_speed = LinearOD_SpeedFrom_m_s((servo_motor.angular_speed / 360.0) * M_PI * servo_motor.wheel_diameter);
         // ************* Limit clamping *************
         if (motion_target_position < servo_motor.limit_angular_position[MINI])
         {
