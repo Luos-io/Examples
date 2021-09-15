@@ -12,7 +12,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define STARTUP_DELAY_MS       20
 #define REFRESH_POSITION_MOTOR 10
 
 #define DEFAULT_ANGULAR_SPEED 180 // 180°/s
@@ -51,7 +51,8 @@ void MotorCopy_Init(void)
 void MotorCopy_Loop(void)
 {
 
-    static short previous_id = -1;
+    static short previous_id       = -1;
+    static uint32_t detection_date = 0;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
@@ -61,96 +62,100 @@ void MotorCopy_Loop(void)
         {
             // someone is making a detection, let it finish.
             // reset the init state to be ready to setup service at the end of detection
-            previous_id = 0;
+            previous_id    = 0;
+            detection_date = Luos_GetSystick();
         }
         else
         {
-            int ledstrip_id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
-            if (ledstrip_id > 0)
+            if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
             {
-                msg_t msg;
+                int ledstrip_id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
+                if (ledstrip_id > 0)
+                {
+                    msg_t msg;
 
-                // Switch the LEDSTRIP_POSITION_APP to copy mode
-                msg.header.target_mode = IDACK;
-                msg.header.target      = ledstrip_id;
-                msg.header.cmd         = PARAMETERS;
-                msg.header.size        = 1;
-                msg.data[0]            = MOTOR_COPY_DISPLAY;
-                while (Luos_SendMsg(app, &msg) != SUCCEED)
-                {
-                    Luos_Loop();
-                }
-                int id = RoutingTB_IDFromAlias("dxl_2");
-                if (id == 0)
-                {
-                    id = RoutingTB_IDFromAlias("dxl_3");
-                }
-                if (id > 0)
-                {
-                    // Setup auto update each UPDATE_PERIOD_MS on dxl
-                    // This value is resetted on all service at each detection
-                    // It's important to setting it each time.
-                    msg.header.target      = id;
+                    // Switch the LEDSTRIP_POSITION_APP to copy mode
                     msg.header.target_mode = IDACK;
-                    time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    msg.header.cmd = UPDATE_PUB;
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
-
-                    // Setup dxl
-                    servo_motor_mode_t servo_mode = {
-                        .mode_compliant = true,
-                        // control POWER / ANGULAR POSITION
-                        .mode_angular_speed    = false,
-                        .mode_angular_position = true,
-                        .angular_position      = true};
-
-                    msg.header.target      = id;
-                    msg.header.cmd         = PARAMETERS;
-                    msg.header.target_mode = IDACK;
-                    msg.header.size        = sizeof(servo_motor_mode_t);
-                    memcpy(&msg.data, &servo_mode, sizeof(servo_motor_mode_t));
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
-
-                    // Compute the position of the dxl
-                    sort_motors();
                     msg.header.target      = ledstrip_id;
-                    msg.header.cmd         = SET_CMD;
-                    msg.header.target_mode = IDACK;
+                    msg.header.cmd         = PARAMETERS;
                     msg.header.size        = 1;
-                    msg.data[0]            = position;
+                    msg.data[0]            = MOTOR_COPY_DISPLAY;
                     while (Luos_SendMsg(app, &msg) != SUCCEED)
                     {
                         Luos_Loop();
                     }
-                }
+                    int id = RoutingTB_IDFromAlias("dxl_2");
+                    if (id == 0)
+                    {
+                        id = RoutingTB_IDFromAlias("dxl_3");
+                    }
+                    if (id > 0)
+                    {
+                        // Setup auto update each UPDATE_PERIOD_MS on dxl
+                        // This value is resetted on all service at each detection
+                        // It's important to setting it each time.
+                        msg.header.target      = id;
+                        msg.header.target_mode = IDACK;
+                        time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
+                        TimeOD_TimeToMsg(&time, &msg);
+                        msg.header.cmd = UPDATE_PUB;
+                        while (Luos_SendMsg(app, &msg) != SUCCEED)
+                        {
+                            Luos_Loop();
+                        }
 
-                // find the other motors and configure them
+                        // Setup dxl
+                        servo_motor_mode_t servo_mode = {
+                            .mode_compliant = true,
+                            // control POWER / ANGULAR POSITION
+                            .mode_angular_speed    = false,
+                            .mode_angular_position = true,
+                            .angular_position      = true};
 
-                id = RoutingTB_IDFromAlias("servo_motor");
-                if (id != 0)
-                {
-                    Motor_init(id);
+                        msg.header.target      = id;
+                        msg.header.cmd         = PARAMETERS;
+                        msg.header.target_mode = IDACK;
+                        msg.header.size        = sizeof(servo_motor_mode_t);
+                        memcpy(&msg.data, &servo_mode, sizeof(servo_motor_mode_t));
+                        while (Luos_SendMsg(app, &msg) != SUCCEED)
+                        {
+                            Luos_Loop();
+                        }
+
+                        // Compute the position of the dxl
+                        sort_motors();
+                        msg.header.target      = ledstrip_id;
+                        msg.header.cmd         = SET_CMD;
+                        msg.header.target_mode = IDACK;
+                        msg.header.size        = 1;
+                        msg.data[0]            = position;
+                        while (Luos_SendMsg(app, &msg) != SUCCEED)
+                        {
+                            Luos_Loop();
+                        }
+                    }
+
+                    // find the other motors and configure them
+
+                    id = RoutingTB_IDFromAlias("servo_motor");
+                    if (id != 0)
+                    {
+                        Motor_init(id);
+                    }
+                    id = RoutingTB_IDFromAlias("servo_motor1");
+                    if (id != 0)
+                    {
+                        Motor_init(id);
+                    }
+                    id = RoutingTB_IDFromAlias("servo_motor2");
+                    if (id != 0)
+                    {
+                        Motor_init(id);
+                    }
+                    previous_id = RoutingTB_IDFromService(app);
                 }
-                id = RoutingTB_IDFromAlias("servo_motor1");
-                if (id != 0)
-                {
-                    Motor_init(id);
-                }
-                id = RoutingTB_IDFromAlias("servo_motor2");
-                if (id != 0)
-                {
-                    Motor_init(id);
-                }
-                previous_id = RoutingTB_IDFromService(app);
+                return;
             }
-            return;
         }
     }
 }
