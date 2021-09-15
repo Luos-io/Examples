@@ -34,6 +34,7 @@ static uint8_t current_motor_target = NO_MOTOR;
 static uint8_t next_motor_target    = NO_MOTOR;
 uint32_t position_refresh           = 0;
 uint32_t command_refresh            = 0;
+uint32_t refresh_motor_timeout      = REFRESH_DIRECTION_MOTOR;
 uint16_t led_app_id                 = 0;
 
 uint16_t motor_table[3];
@@ -127,7 +128,7 @@ void RunMotor_Loop(void)
                 }
 
                 // ask for the current motor's angle position
-                if ((Luos_GetSystick() - command_refresh > REFRESH_DIRECTION_MOTOR))
+                if ((Luos_GetSystick() - command_refresh > refresh_motor_timeout))
                 {
                     // reset command_refresh
                     command_refresh = Luos_GetSystick();
@@ -138,6 +139,14 @@ void RunMotor_Loop(void)
                     {
                         current_motor_target = next_motor_target;
                         reset_unselected_motor(current_motor_target);
+
+                        // the next motor will only does half of the trajectory for the first step (90°)
+                        refresh_motor_timeout = REFRESH_DIRECTION_MOTOR / 2;
+                    }
+                    else
+                    {
+                        // the current motor run through the whole trajectory (180°)
+                        refresh_motor_timeout = REFRESH_DIRECTION_MOTOR;
                     }
 
                     // update target position if a valid motor is selected
@@ -232,6 +241,39 @@ void motor_init(uint8_t motor_target)
     msg.header.target_mode        = IDACK;
     msg.header.size               = sizeof(angular_speed_t);
     memcpy(&msg.data, &angular_speed, sizeof(angular_speed_t));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    float resolution       = 12.0;
+    msg.header.target      = motor_target;
+    msg.header.cmd         = RESOLUTION;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(float);
+    memcpy(&msg.data, &resolution, sizeof(float));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    float reduction        = 74.83;
+    msg.header.target      = motor_target;
+    msg.header.cmd         = REDUCTION;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(float);
+    memcpy(&msg.data, &reduction, sizeof(float));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    asserv_pid_t pid_coef  = {.p = 28.0, .i = 0.1, .d = 100.0};
+    msg.header.target      = motor_target;
+    msg.header.cmd         = PID;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(asserv_pid_t);
+    memcpy(&msg.data, &pid_coef, sizeof(asserv_pid_t));
     while (Luos_SendMsg(app, &msg) != SUCCEED)
     {
         Luos_Loop();
