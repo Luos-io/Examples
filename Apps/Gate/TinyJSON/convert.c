@@ -171,7 +171,8 @@ void Convert_DataToLuos(service_t *service, char *data)
                     float fail_rate                                  = (float)failed_msg_nb * 100.0 / (float)repetition;
                     char tx_json[512];
 
-                    sprintf(tx_json, "{\"benchmark\":{\"data_rate\":%s \",\"fail_rate\":%s}}\n", Convert_Float(data_rate), Convert_Float(fail_rate));
+                    sprintf(tx_json, "{\"benchmark\":{\"data_rate\":%s", Convert_Float(data_rate));
+                    sprintf(tx_json, "%s\",\"fail_rate\":%s}}\n", tx_json, Convert_Float(fail_rate));
                     PipeLink_Send(service, tx_json, strlen(tx_json));
 
                     // restart sensor polling
@@ -846,11 +847,9 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                         break;
                 }
                 // Create the Json content
-                sprintf(data, "\"%s\":[%s,%s,%s],",
-                        name,
-                        Convert_Float(value[0]),
-                        Convert_Float(value[1]),
-                        Convert_Float(value[2]));
+                sprintf(data, "\"%s\":[%s", name, Convert_Float(value[0]));
+                sprintf(data, "%s,%s", data, Convert_Float(value[1]));
+                sprintf(data, "%s,%s],", data, Convert_Float(value[2]));
             }
             break;
         case QUATERNION:
@@ -861,11 +860,10 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 float value[4];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                sprintf(data, "\"quaternion\":[%s,%s,%s,%s],",
-                        Convert_Float(value[0]),
-                        Convert_Float(value[1]),
-                        Convert_Float(value[2]),
-                        Convert_Float(value[3]));
+                sprintf(data, "\"quaternion\":[%s,", Convert_Float(value[0]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[1]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[2]));
+                sprintf(data, "%s%s],", data, Convert_Float(value[3]));
             }
             break;
         case ROT_MAT:
@@ -876,16 +874,15 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 float value[9];
                 memcpy(value, msg->data, msg->header.size);
                 //create the Json content
-                sprintf(data, "\"rotational_matrix\":[%s,%s,%s,%s,%s,%s,%s,%s,%s],",
-                        Convert_Float(value[0]),
-                        Convert_Float(value[1]),
-                        Convert_Float(value[2]),
-                        Convert_Float(value[3]),
-                        Convert_Float(value[4]),
-                        Convert_Float(value[5]),
-                        Convert_Float(value[6]),
-                        Convert_Float(value[7]),
-                        Convert_Float(value[8]));
+                sprintf(data, "\"rotational_matrix\":[%s,", Convert_Float(value[0]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[1]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[2]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[3]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[4]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[5]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[6]));
+                sprintf(data, "%s%s,", data, Convert_Float(value[7]));
+                sprintf(data, "%s%s],", data, Convert_Float(value[8]));
             }
             break;
         case HEADING:
