@@ -45,8 +45,10 @@ void Gate_Loop(void)
 #ifndef GATE_POLLING
     static uint8_t first_conversion = 1;
 #endif
-    static short pipe_id              = 0;
-    static short previous_id          = -1;
+    static short pipe_id = 0;
+#ifndef NODETECTION
+    static short previous_id = -1;
+#endif
     static volatile bool gate_running = false;
     static uint32_t last_time         = 0;
 
@@ -99,6 +101,8 @@ void Gate_Loop(void)
                     DataManager_collect(gate);
                     first_conversion = 0;
                 }
+#else
+                update_time = 0.0;
 #endif
             }
         }
