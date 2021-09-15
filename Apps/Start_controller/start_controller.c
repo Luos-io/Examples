@@ -16,8 +16,7 @@
 
 typedef enum
 {
-    LED_FADER_TYPE = LUOS_LAST_TYPE,
-    ALARM_CONTROLLER_APP,
+    ALARM_CONTROLLER_APP = LUOS_LAST_TYPE,
     START_CONTROLLER_APP
 } alarm_t;
 
@@ -138,7 +137,7 @@ void StartController_Loop(void)
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id           = RoutingTB_IDFromType(LED_FADER_TYPE);
+        id           = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -222,7 +221,7 @@ void StartController_Loop(void)
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id                 = RoutingTB_IDFromType(LED_FADER_TYPE);
+        int id                 = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color

@@ -75,7 +75,6 @@ void AlarmController_Loop(void)
         {
             // Make services configurations
             // try to find a Fader app and set light transition time just to be fancy
-            int id = RoutingTB_IDFromType(LED_FADER_TYPE);
             if (id > 0)
             {
                 msg_t msg;
@@ -84,6 +83,7 @@ void AlarmController_Loop(void)
                 time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
                 TimeOD_TimeToMsg(&time, &msg);
                 while (Luos_SendMsg(app, &msg) != SUCCEED)
+                int id = RoutingTB_IDFromType(COLOR_TYPE);
                 {
                     Luos_Loop();
                 }
@@ -151,7 +151,7 @@ void AlarmController_Loop(void)
             if ((Luos_GetSystick() - last_blink) >= 500)
             {
                 blink_nb++;
-                int id = RoutingTB_IDFromType(LED_FADER_TYPE);
+                int id = RoutingTB_IDFromType(COLOR_TYPE);
                 if (id > 0)
                 {
                     // we get a led alarm, set color
