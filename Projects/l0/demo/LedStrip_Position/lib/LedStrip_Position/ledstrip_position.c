@@ -43,8 +43,10 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg);
 static void distance_filtering(void);
 static void distance_frame_compute(void);
 static void glowing_fade(float target);
+// Display modes
 static void distance_based_display(int led_strip_id);
 static bool detection_display(int led_strip_id);
+static void motor_copy_display(int led_strip_id);
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
@@ -68,6 +70,7 @@ void LedStripPosition_Loop(void)
     static uint32_t lastframe_time_ms = 0;
     static short previous_id          = -1;
     static bool detection_animation   = false;
+    static uint32_t detection_date    = 0;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
@@ -77,35 +80,40 @@ void LedStripPosition_Loop(void)
         {
             // someone is making a detection, let it finish.
             // reset the init state to be ready to setup service at the end of detection
-            previous_id = 0;
+            previous_id    = 0;
+            parameter      = DISTANCE_DISPLAY;
+            detection_date = Luos_GetSystick();
         }
         else
         {
-            // A detection just finished
-            // Make services configurations
-            // try to find a distance sensor
-            int id = RoutingTB_IDFromType(DISTANCE_TYPE);
-            if (id > 0)
+            if ((Luos_GetSystick() - detection_date) > 20)
             {
-                // Setup auto update each UPDATE_PERIOD_MS on imu
-                // This value is resetted on all service at each detection
-                // It's important to setting it each time.
-                msg_t msg;
-                msg.header.target      = id;
-                msg.header.target_mode = IDACK;
-                time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
-                TimeOD_TimeToMsg(&time, &msg);
-                msg.header.cmd = UPDATE_PUB;
-                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                // A detection just finished
+                // Make services configurations
+                // try to find a distance sensor
+                int id = RoutingTB_IDFromType(DISTANCE_TYPE);
+                if (id > 0)
                 {
-                    Luos_Loop();
+                    // Setup auto update each UPDATE_PERIOD_MS on imu
+                    // This value is resetted on all service at each detection
+                    // It's important to setting it each time.
+                    msg_t msg;
+                    msg.header.target      = id;
+                    msg.header.target_mode = IDACK;
+                    time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
+                    TimeOD_TimeToMsg(&time, &msg);
+                    msg.header.cmd = UPDATE_PUB;
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
+                    {
+                        Luos_Loop();
+                    }
+                    // Reset detection animation
+                    detection_display(0);
                 }
-                // Reset detection animation
-                detection_display(0);
+                previous_id = RoutingTB_IDFromService(app);
+                // Start the detection animation
+                detection_animation = true;
             }
-            previous_id = RoutingTB_IDFromService(app);
-            // Start the detection animation
-            detection_animation = true;
         }
         return;
     }
@@ -126,6 +134,10 @@ void LedStripPosition_Loop(void)
             else if (parameter == DISTANCE_DISPLAY)
             {
                 distance_based_display(id);
+            }
+            else if (parameter == MOTOR_COPY_DISPLAY)
+            {
+                motor_copy_display(id);
             }
         }
         lastframe_time_ms = Luos_GetSystick();
@@ -170,6 +182,18 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
     else if (msg->header.cmd == PARAMETERS)
     {
         parameter = msg->data[0];
+    }
+    else if (msg->header.cmd == SET_CMD)
+    {
+        position = msg->data[0];
+        if (position == NO_MOTOR)
+        {
+            parameter = DISTANCE_DISPLAY;
+        }
+        else
+        {
+            parameter = MOTOR_COPY_DISPLAY;
+        }
     }
 }
 
@@ -393,4 +417,89 @@ bool detection_display(int led_strip_id)
         return false;
     }
     return true;
+}
+
+void motor_copy_display(int led_strip_id)
+{
+
+    const int max_intensity                = 200;
+    const float chenillard_space           = 0.05;
+    const float chenillard_ratio_speed     = 0.04;
+    static float chenillard_position_ratio = 0.0;
+
+    if (position > 0)
+    {
+
+        // Add a light indicating the master motor
+        float motor_position = (position * (STRIP_LENGTH / 3.0)) - (STRIP_LENGTH / 6.0);
+        if (motor_position > 0.0)
+        {
+            for (float i = (motor_position + (chenillard_space * chenillard_position_ratio)); i < (5.0 * STRIP_LENGTH / 6.0); i += chenillard_space)
+            {
+                uint16_t motor_led = (uint16_t)(i / SPACE_BETWEEN_LEDS);
+                if (motor_led < LED_NUMBER)
+                {
+                    image[motor_led].b = max_intensity;
+                    image[motor_led].g = 0;
+                    image[motor_led].r = 0;
+                }
+            }
+            for (float i = (motor_position - (chenillard_space * chenillard_position_ratio)); i > (STRIP_LENGTH / 6.0); i -= chenillard_space)
+            {
+                int motor_led = (uint16_t)(i / SPACE_BETWEEN_LEDS);
+                if (motor_led > 0.0)
+                {
+                    image[motor_led].b = max_intensity;
+                    image[motor_led].g = 0;
+                    image[motor_led].r = 0;
+                }
+            }
+
+            // Set motors positions in red
+            uint16_t motor_led = (uint16_t)((STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+            image[motor_led].b = 0;
+            image[motor_led].g = 0;
+            image[motor_led].r = max_intensity;
+
+            motor_led          = (uint16_t)((3.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+            image[motor_led].b = 0;
+            image[motor_led].g = 0;
+            image[motor_led].r = max_intensity;
+
+            motor_led          = (uint16_t)((5.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+            image[motor_led].b = 0;
+            image[motor_led].g = 0;
+            image[motor_led].r = max_intensity;
+
+            // Overlap the red for the transmiting one
+            motor_led = (uint16_t)(motor_position / SPACE_BETWEEN_LEDS);
+            if (chenillard_position_ratio < 0.25)
+            {
+                image[motor_led].b = max_intensity;
+                image[motor_led].g = max_intensity / 2;
+                image[motor_led].r = max_intensity / 2;
+            }
+            else
+            {
+                image[motor_led].b = max_intensity;
+                image[motor_led].g = 0;
+                image[motor_led].r = 0;
+            }
+            // Make the chenillard move
+
+            chenillard_position_ratio += chenillard_ratio_speed;
+            if (chenillard_position_ratio >= 1.0)
+            {
+                chenillard_position_ratio -= 1.0;
+            }
+        }
+    }
+    // send the created image to the led_strip
+    msg_t msg;
+    msg.header.target_mode = IDACK;
+    msg.header.target      = led_strip_id;
+    msg.header.cmd         = COLOR;
+    Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
+    // reinitialize the image so that the led_strip is not lighted by default
+    memset((void *)image, 0, LED_NUMBER * sizeof(color_t));
 }
