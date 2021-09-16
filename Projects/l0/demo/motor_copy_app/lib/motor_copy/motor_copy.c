@@ -12,7 +12,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STARTUP_DELAY_MS       20
+#define STARTUP_DELAY_MS       100
 #define REFRESH_POSITION_MOTOR 10
 
 #define DEFAULT_ANGULAR_SPEED 180 // 180°/s
@@ -200,6 +200,39 @@ void Motor_init(uint16_t id)
     msg.header.target_mode = IDACK;
     msg.header.size        = sizeof(servo_motor_mode_t);
     memcpy(&msg.data, &servo_mode, sizeof(servo_motor_mode_t));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    float resolution       = 12.0;
+    msg.header.target      = id;
+    msg.header.cmd         = RESOLUTION;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(float);
+    memcpy(&msg.data, &resolution, sizeof(float));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    float reduction        = 74.83;
+    msg.header.target      = id;
+    msg.header.cmd         = REDUCTION;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(float);
+    memcpy(&msg.data, &reduction, sizeof(float));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    asserv_pid_t pid_coef  = {.p = 28.0, .i = 0.1, .d = 100.0};
+    msg.header.target      = id;
+    msg.header.cmd         = PID;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(asserv_pid_t);
+    memcpy(&msg.data, &pid_coef, sizeof(asserv_pid_t));
     while (Luos_SendMsg(app, &msg) != SUCCEED)
     {
         Luos_Loop();
