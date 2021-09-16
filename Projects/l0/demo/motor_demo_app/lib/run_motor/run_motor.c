@@ -9,23 +9,20 @@
 #include "od_ratio.h"
 #include "product_config.h"
 
+#include "math.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 #define STARTUP_DELAY_MS 20
 
-#define MOTOR_ID_OFFSET 5
-
-enum
-{
-    LOWER_BOUND_POSITION  = -90,
-    HIGHER_BOUND_POSITION = 90
-};
-
 #define REFRESH_POSITION_MOTOR  100
-#define REFRESH_DIRECTION_MOTOR 1000
+#define REFRESH_DIRECTION_MOTOR 100 // in milliseconds
 
-#define DEFAULT_ANGULAR_SPEED 180 // 180°/s
+#define MAX_ANGLE 90
+
+#define NB_POINT_IN_TRAJECTORY 100
+#define TRAJECTORY_PERIOD      2.0 // in seconds
+#define SAMPLING_PERIOD        (float)(TRAJECTORY_PERIOD / NB_POINT_IN_TRAJECTORY)
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -34,25 +31,23 @@ static uint8_t current_motor_target = NO_MOTOR;
 static uint8_t next_motor_target    = NO_MOTOR;
 uint32_t position_refresh           = 0;
 uint32_t command_refresh            = 0;
-uint32_t refresh_motor_timeout      = REFRESH_DIRECTION_MOTOR;
 uint16_t led_app_id                 = 0;
-
 uint16_t motor_table[3];
 
-float target_position[3] = {
-    LOWER_BOUND_POSITION,
-    LOWER_BOUND_POSITION,
-    LOWER_BOUND_POSITION};
+// Trajectory management
+uint32_t trajectory_refresh = 0;
+float trajectory[NB_POINT_IN_TRAJECTORY];
 
 /*******************************************************************************
  * Function
  ******************************************************************************/
 static void RunMotor_EventHandler(service_t *service, msg_t *msg);
-static void motor_init(uint8_t motor_target);
-static void motor_set(uint8_t motor_target, float position);
-static void reset_unselected_motor(uint8_t motor_target);
 static void run_selected_motor(uint8_t motor_target);
+static void motor_init(uint8_t motor_target);
+static void motor_SendTrajectory(uint8_t motor_target);
+static void motor_stream(uint8_t motor_target, control_type_t control);
 static void sort_motors(void);
+static void compute_trajectory(void);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -65,8 +60,11 @@ void RunMotor_Init(void)
     // Create App
     app = Luos_CreateService(RunMotor_EventHandler, RUN_MOTOR, "run_motor", revision);
 
-    position_refresh = Luos_GetSystick();
-    command_refresh  = Luos_GetSystick();
+    position_refresh   = Luos_GetSystick();
+    command_refresh    = Luos_GetSystick();
+    trajectory_refresh = Luos_GetSystick();
+
+    compute_trajectory();
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -127,8 +125,8 @@ void RunMotor_Loop(void)
                     init_motor_flag = false;
                 }
 
-                // ask for the current motor's angle position
-                if ((Luos_GetSystick() - command_refresh > refresh_motor_timeout))
+                // check if we need to change the selected motor
+                if ((Luos_GetSystick() - command_refresh > REFRESH_DIRECTION_MOTOR))
                 {
                     // reset command_refresh
                     command_refresh = Luos_GetSystick();
@@ -138,25 +136,22 @@ void RunMotor_Loop(void)
                     if (next_motor_target != current_motor_target)
                     {
                         current_motor_target = next_motor_target;
-                        reset_unselected_motor(current_motor_target);
 
-                        // the next motor will only does half of the trajectory for the first step (90°)
-                        refresh_motor_timeout = REFRESH_DIRECTION_MOTOR / 2;
+                        // send play command to selected motor
+                        run_selected_motor(current_motor_target);
                     }
-                    else
-                    {
-                        // the current motor run through the whole trajectory (180°)
-                        refresh_motor_timeout = REFRESH_DIRECTION_MOTOR;
-                    }
+                }
 
-                    // update target position if a valid motor is selected
-                    if (current_motor_target != NO_MOTOR)
-                    {
-                        target_position[current_motor_target - 1] = -target_position[current_motor_target - 1];
-                    }
+                // send trajectory data at a fixed period
+                if ((Luos_GetSystick() - trajectory_refresh > (uint32_t)TRAJECTORY_PERIOD * 1000))
+                {
+                    // reset command_refresh
+                    trajectory_refresh = Luos_GetSystick();
 
-                    // send command to selected motor
-                    run_selected_motor(current_motor_target);
+                    // send trajectory to the motor
+                    motor_SendTrajectory(motor_table[MOTOR_1_POSITION - 1]);
+                    motor_SendTrajectory(motor_table[MOTOR_2_POSITION - 1]);
+                    motor_SendTrajectory(motor_table[MOTOR_3_POSITION - 1]);
                 }
             }
         }
@@ -171,44 +166,29 @@ void RunMotor_EventHandler(service_t *service, msg_t *msg)
     }
 }
 
-void reset_unselected_motor(uint8_t motor_target)
-{
-    switch (motor_target)
-    {
-        case MOTOR_1_POSITION:
-            motor_set(motor_table[MOTOR_2_POSITION - 1], 0);
-            motor_set(motor_table[MOTOR_3_POSITION - 1], 0);
-            break;
-        case MOTOR_2_POSITION:
-            motor_set(motor_table[MOTOR_1_POSITION - 1], 0);
-            motor_set(motor_table[MOTOR_3_POSITION - 1], 0);
-            break;
-        case MOTOR_3_POSITION:
-            motor_set(motor_table[MOTOR_1_POSITION - 1], 0);
-            motor_set(motor_table[MOTOR_2_POSITION - 1], 0);
-            break;
-        default:
-            motor_set(motor_table[MOTOR_1_POSITION - 1], 0);
-            motor_set(motor_table[MOTOR_2_POSITION - 1], 0);
-            motor_set(motor_table[MOTOR_3_POSITION - 1], 0);
-            break;
-    }
-}
-
 void run_selected_motor(uint8_t motor_target)
 {
     switch (motor_target)
     {
         case MOTOR_1_POSITION:
-            motor_set(motor_table[MOTOR_1_POSITION - 1], target_position[current_motor_target - 1]);
+            motor_stream(motor_table[MOTOR_1_POSITION - 1], PLAY);
+            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
             break;
         case MOTOR_2_POSITION:
-            motor_set(motor_table[MOTOR_2_POSITION - 1], target_position[current_motor_target - 1]);
+            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_2_POSITION - 1], PLAY);
+            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
             break;
         case MOTOR_3_POSITION:
-            motor_set(motor_table[MOTOR_3_POSITION - 1], target_position[current_motor_target - 1]);
+            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_3_POSITION - 1], PLAY);
             break;
         default:
+            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
+            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
             break;
     }
 }
@@ -217,9 +197,8 @@ void motor_init(uint8_t motor_target)
 {
     // send a command to the motor
     servo_motor_mode_t servo_mode = {
-        .mode_compliant = false,
-        // control POWER / ANGULAR POSITION
-        .mode_angular_speed    = true,
+        .mode_compliant        = false,
+        .mode_angular_speed    = false,
         .mode_angular_position = true,
         .angular_position      = true};
 
@@ -229,18 +208,6 @@ void motor_init(uint8_t motor_target)
     msg.header.target_mode = IDACK;
     msg.header.size        = sizeof(servo_motor_mode_t);
     memcpy(&msg.data, &servo_mode, sizeof(servo_motor_mode_t));
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
-    {
-        Luos_Loop();
-    }
-
-    // send angular speed message
-    angular_speed_t angular_speed = DEFAULT_ANGULAR_SPEED;
-    msg.header.target             = motor_target;
-    msg.header.cmd                = ANGULAR_SPEED;
-    msg.header.target_mode        = IDACK;
-    msg.header.size               = sizeof(angular_speed_t);
-    memcpy(&msg.data, &angular_speed, sizeof(angular_speed_t));
     while (Luos_SendMsg(app, &msg) != SUCCEED)
     {
         Luos_Loop();
@@ -278,18 +245,46 @@ void motor_init(uint8_t motor_target)
     {
         Luos_Loop();
     }
+
+    float sampling_freq    = SAMPLING_PERIOD;
+    msg.header.target      = motor_target;
+    msg.header.cmd         = TIME;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = sizeof(float);
+    memcpy(&msg.data, &sampling_freq, sizeof(float));
+    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    {
+        Luos_Loop();
+    }
+
+    // stop streaming
+    motor_stream(motor_target, STOP);
+
+    // send trajectory data
+    motor_SendTrajectory(motor_target);
 }
 
-void motor_set(uint8_t motor_target, float position)
+void motor_SendTrajectory(uint8_t motor_target)
 {
     msg_t msg;
-    // send
-    angular_position_t angular_position = position;
-    msg.header.target                   = motor_target;
-    msg.header.cmd                      = ANGULAR_POSITION;
-    msg.header.target_mode              = IDACK;
-    msg.header.size                     = sizeof(angular_position_t);
-    memcpy(&msg.data, &angular_position, sizeof(angular_position_t));
+    // send data
+    msg.header.target      = motor_target;
+    msg.header.cmd         = ANGULAR_POSITION;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t);
+    Luos_SendData(app, &msg, trajectory, NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t));
+}
+
+void motor_stream(uint8_t motor_target, control_type_t control_type)
+{
+    msg_t msg;
+    // stop streaming
+    control_t control      = {.flux = control_type};
+    msg.header.target      = motor_target;
+    msg.header.cmd         = CONTROL;
+    msg.header.target_mode = IDACK;
+    msg.header.size        = NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t);
+    ControlOD_ControlToMsg(&control, &msg);
     while (Luos_SendMsg(app, &msg) != SUCCEED)
     {
         Luos_Loop();
@@ -345,5 +340,20 @@ static void sort_motors(void)
                 }
             }
         }
+    }
+}
+
+void compute_trajectory(void)
+{
+    uint32_t index  = 0;
+    float angle_deg = 0;
+    float quantum   = 360.0 / NB_POINT_IN_TRAJECTORY;
+
+    for (index = 0; index < NB_POINT_IN_TRAJECTORY; index++)
+    {
+        // compute linear trajectory
+        angle_deg = index * quantum;
+        // compute sinus trajectory
+        trajectory[index] = sin(M_PI / 180 * angle_deg) * MAX_ANGLE;
     }
 }
