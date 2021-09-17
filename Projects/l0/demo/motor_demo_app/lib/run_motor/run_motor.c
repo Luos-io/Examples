@@ -29,10 +29,10 @@
 static service_t *app;
 static uint8_t current_motor_target = NO_MOTOR;
 static uint8_t next_motor_target    = NO_MOTOR;
-uint32_t position_refresh           = 0;
 uint32_t command_refresh            = 0;
 uint16_t led_app_id                 = 0;
 uint16_t motor_table[3];
+int motor_found = 0;
 
 // Trajectory management
 uint32_t trajectory_refresh = 0;
@@ -42,7 +42,6 @@ float trajectory[NB_POINT_IN_TRAJECTORY];
  * Function
  ******************************************************************************/
 static void RunMotor_EventHandler(service_t *service, msg_t *msg);
-static void run_selected_motor(uint8_t motor_target);
 static void motor_init(uint8_t motor_target);
 static void motor_SendTrajectory(uint8_t motor_target);
 static void motor_stream(uint8_t motor_target, control_type_t control);
@@ -60,7 +59,6 @@ void RunMotor_Init(void)
     // Create App
     app = Luos_CreateService(RunMotor_EventHandler, RUN_MOTOR, "run_motor", revision);
 
-    position_refresh   = Luos_GetSystick();
     command_refresh    = Luos_GetSystick();
     trajectory_refresh = Luos_GetSystick();
 
@@ -91,118 +89,120 @@ void RunMotor_Loop(void)
         {
             if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
             {
+                // A detection just finished
+                // Make services configurations
                 // ask for the motor's position to move
-                if (Luos_GetSystick() - position_refresh > REFRESH_POSITION_MOTOR)
+                int id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
+                if (id > 0)
                 {
-                    // reset position_refresh
-                    position_refresh = Luos_GetSystick();
-
-                    led_app_id = RoutingTB_IDFromAlias("ledstrip_pos");
-                    if (led_app_id != 0)
+                    // Setup auto update each UPDATE_PERIOD_MS on imu
+                    // This value is resetted on all service at each detection
+                    // It's important to setting it each time.
+                    msg_t msg;
+                    msg.header.target      = id;
+                    msg.header.target_mode = IDACK;
+                    time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
+                    TimeOD_TimeToMsg(&time, &msg);
+                    msg.header.cmd = UPDATE_PUB;
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
                     {
-                        // send message to led strip controller
-                        msg_t msg_led_strip;
-                        msg_led_strip.header.target      = led_app_id;
-                        msg_led_strip.header.cmd         = GET_CMD;
-                        msg_led_strip.header.target_mode = IDACK;
-                        msg_led_strip.header.size        = 0;
-                        while (Luos_SendMsg(app, &msg_led_strip) != SUCCEED)
-                        {
-                            Luos_Loop();
-                        }
+                        Luos_Loop();
                     }
                 }
-
                 // init motor on the first run
-                static bool init_motor_flag = true;
-                if (init_motor_flag)
+                sort_motors();
+                for (int i = 0; i < motor_found; i++)
                 {
-                    sort_motors();
-                    motor_init(motor_table[MOTOR_1_POSITION - 1]);
-                    motor_init(motor_table[MOTOR_2_POSITION - 1]);
-                    motor_init(motor_table[MOTOR_3_POSITION - 1]);
-
-                    init_motor_flag = false;
+                    motor_init(motor_table[i]);
                 }
-
-                // check if we need to change the selected motor
-                if ((Luos_GetSystick() - command_refresh > REFRESH_DIRECTION_MOTOR))
-                {
-                    // reset command_refresh
-                    command_refresh = Luos_GetSystick();
-
-                    // if new target has been received, update selected motor
-                    // and reset unselected motor to their default position
-                    if (next_motor_target != current_motor_target)
-                    {
-                        current_motor_target = next_motor_target;
-
-                        // send play command to selected motor
-                        run_selected_motor(current_motor_target);
-                    }
-                }
-
-                // send trajectory data at a fixed period
-                if ((Luos_GetSystick() - trajectory_refresh > (uint32_t)TRAJECTORY_PERIOD * 1000))
-                {
-                    // reset command_refresh
-                    trajectory_refresh = Luos_GetSystick();
-
-                    // send trajectory to the motor
-                    motor_SendTrajectory(motor_table[MOTOR_1_POSITION - 1]);
-                    motor_SendTrajectory(motor_table[MOTOR_2_POSITION - 1]);
-                    motor_SendTrajectory(motor_table[MOTOR_3_POSITION - 1]);
-                }
+                previous_id = RoutingTB_IDFromService(app);
             }
+        }
+        return;
+    }
+    // check if we need to change the selected motor
+    // if new target has been received, update selected motor
+    // and reset unselected motor to their default position
+    if (next_motor_target != current_motor_target)
+    {
+        // send play command to selected motor
+        motor_stream(motor_table[current_motor_target - 1], PAUSE);
+        if (next_motor_target != NO_MOTOR)
+        {
+            motor_stream(motor_table[next_motor_target - 1], PLAY);
+        }
+        current_motor_target = next_motor_target;
+    }
+
+    // send trajectory data at a fixed period
+    if ((Luos_GetSystick() - trajectory_refresh > (uint32_t)TRAJECTORY_PERIOD * 1000))
+    {
+        // reset command_refresh
+        trajectory_refresh = Luos_GetSystick();
+
+        if (current_motor_target != NO_MOTOR)
+        {
+            // send trajectory to the current motor
+            motor_SendTrajectory(motor_table[current_motor_target - 1]);
         }
     }
 }
 
 void RunMotor_EventHandler(service_t *service, msg_t *msg)
 {
-    if (msg->header.source == RoutingTB_IDFromAlias("ledstrip_pos"))
+    if (msg->header.cmd == SET_CMD)
     {
         next_motor_target = msg->data[0];
     }
 }
 
-void run_selected_motor(uint8_t motor_target)
-{
-    switch (motor_target)
-    {
-        case MOTOR_1_POSITION:
-            motor_stream(motor_table[MOTOR_1_POSITION - 1], PLAY);
-            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
-            break;
-        case MOTOR_2_POSITION:
-            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_2_POSITION - 1], PLAY);
-            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
-            break;
-        case MOTOR_3_POSITION:
-            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_3_POSITION - 1], PLAY);
-            break;
-        default:
-            motor_stream(motor_table[MOTOR_1_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_2_POSITION - 1], PAUSE);
-            motor_stream(motor_table[MOTOR_3_POSITION - 1], PAUSE);
-            break;
-    }
-}
-
 void motor_init(uint8_t motor_target)
 {
-    // send a command to the motor
+    msg_t msg;
+    // Do not send motor configuration to dxl
+    if (strcmp(RoutingTB_AliasFromId(motor_target), "dxl_2") || strcmp(RoutingTB_AliasFromId(motor_target), "dxl_3"))
+    {
+        // Send sensor resolution
+        float resolution       = 12.0;
+        msg.header.target      = motor_target;
+        msg.header.cmd         = RESOLUTION;
+        msg.header.target_mode = IDACK;
+        msg.header.size        = sizeof(float);
+        memcpy(&msg.data, &resolution, sizeof(float));
+        while (Luos_SendMsg(app, &msg) != SUCCEED)
+        {
+            Luos_Loop();
+        }
+        // Send reduction ratio resolution
+        float reduction        = 74.83;
+        msg.header.target      = motor_target;
+        msg.header.cmd         = REDUCTION;
+        msg.header.target_mode = IDACK;
+        msg.header.size        = sizeof(float);
+        memcpy(&msg.data, &reduction, sizeof(float));
+        while (Luos_SendMsg(app, &msg) != SUCCEED)
+        {
+            Luos_Loop();
+        }
+        // Send PID
+        asserv_pid_t pid_coef  = {.p = 28.0, .i = 0.1, .d = 100.0};
+        msg.header.target      = motor_target;
+        msg.header.cmd         = PID;
+        msg.header.target_mode = IDACK;
+        msg.header.size        = sizeof(asserv_pid_t);
+        memcpy(&msg.data, &pid_coef, sizeof(asserv_pid_t));
+        while (Luos_SendMsg(app, &msg) != SUCCEED)
+        {
+            Luos_Loop();
+        }
+    }
+    // Send parameters to the motor
     servo_motor_mode_t servo_mode = {
         .mode_compliant        = false,
         .mode_angular_speed    = false,
         .mode_angular_position = true,
         .angular_position      = true};
 
-    msg_t msg;
     msg.header.target      = motor_target;
     msg.header.cmd         = PARAMETERS;
     msg.header.target_mode = IDACK;
@@ -212,40 +212,7 @@ void motor_init(uint8_t motor_target)
     {
         Luos_Loop();
     }
-
-    float resolution       = 12.0;
-    msg.header.target      = motor_target;
-    msg.header.cmd         = RESOLUTION;
-    msg.header.target_mode = IDACK;
-    msg.header.size        = sizeof(float);
-    memcpy(&msg.data, &resolution, sizeof(float));
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
-    {
-        Luos_Loop();
-    }
-
-    float reduction        = 74.83;
-    msg.header.target      = motor_target;
-    msg.header.cmd         = REDUCTION;
-    msg.header.target_mode = IDACK;
-    msg.header.size        = sizeof(float);
-    memcpy(&msg.data, &reduction, sizeof(float));
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
-    {
-        Luos_Loop();
-    }
-
-    asserv_pid_t pid_coef  = {.p = 28.0, .i = 0.1, .d = 100.0};
-    msg.header.target      = motor_target;
-    msg.header.cmd         = PID;
-    msg.header.target_mode = IDACK;
-    msg.header.size        = sizeof(asserv_pid_t);
-    memcpy(&msg.data, &pid_coef, sizeof(asserv_pid_t));
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
-    {
-        Luos_Loop();
-    }
-
+    // Send sampling frequency
     float sampling_freq    = SAMPLING_PERIOD;
     msg.header.target      = motor_target;
     msg.header.cmd         = TIME;
@@ -294,8 +261,8 @@ void motor_stream(uint8_t motor_target, control_type_t control_type)
 static void sort_motors(void)
 {
     // Parse routing table to find motors
-    int motor_found = 0;
-    int id          = RoutingTB_IDFromAlias("servo_motor");
+    int id      = RoutingTB_IDFromAlias("servo_motor");
+    motor_found = 0;
     if (id != 0)
     {
         motor_table[motor_found] = id;
@@ -339,6 +306,7 @@ static void sort_motors(void)
                     motor_table[y - 1] = id;
                 }
             }
+            motor_found++;
         }
     }
 }
