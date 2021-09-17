@@ -34,7 +34,9 @@ volatile color_t image[LED_NUMBER];
 // Display modes
 ledstrip_position_OperationMode_t parameter = DISTANCE_DISPLAY;
 // Distance display mode variables
-float radius = 0.0;
+float radius             = 0.0;
+volatile int motor_found = 0;
+bool motor_run_mode      = false;
 
 /*******************************************************************************
  * Function
@@ -43,6 +45,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg);
 static void distance_filtering(void);
 static void distance_frame_compute(void);
 static void glowing_fade(float target);
+static void sort_motors(void);
 // Display modes
 static void distance_based_display(int led_strip_id);
 static bool detection_display(int led_strip_id);
@@ -88,6 +91,8 @@ void LedStripPosition_Loop(void)
         {
             if ((Luos_GetSystick() - detection_date) > 20)
             {
+                motor_run_mode = false;
+                sort_motors();
                 // A detection just finished
                 // Make services configurations
                 // try to find a distance sensor
@@ -178,6 +183,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
         {
             Luos_Loop();
         }
+        motor_run_mode = true;
     }
     else if (msg->header.cmd == PARAMETERS)
     {
@@ -194,6 +200,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
         {
             parameter = MOTOR_COPY_DISPLAY;
         }
+        motor_run_mode = false;
     }
 }
 
@@ -300,18 +307,12 @@ void distance_frame_compute(void)
     float motor_position = (position * (STRIP_LENGTH / 3.0)) - (STRIP_LENGTH / 6.0);
     if (motor_position > 0.0)
     {
-        uint16_t motor_led = (uint16_t)(motor_position / SPACE_BETWEEN_LEDS);
-        image[motor_led].b = 0;
-        image[motor_led].g = 0;
-        image[motor_led].r = 200;
-        switch (position)
+        if ((position <= motor_found) && (motor_run_mode))
         {
-            case 1:
-                /* code */
-                break;
-
-            default:
-                break;
+            uint16_t motor_led = (uint16_t)(motor_position / SPACE_BETWEEN_LEDS);
+            image[motor_led].b = 0;
+            image[motor_led].g = (uint8_t)(81.0 * ((float)max_intensity / 255.0));
+            image[motor_led].r = (uint8_t)(255.0 * ((float)max_intensity / 255.0));
         }
     }
 }
@@ -370,7 +371,7 @@ bool detection_display(int led_strip_id)
         // This is not a good value just reset state
         speed          = start_speed;
         light_position = 0.0;
-        return;
+        return false;
     }
 
     // Compute the new light _position based on the current speed
@@ -434,14 +435,15 @@ void motor_copy_display(int led_strip_id)
         float motor_position = (position * (STRIP_LENGTH / 3.0)) - (STRIP_LENGTH / 6.0);
         if (motor_position > 0.0)
         {
-            for (float i = (motor_position + (chenillard_space * chenillard_position_ratio)); i < (5.0 * STRIP_LENGTH / 6.0); i += chenillard_space)
+            float last_motor_position = ((motor_found * (STRIP_LENGTH / 3.0)) - (STRIP_LENGTH / 6.0));
+            for (float i = (motor_position + (chenillard_space * chenillard_position_ratio)); i < last_motor_position; i += chenillard_space)
             {
                 uint16_t motor_led = (uint16_t)(i / SPACE_BETWEEN_LEDS);
                 if (motor_led < LED_NUMBER)
                 {
-                    image[motor_led].b = max_intensity;
-                    image[motor_led].g = 0;
-                    image[motor_led].r = 0;
+                    image[motor_led].b = (uint8_t)(189.0 * ((float)max_intensity / 255.0));
+                    image[motor_led].g = (uint8_t)(153.0 * ((float)max_intensity / 255.0));
+                    image[motor_led].r = (uint8_t)(225.0 * ((float)max_intensity / 255.0));
                 }
             }
             for (float i = (motor_position - (chenillard_space * chenillard_position_ratio)); i > (STRIP_LENGTH / 6.0); i -= chenillard_space)
@@ -449,27 +451,35 @@ void motor_copy_display(int led_strip_id)
                 int motor_led = (uint16_t)(i / SPACE_BETWEEN_LEDS);
                 if (motor_led > 0.0)
                 {
-                    image[motor_led].b = max_intensity;
-                    image[motor_led].g = 0;
-                    image[motor_led].r = 0;
+                    image[motor_led].b = (uint8_t)(189.0 * ((float)max_intensity / 255.0));
+                    image[motor_led].g = (uint8_t)(153.0 * ((float)max_intensity / 255.0));
+                    image[motor_led].r = (uint8_t)(225.0 * ((float)max_intensity / 255.0));
                 }
             }
 
             // Set motors positions in red
-            uint16_t motor_led = (uint16_t)((STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
-            image[motor_led].b = 0;
-            image[motor_led].g = 0;
-            image[motor_led].r = max_intensity;
-
-            motor_led          = (uint16_t)((3.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
-            image[motor_led].b = 0;
-            image[motor_led].g = 0;
-            image[motor_led].r = max_intensity;
-
-            motor_led          = (uint16_t)((5.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
-            image[motor_led].b = 0;
-            image[motor_led].g = 0;
-            image[motor_led].r = max_intensity;
+            uint16_t motor_led;
+            if (motor_found > 0)
+            {
+                motor_led          = (uint16_t)((STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+                image[motor_led].b = 0;
+                image[motor_led].g = (uint8_t)(81.0 * ((float)max_intensity / 255.0));
+                image[motor_led].r = (uint8_t)(255.0 * ((float)max_intensity / 255.0));
+            }
+            if (motor_found > 1)
+            {
+                motor_led          = (uint16_t)((3.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+                image[motor_led].b = 0;
+                image[motor_led].g = (uint8_t)(81.0 * ((float)max_intensity / 255.0));
+                image[motor_led].r = (uint8_t)(255.0 * ((float)max_intensity / 255.0));
+            }
+            if (motor_found > 2)
+            {
+                motor_led          = (uint16_t)((5.0 * STRIP_LENGTH / 6.0) / SPACE_BETWEEN_LEDS);
+                image[motor_led].b = 0;
+                image[motor_led].g = (uint8_t)(81.0 * ((float)max_intensity / 255.0));
+                image[motor_led].r = (uint8_t)(255.0 * ((float)max_intensity / 255.0));
+            }
 
             // Overlap the red for the transmiting one
             motor_led = (uint16_t)(motor_position / SPACE_BETWEEN_LEDS);
@@ -481,9 +491,9 @@ void motor_copy_display(int led_strip_id)
             }
             else
             {
-                image[motor_led].b = max_intensity;
-                image[motor_led].g = 0;
-                image[motor_led].r = 0;
+                image[motor_led].b = (uint8_t)(189.0 * ((float)max_intensity / 255.0));
+                image[motor_led].g = (uint8_t)(153.0 * ((float)max_intensity / 255.0));
+                image[motor_led].r = (uint8_t)(225.0 * ((float)max_intensity / 255.0));
             }
             // Make the chenillard move
 
@@ -502,4 +512,44 @@ void motor_copy_display(int led_strip_id)
     Luos_SendData(app, &msg, &image[0], sizeof(color_t) * LED_NUMBER);
     // reinitialize the image so that the led_strip is not lighted by default
     memset((void *)image, 0, LED_NUMBER * sizeof(color_t));
+}
+
+void sort_motors(void)
+{
+    motor_found = 0;
+    // Parse routing table to find motors
+    int id = RoutingTB_IDFromAlias("servo_motor");
+    if (id != 0)
+    {
+        motor_found++;
+    }
+    id = RoutingTB_IDFromAlias("servo_motor1");
+    if (id != 0)
+    {
+        motor_found++;
+    }
+    id = RoutingTB_IDFromAlias("servo_motor2");
+    if (id != 0)
+    {
+        motor_found++;
+    }
+    id = RoutingTB_IDFromAlias("servo_motor3");
+    if (id != 0)
+    {
+        motor_found++;
+    }
+    if (motor_found < 3)
+    {
+        // Then get the dxl
+        id = RoutingTB_IDFromAlias("dxl_2");
+        if (id == 0)
+        {
+            id = RoutingTB_IDFromAlias("dxl_3");
+        }
+        if (id != 0)
+        {
+            motor_found++;
+            // Now sort them
+        }
+    }
 }
