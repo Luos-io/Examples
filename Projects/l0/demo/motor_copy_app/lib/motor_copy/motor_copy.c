@@ -12,7 +12,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STARTUP_DELAY_MS       100
+#define STARTUP_DELAY_MS       50
 #define REFRESH_POSITION_MOTOR 10
 
 #define DEFAULT_ANGULAR_SPEED 180 // 180°/s
@@ -62,7 +62,7 @@ void MotorCopy_Loop(void)
         {
             // someone is making a detection, let it finish.
             // reset the init state to be ready to setup service at the end of detection
-            previous_id    = 0;
+            previous_id    = -1;
             detection_date = Luos_GetSystick();
         }
         else
