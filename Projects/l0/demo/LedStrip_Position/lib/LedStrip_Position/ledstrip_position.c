@@ -83,13 +83,13 @@ void LedStripPosition_Loop(void)
         {
             // someone is making a detection, let it finish.
             // reset the init state to be ready to setup service at the end of detection
-            previous_id    = 0;
+            previous_id    = -1;
             parameter      = DISTANCE_DISPLAY;
             detection_date = Luos_GetSystick();
         }
         else
         {
-            if ((Luos_GetSystick() - detection_date) > 20)
+            if ((Luos_GetSystick() - detection_date) > 50)
             {
                 motor_run_mode = false;
                 sort_motors();
