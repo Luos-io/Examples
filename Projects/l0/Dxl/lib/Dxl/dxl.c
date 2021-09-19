@@ -289,7 +289,7 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
         discover_dxl();
         return;
     }
-    if (msg->header.cmd == ANGULAR_POSITION)
+    if ((msg->header.cmd == ANGULAR_POSITION) && (msg->header.size == sizeof(float)))
     {
         int pos;
         if (dxl[index].model == AX12 || dxl[index].model == AX18 || dxl[index].model == XL320)
@@ -475,8 +475,8 @@ static void discover_dxl(void)
     uint32_t nb_samples_in_frame = ceil(BUFFER_SIZE / dxl_index);
     for (int i = 0; i < dxl_index; i++)
     {
-        dxl[i].dxl_motor.trajectory  = Stream_CreateStreamingChannel((float *)&trajectory_buf[nb_samples_in_frame * (i + 1)], nb_samples_in_frame, sizeof(float));
-        dxl[i].dxl_motor.measurement = Stream_CreateStreamingChannel((float *)&measurement_buf[nb_samples_in_frame * (i + 1)], nb_samples_in_frame, sizeof(float));
+        dxl[i].dxl_motor.trajectory  = Stream_CreateStreamingChannel((float *)&trajectory_buf[nb_samples_in_frame * i], nb_samples_in_frame, sizeof(float));
+        dxl[i].dxl_motor.measurement = Stream_CreateStreamingChannel((float *)&measurement_buf[nb_samples_in_frame * i], nb_samples_in_frame, sizeof(float));
     }
 
     HAL_NVIC_DisableIRQ(USART3_4_IRQn);
