@@ -248,7 +248,7 @@ void motor_set(uint8_t motor_target, angular_position_t position)
     msg.header.target_mode = IDACK;
     msg.header.size        = sizeof(angular_position_t);
     memcpy(&msg.data, &position, sizeof(angular_position_t));
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    while (Luos_SendMsg(app, &msg) == FAILED)
     {
         Luos_Loop();
     }
