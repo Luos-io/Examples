@@ -69,6 +69,8 @@ void MotorCopy_Loop(void)
         {
             if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
             {
+
+                sort_motors();
                 int ledstrip_id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
                 if (ledstrip_id > 0)
                 {
@@ -121,18 +123,16 @@ void MotorCopy_Loop(void)
                         {
                             Luos_Loop();
                         }
-
-                        // Compute the position of the dxl
-                        sort_motors();
-                        msg.header.target      = ledstrip_id;
-                        msg.header.cmd         = SET_CMD;
-                        msg.header.target_mode = IDACK;
-                        msg.header.size        = 1;
-                        msg.data[0]            = position;
-                        while (Luos_SendMsg(app, &msg) != SUCCEED)
-                        {
-                            Luos_Loop();
-                        }
+                    }
+                    // Compute the position of the dxl
+                    msg.header.target      = ledstrip_id;
+                    msg.header.cmd         = SET_CMD;
+                    msg.header.target_mode = IDACK;
+                    msg.header.size        = 1;
+                    msg.data[0]            = position;
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
+                    {
+                        Luos_Loop();
                     }
 
                     // find the other motors and configure them
@@ -258,6 +258,7 @@ static void sort_motors(void)
 {
     // Parse routing table to find motors
     int motor_found = 0;
+    position        = NO_MOTOR;
     int id          = RoutingTB_IDFromAlias("servo_motor");
     if (id != 0)
     {
