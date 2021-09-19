@@ -179,7 +179,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
         pub_msg.header.cmd         = SET_CMD;
         pub_msg.header.size        = 1;
         pub_msg.data[0]            = position;
-        while (Luos_SendMsg(app, &pub_msg) != SUCCEED)
+        while (Luos_SendMsg(app, &pub_msg) == FAILED)
         {
             Luos_Loop();
         }

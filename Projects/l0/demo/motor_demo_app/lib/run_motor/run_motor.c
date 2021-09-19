@@ -252,7 +252,7 @@ void motor_stream(uint8_t motor_target, control_type_t control_type)
     msg.header.target_mode = IDACK;
     msg.header.size        = NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t);
     ControlOD_ControlToMsg(&control, &msg);
-    while (Luos_SendMsg(app, &msg) != SUCCEED)
+    while (Luos_SendMsg(app, &msg) == FAILED)
     {
         Luos_Loop();
     }
