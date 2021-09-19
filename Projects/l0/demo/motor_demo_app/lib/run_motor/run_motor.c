@@ -233,13 +233,16 @@ void motor_init(uint8_t motor_target)
 
 void motor_SendTrajectory(uint8_t motor_target)
 {
-    msg_t msg;
-    // send data
-    msg.header.target      = motor_target;
-    msg.header.cmd         = ANGULAR_POSITION;
-    msg.header.target_mode = IDACK;
-    msg.header.size        = NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t);
-    Luos_SendData(app, &msg, trajectory, NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t));
+    if (motor_target != 0)
+    {
+        msg_t msg;
+        // send data
+        msg.header.target      = motor_target;
+        msg.header.cmd         = ANGULAR_POSITION;
+        msg.header.target_mode = IDACK;
+        msg.header.size        = NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t);
+        Luos_SendData(app, &msg, trajectory, NB_POINT_IN_TRAJECTORY * sizeof(angular_position_t));
+    }
 }
 
 void motor_stream(uint8_t motor_target, control_type_t control_type)
