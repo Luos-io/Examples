@@ -21,6 +21,7 @@
 #define MAXRADIUS              0.05
 #define MAX_DISTANCE_UPDATE_MS 30
 #define DIST_OFFSET            0.03
+#define STARTUP_DELAY_MS       100
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -89,7 +90,7 @@ void LedStripPosition_Loop(void)
         }
         else
         {
-            if ((Luos_GetSystick() - detection_date) > 50)
+            if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
             {
                 motor_run_mode = false;
                 sort_motors();

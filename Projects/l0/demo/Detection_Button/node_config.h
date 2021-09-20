@@ -43,7 +43,8 @@
  *    NBR_PORT              |              2             | PTP Branch number Max 8
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
 ******************************************************************************/
-
+#define MAX_MSG_NB      30
+#define MSG_BUFFER_SIZE 1024
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
 *******************************************************************************
