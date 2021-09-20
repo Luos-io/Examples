@@ -13,7 +13,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define STARTUP_DELAY_MS 50
+#define STARTUP_DELAY_MS 100
 
 #define REFRESH_POSITION_MOTOR  100
 #define REFRESH_DIRECTION_MOTOR 100 // in milliseconds
