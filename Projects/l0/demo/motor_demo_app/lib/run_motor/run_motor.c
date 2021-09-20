@@ -20,7 +20,7 @@
 
 #define MAX_ANGLE 90
 
-#define NB_POINT_IN_TRAJECTORY 100
+#define NB_POINT_IN_TRAJECTORY 200
 #define TRAJECTORY_PERIOD      2.0 // in seconds
 #define SAMPLING_PERIOD        (float)(TRAJECTORY_PERIOD / NB_POINT_IN_TRAJECTORY)
 /*******************************************************************************
@@ -118,6 +118,7 @@ void RunMotor_Loop(void)
                 previous_id = RoutingTB_IDFromService(app);
             }
         }
+        next_motor_target = NO_MOTOR;
         return;
     }
     // check if we need to change the selected motor
@@ -126,7 +127,10 @@ void RunMotor_Loop(void)
     if (next_motor_target != current_motor_target)
     {
         // send play command to selected motor
-        motor_stream(motor_table[current_motor_target - 1], PAUSE);
+        if (current_motor_target != NO_MOTOR)
+        {
+            motor_stream(motor_table[current_motor_target - 1], PAUSE);
+        }
         if (next_motor_target != NO_MOTOR)
         {
             motor_stream(motor_table[next_motor_target - 1], PLAY);
@@ -140,10 +144,10 @@ void RunMotor_Loop(void)
         // reset command_refresh
         trajectory_refresh = Luos_GetSystick();
 
-        if (current_motor_target != NO_MOTOR)
+        // send trajectory to the current motor
+        for (int i = 0; i < motor_found; i++)
         {
-            // send trajectory to the current motor
-            motor_SendTrajectory(motor_table[current_motor_target - 1]);
+            motor_SendTrajectory(motor_table[i]);
         }
     }
 }
@@ -225,7 +229,7 @@ void motor_init(uint8_t motor_target)
     }
 
     // stop streaming
-    motor_stream(motor_target, STOP);
+    motor_stream(motor_target, PAUSE);
 
     // send trajectory data
     motor_SendTrajectory(motor_target);
