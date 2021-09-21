@@ -10,7 +10,7 @@
     "licence": "MIT",
     "build": {
         "flags": [
-            "-DREV={0,7,0}"
+            "-DREV={1,0,0}"
         ]
     },
     "dependencies": [
