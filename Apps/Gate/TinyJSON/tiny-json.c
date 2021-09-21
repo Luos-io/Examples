@@ -385,7 +385,7 @@ static char* objValue( char* ptr, json_t* obj, jsonPool_t* pool ) {
   * @param pool The handler of the pool.
   * @return a instance of a json. */
 static json_t* poolInit( jsonPool_t* pool ) {
-    jsonStaticPool_t *spool = json_containerOf( pool, jsonStaticPool_t, pool );
+    jsonStaticPool_t *spool = json_serviceOf( pool, jsonStaticPool_t, pool );
     spool->nextFree = 1;
     return spool->mem;
 }
@@ -395,7 +395,7 @@ static json_t* poolInit( jsonPool_t* pool ) {
   * @retval The handler of the new instance if success.
   * @retval Null pointer if the pool was empty. */
 static json_t* poolAlloc( jsonPool_t* pool ) {
-    jsonStaticPool_t *spool = json_containerOf( pool, jsonStaticPool_t, pool );
+    jsonStaticPool_t *spool = json_serviceOf( pool, jsonStaticPool_t, pool );
     if ( spool->nextFree >= spool->qty ) return 0;
     return spool->mem + spool->nextFree++;
 }

@@ -18,7 +18,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *gate;
+service_t *gate;
 char detection_ask      = 0;
 time_luos_t update_time = GATE_REFRESH_TIME_S;
 /*******************************************************************************
@@ -32,7 +32,7 @@ time_luos_t update_time = GATE_REFRESH_TIME_S;
 void Gate_Init(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    gate                = Luos_CreateContainer(0, GATE_MOD, "gate", revision);
+    gate                = Luos_CreateService(0, GATE_TYPE, "gate", revision);
 }
 
 /******************************************************************************
@@ -45,37 +45,34 @@ void Gate_Loop(void)
 #ifndef GATE_POLLING
     static uint8_t first_conversion = 1;
 #endif
-    static short pipe_id              = 0;
-    static short previous_id          = -1;
+    static short pipe_id = 0;
+#ifndef NODETECTION
+    static short previous_id = -1;
+#endif
     static volatile bool gate_running = false;
     static uint32_t last_time         = 0;
 
     // Check the detection status.
-    if (RoutingTB_IDFromContainer(gate) == 0)
+    if (RoutingTB_IDFromService(gate) == 0)
     {
+#ifndef NODETECTION
         // We don't have any ID, meaning no detection occure or detection is occuring.
         if (previous_id == -1)
         {
             // This is the start period, we have to make a detection.
             // Be sure the network is powered up 20 ms before starting a detection
-#ifndef NODETECTION
             if (Luos_GetSystick() > 20)
             {
                 // No detection occure, do it
-                RoutingTB_DetectContainers(gate);
+                RoutingTB_DetectServices(gate);
+                previous_id = 0;
 #ifndef GATE_POLLING
                 first_conversion = 1;
                 update_time      = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
 #endif
             }
+        }
 #endif
-        }
-        else
-        {
-            // someone is making a detection, let it finish.
-            // reset the previous_id state to be ready to setup container at the end of detection
-            previous_id = 0;
-        }
         pipe_id = 0;
     }
     else
@@ -104,6 +101,8 @@ void Gate_Loop(void)
                     DataManager_collect(gate);
                     first_conversion = 0;
                 }
+#else
+                update_time = 0.0;
 #endif
             }
         }
@@ -114,9 +113,9 @@ void Gate_Loop(void)
         if (detection_ask)
         {
             // Run detection
-            RoutingTB_DetectContainers(gate);
+            RoutingTB_DetectServices(gate);
             pipe_id = PipeLink_Find(gate);
-            // Create data from container
+            // Create data from service
             Convert_RoutingTableData(gate);
 #ifndef GATE_POLLING
             // Set update frequency

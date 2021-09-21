@@ -39,7 +39,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define json_containerOf( ptr, type, member ) \
+#define json_serviceOf( ptr, type, member ) \
     ((type*)( (char*)ptr - offsetof( type, member ) ))
 
 /** @defgroup tinyJson Tiny JSON parser.

@@ -2,6 +2,7 @@
 #define POTENTIOMETER_H
 
 #include "luos.h"
+#include "potentiometer_drv.h"
 
 /*******************************************************************************
  * Definitions

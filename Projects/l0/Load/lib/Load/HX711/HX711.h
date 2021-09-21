@@ -1,27 +1,33 @@
-/**
- *
- * HX711 library
- * Inspired by HX711 library for Arduino
+/******************************************************************************
+ * @file HX711 library
+ * @brief Inspired by HX711 library for Arduino
  * https://github.com/bogde/HX711
- *
-**/
+ * @author Luos
+ * @version 0.0.0
+ ******************************************************************************/
 #ifndef HX711_h
 #define HX711_h
 
-#include "main.h"
-
-typedef struct {
-    char GAIN;      // amplification factor
-    long OFFSET;// used for tare weight
+#include "stm32f0xx_hal.h"
+#include "luos.h"
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
+typedef struct
+{
+    char GAIN;   // amplification factor
+    long OFFSET; // used for tare weight
     float SCALE; // used to return weight in grams, kg, ounces, whatever
-}hx711_t;
+} hx711_t;
 
-// Initialize library with data output pin, clock input pin and gain factor.
-// Channel selection is made by passing the appropriate gain:
-// - With a gain factor of 64 or 128, channel A is selected
-// - With a gain factor of 32, channel B is selected
-// The library default is "128" (Channel A).
-void hx711_init(uint8_t gain);
+#define DEFAULT_TARE_TIME 10
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
 
 // Check if HX711 is ready
 // from the datasheet: When output data is not ready for retrieval, digital output pin DOUT is high. Serial clock
@@ -71,5 +77,14 @@ void hx711_power_down();
 
 // wakes up the chip after power down mode
 void hx711_power_up();
+
+//driver API
+// Initialize library with data output pin, clock input pin and gain factor.
+// Channel selection is made by passing the appropriate gain:
+// - With a gain factor of 64 or 128, channel A is selected
+// - With a gain factor of 32, channel B is selected
+// The library default is "128" (Channel A).
+void hx711_Init(void);
+uint8_t hx711_ReadValue(force_t *load);
 
 #endif /* HX711_h */

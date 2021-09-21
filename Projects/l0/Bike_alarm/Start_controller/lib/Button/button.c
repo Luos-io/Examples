@@ -4,8 +4,10 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
+
 #include "button.h"
-#include "gpio.h"
+#include "ll_button.h"
+#include "profile_state.h"
 
 /*******************************************************************************
  * Definitions
@@ -14,11 +16,11 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-
+profile_state_t button;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Button_MsgHandler(container_t *container, msg_t *msg);
+
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
@@ -26,9 +28,16 @@ static void Button_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void Button_Init(void)
 {
-    revision_t revision = {.unmap = REV};
-    Luos_CreateContainer(Button_MsgHandler, STATE_MOD, "button_mod", revision);
+    // low level initialization
+    ll_button_init();
+    // service initialization
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
+    // Profile configuration
+    button.access = READ_ONLY_ACCESS;
+    // Service creation following state profile
+    ProfileState_CreateService(&button, 0, "lock", revision);
 }
+
 /******************************************************************************
  * @brief loop must be call in project loop
  * @param None
@@ -36,25 +45,5 @@ void Button_Init(void)
  ******************************************************************************/
 void Button_Loop(void)
 {
-}
-/******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
- * @param Msg receive
- * @return None
- ******************************************************************************/
-static void Button_MsgHandler(container_t *container, msg_t *msg)
-{
-    if (msg->header.cmd == ASK_PUB_CMD)
-    {
-        // fill the message infos
-        msg_t pub_msg;
-        pub_msg.header.cmd         = IO_STATE;
-        pub_msg.header.target_mode = ID;
-        pub_msg.header.target      = msg->header.source;
-        pub_msg.header.size        = sizeof(char);
-        pub_msg.data[0]            = HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin);
-        Luos_SendMsg(container, &pub_msg);
-        return;
-    }
+    ll_button_read(&button.state);
 }

@@ -1,8 +1,8 @@
 {
     "name": "Potentiometer",
-    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,container,ST",
+    "keywords": "robus,network,microservice,luos,operating system,os,embedded,communication,service,ST",
     "description": "a simple Potentiometer",
-    "version": "0.7.0",
+    "version": "1.0.0",
     "authors": {
         "name": "Luos",
         "url": "https://luos.io"
@@ -10,13 +10,13 @@
     "licence": "MIT",
     "build": {
         "flags": [
-            "-DREV={0,7,0}"
+            "-DREV={1,0,0}"
         ]
     },
     "dependencies": [
         {
             "name": "luos/Luos",
-            "version": "^1.0.0"
+            "version": "^2.0.0"
         }
     ]
 }

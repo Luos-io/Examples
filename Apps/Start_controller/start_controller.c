@@ -23,7 +23,7 @@ typedef enum
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-container_t *app;
+service_t *app;
 volatile control_t control_app;
 uint8_t lock           = 1;
 uint8_t last_btn_state = 0;
@@ -33,7 +33,7 @@ uint8_t init           = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void StartController_MsgHandler(container_t *container, msg_t *msg);
+static void StartController_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
  * @brief init must be call in project init
@@ -42,11 +42,11 @@ static void StartController_MsgHandler(container_t *container, msg_t *msg);
  ******************************************************************************/
 void StartController_Init(void)
 {
-    revision_t revision = {.major = 0, .minor = 1, .build = 1};
+    revision_t revision = {.major = 1, .minor = 0, .build = 0};
     // By default this app running
     control_app.flux = PLAY;
     // Create App
-    app = Luos_CreateContainer(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
+    app = Luos_CreateService(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -58,48 +58,57 @@ void StartController_Loop(void)
     static short previous_id       = -1;
     static uint32_t switch_date    = 0;
     static uint8_t animation_state = 0;
+    static uint32_t detection_date = 0;
     // ********** hot plug management ************
-    // Check if we have done the first init or if container Id have changed
-    if (previous_id != RoutingTB_IDFromContainer(app))
+    // Check if we have done the first init or if service Id have changed
+    if (previous_id != RoutingTB_IDFromService(app))
     {
-        if (RoutingTB_IDFromContainer(app) == 0)
+        if (RoutingTB_IDFromService(app) == 0)
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
             {
                 // This is the really first init, we have to make it.
                 // Be sure the network is powered up 1000 ms before starting a detection
-                if (HAL_GetTick() > 1000)
+                if (Luos_GetSystick() > 1000)
                 {
                     // No detection occure, do it
-                    RoutingTB_DetectContainers(app);
+                    RoutingTB_DetectServices(app);
+                    detection_date = Luos_GetSystick();
                 }
             }
             else
             {
                 // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup container at the end of detection
-                previous_id = 0;
+                // reset the init state to be ready to setup service at the end of detection
+                previous_id    = 0;
+                detection_date = Luos_GetSystick();
             }
         }
         else
         {
-            // Make containers configurations
-            int id = RoutingTB_IDFromAlias("lock");
-            if (id > 0)
+            if ((Luos_GetSystick() - detection_date) > 100)
             {
-                msg_t msg;
-                msg.header.target      = id;
-                msg.header.target_mode = IDACK;
-                // Setup auto update each UPDATE_PERIOD_MS on button
-                // This value is resetted on all container at each detection
-                // It's important to setting it each time.
-                time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
-                TimeOD_TimeToMsg(&time, &msg);
-                msg.header.cmd = UPDATE_PUB;
-                Luos_SendMsg(app, &msg);
+                // Make services configurations
+                int id = RoutingTB_IDFromAlias("lock");
+                if (id > 0)
+                {
+                    msg_t msg;
+                    msg.header.target      = id;
+                    msg.header.target_mode = IDACK;
+                    // Setup auto update each UPDATE_PERIOD_MS on button
+                    // This value is resetted on all service at each detection
+                    // It's important to setting it each time.
+                    time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
+                    TimeOD_TimeToMsg(&time, &msg);
+                    msg.header.cmd = UPDATE_PUB;
+                    while (Luos_SendMsg(app, &msg) != SUCCEED)
+                    {
+                        Luos_Loop();
+                    }
+                }
+                previous_id = RoutingTB_IDFromService(app);
             }
-            previous_id = RoutingTB_IDFromContainer(app);
         }
         return;
     }
@@ -125,12 +134,16 @@ void StartController_Loop(void)
                 alarm_control.flux = STOP;
             }
             // send message
+            msg.header.target = id;
             ControlOD_ControlToMsg(&alarm_control, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         // The button state switch, change the led consequently
         state_switch = 0;
-        id           = RoutingTB_IDFromType(COLOR_MOD);
+        id           = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -148,7 +161,10 @@ void StartController_Loop(void)
             }
             msg.header.target = id;
             IlluminanceOD_ColorToMsg(&color, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         id = RoutingTB_IDFromAlias("horn");
         if (id > 0)
@@ -159,7 +175,10 @@ void StartController_Loop(void)
             msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 1;
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         // try to reach a buzzer and drive it to make a happy sound
         if (!lock)
@@ -171,15 +190,18 @@ void StartController_Loop(void)
                 msg.header.cmd    = IO_STATE;
                 msg.header.size   = 1;
                 msg.data[0]       = 1;
-                Luos_SendMsg(app, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
             }
         }
         // Save switch date
-        switch_date = HAL_GetTick();
+        switch_date = Luos_GetSystick();
         animation_state++;
     }
-    // This part is a start stop animation using available containers
-    if (((HAL_GetTick() - switch_date) > 100) & (animation_state == 1))
+    // This part is a start stop animation using available services
+    if (((Luos_GetSystick() - switch_date) > 100) & (animation_state == 1))
     {
         // 100ms after button turn of light and horn
         msg_t msg;
@@ -193,16 +215,19 @@ void StartController_Loop(void)
             msg.header.cmd    = IO_STATE;
             // turn the horn on/off
             msg.data[0] = 0;
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         animation_state++;
     }
-    if (((HAL_GetTick() - switch_date) > 600) & (animation_state == 2))
+    if (((Luos_GetSystick() - switch_date) > 600) & (animation_state == 2))
     {
         // 600ms after switch turn light depending on the curent lock state
         msg_t msg;
         msg.header.target_mode = IDACK;
-        int id                 = RoutingTB_IDFromType(COLOR_MOD);
+        int id                 = RoutingTB_IDFromType(COLOR_TYPE);
         if (id > 0)
         {
             // we have an alarm, we can set its color
@@ -221,24 +246,27 @@ void StartController_Loop(void)
             }
             msg.header.target = id;
             IlluminanceOD_ColorToMsg(&color, &msg);
-            Luos_SendMsg(app, &msg);
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
         }
         animation_state = 0;
     }
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void StartController_MsgHandler(container_t *container, msg_t *msg)
+static void StartController_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == IO_STATE)
     {
         if (control_app.flux == PLAY)
         {
-            if (RoutingTB_TypeFromID(msg->header.source) == STATE_MOD)
+            if (RoutingTB_TypeFromID(msg->header.source) == STATE_TYPE)
             {
                 // this is the button reply we have filter it to manage monostability
                 if ((!last_btn_state) & (last_btn_state != msg->data[0]))

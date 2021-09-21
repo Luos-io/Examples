@@ -26,21 +26,21 @@ typedef struct
 } servo_parameters_t;
 
 // Luos data to Luos messages convertion
-void Convert_DataToLuos(container_t *service, char *data);
+void Convert_DataToLuos(service_t *service, char *data);
 
 // Luos service information to Data convertion
 uint16_t Convert_StartData(char *data);
 uint16_t Convert_StartServiceData(char *data, char *alias);
 uint16_t Convert_MsgToData(msg_t *msg, char *data);
 uint16_t Convert_EndServiceData(char *data);
-void Convert_EndData(container_t *service, char *data, char *data_ptr);
-void Convert_VoidData(container_t *service);
+void Convert_EndData(service_t *service, char *data, char *data_ptr);
+void Convert_VoidData(service_t *service);
 
 // Luos default information to Data convertion
-void Convert_AssertToData(container_t *service, uint16_t source, luos_assert_t assertion);
-void Convert_ExcludedContainerData(container_t *service);
+void Convert_AssertToData(service_t *service, uint16_t source, luos_assert_t assertion);
+void Convert_ExcludedServiceData(service_t *service);
 
 // Luos routing table information to Json convertion
-void Convert_RoutingTableData(container_t *service);
+void Convert_RoutingTableData(service_t *service);
 
 #endif /* CONVERT_H_ */

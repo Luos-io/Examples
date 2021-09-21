@@ -29,17 +29,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f0xx_hal.h"
-#include "stm32f0xx_ll_usart.h"
-#include "stm32f0xx_ll_rcc.h"
-#include "stm32f0xx_ll_bus.h"
-#include "stm32f0xx_ll_cortex.h"
-#include "stm32f0xx_ll_system.h"
-#include "stm32f0xx_ll_utils.h"
-#include "stm32f0xx_ll_pwr.h"
-#include "stm32f0xx_ll_gpio.h"
-#include "stm32f0xx_ll_dma.h"
-
-#include "stm32f0xx_ll_exti.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -69,34 +58,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define S1_Pin GPIO_PIN_0
-#define S1_GPIO_Port GPIOA
-#define POWER_SENSOR_Pin GPIO_PIN_2
-#define POWER_SENSOR_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOA
-#define COM_LVL_DOWN_Pin GPIO_PIN_5
-#define COM_LVL_DOWN_GPIO_Port GPIOA
-#define COM_LVL_UP_Pin GPIO_PIN_6
-#define COM_LVL_UP_GPIO_Port GPIOA
-#define S3_Pin GPIO_PIN_10
-#define S3_GPIO_Port GPIOB
-#define S4_Pin GPIO_PIN_11
-#define S4_GPIO_Port GPIOB
-#define PTPB_Pin GPIO_PIN_13
-#define PTPB_GPIO_Port GPIOB
-#define RX_EN_Pin GPIO_PIN_14
-#define RX_EN_GPIO_Port GPIOB
-#define TX_EN_Pin GPIO_PIN_15
-#define TX_EN_GPIO_Port GPIOB
-#define PTPA_Pin GPIO_PIN_8
-#define PTPA_GPIO_Port GPIOA
-#define COM_TX_Pin GPIO_PIN_9
-#define COM_TX_GPIO_Port GPIOA
-#define COM_RX_Pin GPIO_PIN_10
-#define COM_RX_GPIO_Port GPIOA
-#define S2_Pin GPIO_PIN_3
-#define S2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

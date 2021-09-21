@@ -9,7 +9,7 @@
 #include "math.h"
 #include "tim.h"
 #include <float.h>
-#include "template_servo_motor.h"
+#include "profile_servo_motor.h"
 
 /*******************************************************************************
  * Definitions
@@ -18,8 +18,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-template_servo_motor_t stepper_motor_template;
-profile_servo_motor_t *stepper_motor = &stepper_motor_template.profile;
+profile_servo_motor_t stepper_motor;
 
 volatile uint8_t microstepping = 16;
 volatile int target_step_nb    = 0;
@@ -28,7 +27,7 @@ volatile int current_step_nb   = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
-static void Stepper_MsgHandler(container_t *container, msg_t *msg);
+static void Stepper_MsgHandler(service_t *service, msg_t *msg);
 static void compute_speed(void);
 
 /******************************************************************************
@@ -48,36 +47,36 @@ void Stepper_Init(void)
 
     // ************** Default configuration settings *****************
     // motor mode by default
-    stepper_motor->mode.mode_compliant        = 1;
-    stepper_motor->mode.current               = 0;
-    stepper_motor->mode.mode_power            = 1;
-    stepper_motor->mode.mode_angular_position = 0;
-    stepper_motor->mode.mode_angular_speed    = 0;
-    stepper_motor->mode.mode_linear_position  = 0;
-    stepper_motor->mode.mode_linear_speed     = 0;
-    stepper_motor->mode.angular_position      = 1;
-    stepper_motor->mode.angular_speed         = 0;
-    stepper_motor->mode.linear_position       = 0;
-    stepper_motor->mode.linear_speed          = 0;
+    stepper_motor.mode.mode_compliant        = 1;
+    stepper_motor.mode.current               = 0;
+    stepper_motor.mode.mode_power            = 1;
+    stepper_motor.mode.mode_angular_position = 0;
+    stepper_motor.mode.mode_angular_speed    = 0;
+    stepper_motor.mode.mode_linear_position  = 0;
+    stepper_motor.mode.mode_linear_speed     = 0;
+    stepper_motor.mode.angular_position      = 1;
+    stepper_motor.mode.angular_speed         = 0;
+    stepper_motor.mode.linear_position       = 0;
+    stepper_motor.mode.linear_speed          = 0;
 
     // default motor configuration
-    stepper_motor->motor_reduction      = 131;
-    stepper_motor->resolution           = 200;
-    stepper_motor->wheel_diameter       = 0.100f;
-    stepper_motor->target_angular_speed = 100.0;
+    stepper_motor.motor_reduction      = 131;
+    stepper_motor.resolution           = 200;
+    stepper_motor.wheel_diameter       = 0.100f;
+    stepper_motor.target_angular_speed = 100.0;
 
     // default motor limits
-    stepper_motor->limit_angular_position[MINI] = -FLT_MAX;
-    stepper_motor->limit_angular_position[MAXI] = FLT_MAX;
-    stepper_motor->motor.limit_current          = 6.0;
+    stepper_motor.limit_angular_position[MINI] = -FLT_MAX;
+    stepper_motor.limit_angular_position[MAXI] = FLT_MAX;
+    stepper_motor.motor.limit_current          = 6.0;
 
     // Control mode default values
-    stepper_motor->control.unmap = 0; // PLAY and no REC
+    stepper_motor.control.unmap = 0; // PLAY and no REC
 
     compute_speed();
 
-    // ************** Container creation *****************
-    TemplateServoMotor_CreateContainer(Stepper_MsgHandler, &stepper_motor_template, "stepper_motor", revision);
+    // ************** Service creation *****************
+    ProfileServo_CreateService(&stepper_motor, Stepper_MsgHandler, "stepper_motor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -87,29 +86,29 @@ void Stepper_Init(void)
 void Stepper_Loop(void)
 {
     // compute values
-    float degPerStep = 360.0 / (float)(stepper_motor->resolution * microstepping);
-    target_step_nb   = (int)(stepper_motor->target_angular_position / degPerStep);
+    float degPerStep = 360.0 / (float)(stepper_motor.resolution * microstepping);
+    target_step_nb   = (int)(stepper_motor.target_angular_position / degPerStep);
 }
 /******************************************************************************
- * @brief Msg Handler call back when a msg receive for this container
- * @param Container destination
+ * @brief Msg Handler call back when a msg receive for this service
+ * @param Service destination
  * @param Msg receive
  * @return None
  ******************************************************************************/
-static void Stepper_MsgHandler(container_t *container, msg_t *msg)
+static void Stepper_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == PARAMETERS)
     {
-        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, stepper_motor->mode.mode_compliant);
+        HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, stepper_motor.mode.mode_compliant);
     }
 }
 
 static void compute_speed(void)
 {
-    if (fabs(stepper_motor->target_angular_speed) > 0.1)
+    if (fabs(stepper_motor.target_angular_speed) > 0.1)
     {
-        volatile float degPerStep  = 360.0 / (float)(stepper_motor->resolution * microstepping);
-        volatile float timePerStep = 1.0 / (fabs(stepper_motor->target_angular_speed) / degPerStep);
+        volatile float degPerStep  = 360.0 / (float)(stepper_motor.resolution * microstepping);
+        volatile float timePerStep = 1.0 / (fabs(stepper_motor.target_angular_speed) / degPerStep);
         htim3.Init.Period          = (uint32_t)(timePerStep * (float)(48000000 / htim3.Init.Prescaler));
         TIM3->CCR3                 = htim3.Init.Period / 2;
         HAL_TIM_Base_Init(&htim3);
@@ -126,18 +125,18 @@ static void compute_speed(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     static float last_speed = 100.0;
-    if (stepper_motor->target_angular_speed != last_speed)
+    if (stepper_motor.target_angular_speed != last_speed)
     {
-        last_speed = stepper_motor->target_angular_speed;
+        last_speed = stepper_motor.target_angular_speed;
         compute_speed();
     }
-    if (stepper_motor->mode.mode_compliant)
+    if (stepper_motor.mode.mode_compliant)
     {
         // stop pwm output
         TIM3->CCR3 = 0;
         return;
     }
-    if (stepper_motor->mode.mode_angular_position || stepper_motor->mode.mode_linear_position)
+    if (stepper_motor.mode.mode_angular_position || stepper_motor.mode.mode_linear_position)
     {
         if (current_step_nb < target_step_nb)
         {
@@ -161,14 +160,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
     else
     {
-        if (stepper_motor->target_angular_speed > 0.0)
+        if (stepper_motor.target_angular_speed > 0.0)
         {
             // start pwm output
             TIM3->CCR3 = htim3.Init.Period / 2;
             HAL_GPIO_WritePin(DIR_GPIO_Port, DIR_Pin, 1);
             current_step_nb++;
         }
-        if (stepper_motor->target_angular_speed < 0.0)
+        if (stepper_motor.target_angular_speed < 0.0)
         {
             // start pwm output
             TIM3->CCR3 = htim3.Init.Period / 2;
