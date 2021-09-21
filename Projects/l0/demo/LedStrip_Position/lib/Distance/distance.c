@@ -57,15 +57,12 @@ static void Distance_MsgHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == GET_CMD)
     {
-        if (new_data_ready)
-        {
-            msg_t pub_msg;
-            // dist measurement ok
-            pub_msg.header.target_mode = ID;
-            pub_msg.header.target      = msg->header.source;
-            LinearOD_PositionToMsg(&dist, &pub_msg);
-            new_data_ready = false;
-            Luos_SendMsg(service, &pub_msg);
-        }
+        msg_t pub_msg;
+        // dist measurement ok
+        pub_msg.header.target_mode = ID;
+        pub_msg.header.target      = msg->header.source;
+        LinearOD_PositionToMsg(&dist, &pub_msg);
+        new_data_ready = false;
+        Luos_SendMsg(service, &pub_msg);
     }
 }
