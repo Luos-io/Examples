@@ -26,4 +26,4 @@ jobs:
       run: |
         cd Apps/Gate/
         pio package pack
-        pio package publish --owner luos
+        pio package publish --owner luos --non-interactive
