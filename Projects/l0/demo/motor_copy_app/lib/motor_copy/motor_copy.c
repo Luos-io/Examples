@@ -306,5 +306,9 @@ static void sort_motors(void)
                 }
             }
         }
+        else
+        {
+            position = NO_MOTOR;
+        }
     }
 }
