@@ -16,7 +16,7 @@ Feel free to use these examples as a starting point for your own projects, and d
 
 ### Apps folder
 
-This folder contains the container's sources of each **App** project (see [Apps section](https://docs.luos.io/pages/low/containers/create-containers.html?#apps-guidelines) in documentation). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
+This folder contains the container's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/pages/tutorials/tutorials.html?highlight=servo#demo-boards-tutorials) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
 
 ### Projects folder
 
@@ -24,12 +24,12 @@ This folder contains the sources of every examples.  It is sorted into two folde
 
 #### Prototyping boards projects
 
-Most of the projects are Luos prototyping boards (see [Demonstration boards section](https://docs.luos.io/pages/demo_boards/demo-boards.html) in documentation).
+Most of the projects are Luos prototyping boards (see [Demonstration boards tutorial](https://docs.luos.io/pages/tutorials/demo-boards/demo-boards-tuto.html) in documentation).
 
 #### Hardware folder
 
 This contains hardwares librairies used by Luos to inspire you to create your own designs:
- - **l0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/demo_boards/demo-boards.html).
+ - **l0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/tutorials/demo-boards/luos-demo-boards.html).
  - **l0-shields**: Different shields that can be used directly on the Luos L0 board for added functionality.
  - **stm32f0_disco_luos_shield**: a debugging shield equivalent to a Luos L0 for STM32F072B-DISCO dev board.
  - **Breakout_board**: a small add-on board to make any board compatible with Luos.
