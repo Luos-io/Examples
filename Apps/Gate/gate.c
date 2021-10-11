@@ -102,7 +102,7 @@ void Gate_Loop(void)
                     first_conversion = 0;
                 }
 #else
-                update_time = 0.0;
+                update_time = 0.005;
 #endif
             }
         }
