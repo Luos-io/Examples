@@ -41,20 +41,27 @@ void Inspector_Init(void)
  ******************************************************************************/
 void Inspector_Loop(void)
 {
-    if (Robus_IsNodeDetected() == NETWORK_LINK_UP)
+    // check if the while network is detected
+    if (Luos_IsNodeDetected())
     {
         // Network have been detected, We are good to go
         if (pipe_id == 0)
         {
             // We dont have spotted any pipe yet. Try to find one
             pipe_id = PipeLink_Find(inspector);
+            // send to Robus a flag in order not to filter the messages
+            Luos_SetFilterState(false);
         }
         // check if we have messages from pipe
         DataManager_GetPipeMsg(inspector);
     }
     else
     {
+        // if the network is not yet detected reset the pipe id
         pipe_id = 0;
+        // send to Robus a flag in order not to filter the messages
+        Luos_SetFilterState(true);
+        rtb_ask = 1;
     }
 }
 /******************************************************************************
@@ -65,16 +72,18 @@ void Inspector_Loop(void)
 static void Inspector_MsgHandler(service_t *service, msg_t *msg)
 {
     // if we receive a message send it directly to pipe
-    if ((pipe_id > 0) && (RoutingTB_IDFromService(inspector) != msg->header.target))
+    if ((pipe_id > 0) && (RoutingTB_IDFromService(inspector) != msg->header.target) && (pipe_id != msg->header.target))
     {
         // the first time sent the routing table
         if (rtb_ask)
         {
+            // store the address of the RoutingTB
             routing_table_t *routing_table = RoutingTB_Get();
             PipeLink_Send(inspector, routing_table, ((RoutingTB_GetLastEntry() + 1) * sizeof(routing_table_t)));
             rtb_ask = 0;
             return;
         }
+        // send every message received
         PipeLink_Send(inspector, msg->stream, sizeof(uint8_t) * (msg->header.size + sizeof(header_t)));
         return;
     }
