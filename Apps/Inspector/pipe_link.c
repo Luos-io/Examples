@@ -5,6 +5,8 @@
  ******************************************************************************/
 #include "pipe_link.h"
 #include "streaming.h"
+#include <stdio.h>
+#include <string.h>
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -30,7 +32,7 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     msg_t msg;
     msg.header.target      = pipe_id;
     msg.header.cmd         = SET_CMD;
-    msg.header.target_mode = IDACK;
+    msg.header.target_mode = ID;
     if (pipeStreamingChannel == 0)
     {
         // We are not using localhost send the entire data trough the Luos network

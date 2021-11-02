@@ -17,7 +17,6 @@
  * Variables
  ******************************************************************************/
 service_t *inspector;
-uint8_t rtb_ask         = 1;
 static uint16_t pipe_id = 0;
 /*******************************************************************************
  * Function
@@ -41,7 +40,7 @@ void Inspector_Init(void)
  ******************************************************************************/
 void Inspector_Loop(void)
 {
-    // check if the while network is detected
+    // check if the network is detected
     if (Luos_IsNodeDetected())
     {
         // Network have been detected, We are good to go
@@ -49,11 +48,12 @@ void Inspector_Loop(void)
         {
             // We dont have spotted any pipe yet. Try to find one
             pipe_id = PipeLink_Find(inspector);
-            // send to Robus a flag in order not to filter the messages
-            Luos_SetFilterState(false, RoutingTB_IDFromService(inspector));
         }
-        // check if we have messages from pipe
-        DataManager_GetPipeMsg(inspector);
+        msg_t *msg;
+        if (Luos_ReadFromService(inspector, msg->header.source, &msg) == SUCCEED)
+        {
+            DataManager_GetPipeMsg(inspector, msg);
+        }
     }
     else
     {
