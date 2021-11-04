@@ -41,7 +41,11 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     else
     {
         // We have a localhost pipe
-        // Copy the data directly into the local streaming channel without passing by Luos.
+        // Add a delimiter to separate messages
+        char delimiter[4];
+        memcpy(delimiter, "~~~~", 4);
+        Stream_PutSample(pipeStreamingChannel, delimiter, 4);
+        //  Copy the data directly into the local streaming channel without passing by Luos.
         Stream_PutSample(pipeStreamingChannel, data, size);
         // Send a void set_cmd to strat data transmission on pipe.
         msg.header.size = 0;

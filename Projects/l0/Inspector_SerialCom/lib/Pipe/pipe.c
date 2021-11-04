@@ -70,6 +70,10 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
         uint16_t size = 0;
         if (msg->header.size > 0)
         {
+            // Add a delimiter to separate messages
+            char delimiter[4];
+            memcpy(delimiter, "~~~~", 4);
+            Stream_PutSample(&L2P_StreamChannel, delimiter, 4);
             Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel);
         }
         if (PipeCom_SendL2PPending() == false)
