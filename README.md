@@ -38,7 +38,7 @@ This contains hardwares librairies used by Luos to inspire you to create your ow
 
 ##### How to start
 
-1. install KiCad: https://www.kicad-pcb.org/
+1. install KiCad: https://www.kicad.org/
 
 2. Once Kicad is installed, open it and setup libraries. There are 3 libs:
 
