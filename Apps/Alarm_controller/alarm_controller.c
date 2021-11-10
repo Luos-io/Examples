@@ -42,17 +42,16 @@ void AlarmController_Init(void)
  ******************************************************************************/
 void AlarmController_Loop(void)
 {
-    static short previous_id       = -1;
-    static uint8_t blink           = 0;
-    static uint8_t blink_nb        = BLINK_NUMBER * 2;
-    static uint32_t last_blink     = 0;
-    static uint32_t detection_date = 0;
+    static short previous_id   = -1;
+    static uint8_t blink       = 0;
+    static uint8_t blink_nb    = BLINK_NUMBER * 2;
+    static uint32_t last_blink = 0;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
     if (previous_id != RoutingTB_IDFromService(app))
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        if (!Luos_IsNodeDetected())
         {
             // We don't have any ID, meaning no detection occure or detection is occuring.
             if (previous_id == -1)
@@ -63,20 +62,18 @@ void AlarmController_Loop(void)
                 {
                     // No detection occure, do it
                     RoutingTB_DetectServices(app);
-                    detection_date = Luos_GetSystick();
                 }
             }
             else
             {
                 // someone is making a detection, let it finish.
                 // reset the init state to be ready to setup service at the end of detection
-                previous_id    = 0;
-                detection_date = Luos_GetSystick();
+                previous_id = 0;
             }
         }
         else
         {
-            if ((Luos_GetSystick() - detection_date) > 100)
+            if (Luos_IsNodeDetected())
             {
                 // Make services configurations
                 // try to find a Fader app and set light transition time just to be fancy
