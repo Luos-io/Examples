@@ -95,14 +95,14 @@ void Gate_Loop(void)
                 {
                     // This is the first time we perform a convertion
                     // Evaluate the time needed to convert all the data of this configuration and update refresh rate
-                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 1;
+                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 2;
                     update_time             = TimeOD_TimeFrom_ms(execution_time);
                     // Update refresh rate for all services of the network
                     DataManager_collect(gate);
                     first_conversion = 0;
                 }
 #else
-                update_time = 0.0;
+                update_time = 0.005;
 #endif
             }
         }
