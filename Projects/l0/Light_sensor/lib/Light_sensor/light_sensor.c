@@ -7,6 +7,7 @@
 #include "main.h"
 #include "light_sensor.h"
 #include "string.h"
+#include "timestamp.h"
 
 /*******************************************************************************
  * Definitions
@@ -16,6 +17,7 @@
  * Variables
  ******************************************************************************/
 illuminance_t lux = 0.0;
+timestamp_token_t lux_timestamp;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -43,6 +45,7 @@ void LightSensor_Loop(void)
 {
     // read and store the value that captured by the sensor
     lux = LightSensorDrv_Read();
+    Timestamp_Tag(&lux_timestamp, &lux);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
@@ -61,6 +64,11 @@ static void LightSensor_MsgHandler(service_t *service, msg_t *msg)
         pub_msg.header.target      = msg->header.source;
         // transform the illuminance value to message format using Luos Object Dictionary
         IlluminanceOD_IlluminanceToMsg((illuminance_t *)&lux, &pub_msg);
+        // find if this value is timestamped
+        if (Timestamp_GetToken(&lux))
+        {
+            Timestamp_EncodeMsg(&pub_msg, &lux);
+        }
         // send the illuminance that the sensor captured
         Luos_SendMsg(service, &pub_msg);
         return;
