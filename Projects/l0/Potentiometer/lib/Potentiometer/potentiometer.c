@@ -6,6 +6,7 @@
  ******************************************************************************/
 #include "main.h"
 #include "potentiometer.h"
+#include "timestamp.h"
 
 /*******************************************************************************
  * Definitions
@@ -15,6 +16,7 @@
  * Variables
  ******************************************************************************/
 angular_position_t angle = 0.0;
+timestamp_token_t angle_timestamp;
 
 /*******************************************************************************
  * Function
@@ -43,6 +45,7 @@ void Potentiometer_Loop(void)
 {
     // read and save the angular position value
     angle = PotentiometerDrv_Read();
+    Timestamp_Tag(&angle_timestamp, &angle);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
@@ -62,6 +65,11 @@ static void Potentiometer_MsgHandler(service_t *service, msg_t *msg)
         pub_msg.header.target = msg->header.source;
         // convert the position to message data using Luos Object Dictionary
         AngularOD_PositionToMsg((angular_position_t *)&angle, &pub_msg);
+        // find if this value is timestamped
+        if (Timestamp_GetToken(&angle))
+        {
+            Timestamp_EncodeMsg(&pub_msg, &angle);
+        }
         // send the angular position information
         Luos_SendMsg(service, &pub_msg);
         return;
