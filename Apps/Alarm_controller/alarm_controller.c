@@ -10,13 +10,14 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define DETECTION_LATENCY 52
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 service_t *app;
 volatile control_t control_app;
-uint8_t blink_state = 0;
+uint8_t blink_state   = 0;
+uint8_t end_detection = 0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -42,92 +43,76 @@ void AlarmController_Init(void)
  ******************************************************************************/
 void AlarmController_Loop(void)
 {
-    static short previous_id       = -1;
     static uint8_t blink           = 0;
     static uint8_t blink_nb        = BLINK_NUMBER * 2;
     static uint32_t last_blink     = 0;
-    static uint32_t detection_date = 0;
+    static uint32_t last_detection = 0;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
-    if (previous_id != RoutingTB_IDFromService(app))
+    if (Luos_IsNodeDetected())
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        if (end_detection)
         {
-            // We don't have any ID, meaning no detection occure or detection is occuring.
-            if (previous_id == -1)
+            // Make services configurations
+            // try to find a Fader app and set light transition time just to be fancy
+            int id = RoutingTB_IDFromType(COLOR_TYPE);
+            if (id > 0)
             {
-                // This is the really first init, we have to make it.
-                // Be sure the network is powered up 1500 ms before starting a detection
-                if (Luos_GetSystick() > 1500)
+                msg_t msg;
+                msg.header.target      = id;
+                msg.header.target_mode = IDACK;
+                time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
+                TimeOD_TimeToMsg(&time, &msg);
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
                 {
-                    // No detection occure, do it
-                    RoutingTB_DetectServices(app);
-                    detection_date = Luos_GetSystick();
+                    Luos_Loop();
                 }
             }
-            else
+            // try to find an IMU and set parameters to disable quaternion and send back Gyro acceleration and euler.
+            imu_report_t report;
+            report.gyro  = 1;
+            report.euler = 1;
+            report.quat  = 0;
+            id           = RoutingTB_IDFromType(IMU_TYPE);
+            if (id > 0)
             {
-                // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup service at the end of detection
-                previous_id    = 0;
-                detection_date = Luos_GetSystick();
-            }
-        }
-        else
-        {
-            if ((Luos_GetSystick() - detection_date) > 100)
-            {
-                // Make services configurations
-                // try to find a Fader app and set light transition time just to be fancy
-                int id = RoutingTB_IDFromType(COLOR_TYPE);
-                if (id > 0)
+                msg_t msg;
+                msg.header.cmd         = PARAMETERS;
+                msg.header.size        = sizeof(imu_report_t);
+                msg.header.target      = id;
+                msg.header.target_mode = IDACK;
+                memcpy(msg.data, &report, sizeof(imu_report_t));
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
                 {
-                    msg_t msg;
-                    msg.header.target      = id;
-                    msg.header.target_mode = IDACK;
-                    time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
+                    Luos_Loop();
                 }
-                // try to find an IMU and set parameters to disable quaternion and send back Gyro acceleration and euler.
-                imu_report_t report;
-                report.gyro  = 1;
-                report.euler = 1;
-                report.quat  = 0;
-                id           = RoutingTB_IDFromType(IMU_TYPE);
-                if (id > 0)
-                {
-                    msg_t msg;
-                    msg.header.cmd         = PARAMETERS;
-                    msg.header.size        = sizeof(imu_report_t);
-                    msg.header.target      = id;
-                    msg.header.target_mode = IDACK;
-                    memcpy(msg.data, &report, sizeof(imu_report_t));
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
 
-                    // Setup auto update each UPDATE_PERIOD_MS on imu
-                    // This value is resetted on all service at each detection
-                    // It's important to setting it each time.
-                    time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    msg.header.cmd = UPDATE_PUB;
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
+                // Setup auto update each UPDATE_PERIOD_MS on imu
+                // This value is resetted on all service at each detection
+                // It's important to setting it each time.
+                time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
+                TimeOD_TimeToMsg(&time, &msg);
+                msg.header.cmd = UPDATE_PUB;
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
                 }
-                previous_id = RoutingTB_IDFromService(app);
             }
+            end_detection = 0;
+            return;
+        }
+    }
+    else
+    {
+        if (Luos_GetSystick() - last_detection >= DETECTION_LATENCY)
+        {
+            Luos_Detect(app);
+            last_detection = Luos_GetSystick();
         }
         return;
     }
+    last_detection = Luos_GetSystick();
     // ********** non blocking blink ************
     if (control_app.flux == PLAY)
     {
@@ -242,5 +227,9 @@ static void AlarmController_MsgHandler(service_t *service, msg_t *msg)
     {
         ControlOD_ControlFromMsg((control_t *)&control_app, msg);
         return;
+    }
+    if (msg->header.cmd == END_DETECTION)
+    {
+        end_detection = 1;
     }
 }
