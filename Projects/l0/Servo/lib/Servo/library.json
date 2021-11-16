@@ -9,8 +9,7 @@
     },
     "licence": "MIT",
     "build": {
-        "flags": [
-        ]
+        "flags": []
     },
     "dependencies": [
         {

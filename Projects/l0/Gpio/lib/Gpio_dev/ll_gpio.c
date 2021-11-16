@@ -38,7 +38,7 @@ void ll_analog_init(void)
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC GPIO Configuration
-    */
+     */
     // Configure analog input pin channel
     GPIO_InitStruct.Pin  = P1_Pin | P9_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -70,7 +70,7 @@ void ll_analog_init(void)
     if (HAL_ADC_Init(&GpioDev_adc) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
 
     sConfig.Channel      = ADC_CHANNEL_0;
@@ -79,7 +79,7 @@ void ll_analog_init(void)
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
     sConfig.Channel      = ADC_CHANNEL_9;
     sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
@@ -87,7 +87,7 @@ void ll_analog_init(void)
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
     sConfig.Channel      = ADC_CHANNEL_8;
     sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
@@ -95,7 +95,7 @@ void ll_analog_init(void)
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
     sConfig.Channel      = ADC_CHANNEL_1;
     sConfig.Rank         = ADC_RANK_CHANNEL_NUMBER;
@@ -103,7 +103,7 @@ void ll_analog_init(void)
     if (HAL_ADC_ConfigChannel(&GpioDev_adc, &sConfig) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
 
     // Enable DMA1 clock
@@ -121,7 +121,7 @@ void ll_analog_init(void)
     if (HAL_DMA_Init(&GpioDev_dma_adc) != HAL_OK)
     {
         // TODO: handle error
-        //Error_Handler();
+        // Error_Handler();
     }
     __HAL_LINKDMA(&GpioDev_adc, DMA_Handle, GpioDev_dma_adc);
     // disable DMA Irq

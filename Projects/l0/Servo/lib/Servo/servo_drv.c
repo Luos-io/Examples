@@ -118,7 +118,7 @@ uint8_t Servo_DRVParameter(servo_parameters_t param, uint8_t MotorId)
  ******************************************************************************/
 static void Servo_DRVHWInit(void)
 {
-    //pinout initialization
+    // pinout initialization
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     PWM_PIN_CLK();
@@ -143,14 +143,14 @@ static void Servo_DRVHWInit(void)
     GPIO_InitStruct.Alternate = S4_AF;
     HAL_GPIO_Init(S4_PORT, &GPIO_InitStruct);
 
-    //pwm init
+    // pwm init
 
     LL_TIM_InitTypeDef TimerInit;
     LL_TIM_OC_InitTypeDef TimerConfigOC;
     LL_TIM_StructInit(&TimerInit);
     LL_TIM_OC_StructInit(&TimerConfigOC);
 
-    //initialize clock
+    // initialize clock
     PWM_TIMER_CLK();
 
     TimerInit.Autoreload        = 16000 - 1;

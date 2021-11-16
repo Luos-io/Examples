@@ -43,10 +43,10 @@ void Pipe_Loop(void)
 {
     uint16_t size = 0;
 
-    //check receive on serial
+    // check receive on serial
     PipeCom_ReceiveP2L();
 
-    //check need to transmit
+    // check need to transmit
     if (PipeCom_SendL2PPending() == false)
     {
         size = Stream_GetAvailableSampleNB(&L2P_StreamChannel);
