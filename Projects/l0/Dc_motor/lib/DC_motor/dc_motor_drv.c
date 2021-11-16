@@ -36,7 +36,7 @@ void DRV_DCMotorInit(void)
 {
     DRV_DCMotorHWInit();
 
-    //assign to motor pwm
+    // assign to motor pwm
     MotorDCCommand[MOTOR_DC_1].CLKWiseTimer          = PWM_1_TIMER;
     MotorDCCommand[MOTOR_DC_1].CLKWiseChannel        = PWM_1_CHANNEL;
     MotorDCCommand[MOTOR_DC_1].CounterCLKWiseTimer   = PWM_2_TIMER;
@@ -124,7 +124,7 @@ void DRV_DCMotorEnable(uint8_t enable)
 static void DRV_DCMotorHWInit(void)
 {
     ///////////////////////////////
-    //GPIO Init
+    // GPIO Init
     ///////////////////////////////
     PWM_PIN_CLK();
 
@@ -154,14 +154,14 @@ static void DRV_DCMotorHWInit(void)
     HAL_GPIO_Init(PWM_4_PORT, &GPIO_InitStruct);
 
     ///////////////////////////////
-    //Timer PWM Init
+    // Timer PWM Init
     ///////////////////////////////
     LL_TIM_InitTypeDef TimerInit;
     LL_TIM_OC_InitTypeDef TimerConfigOC;
     LL_TIM_StructInit(&TimerInit);
     LL_TIM_OC_StructInit(&TimerConfigOC);
 
-    //initialize clock
+    // initialize clock
     PWM_TIMER_CLK();
 
     TimerInit.Autoreload        = PWM_PERIOD;

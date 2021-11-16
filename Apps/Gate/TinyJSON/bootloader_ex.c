@@ -68,7 +68,7 @@ void Bootloader_LuosToJson(service_t *service, msg_t *msg)
 
 /******************************************************************************
  * @brief Process Host commands and send them to the node
- * @param service pointer, binary data and json object received 
+ * @param service pointer, binary data and json object received
  * @return None
  ******************************************************************************/
 void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *bootloader_json)

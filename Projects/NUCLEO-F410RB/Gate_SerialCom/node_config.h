@@ -18,7 +18,7 @@
  *     preprocessor definitions of MCU Hardware needs
  *
  *   # Usage
- *      This file should be place a the root folder of your project and include 
+ *      This file should be place a the root folder of your project and include
  *      where build flag preprocessor definitions are define in your IDE
  *      -include node_config.h
  *
@@ -30,11 +30,11 @@
 
 /*******************************************************************************
  * PROJECT DEFINITION
-*******************************************************************************/
+ *******************************************************************************/
 
 /*******************************************************************************
  * LUOS LIBRARY DEFINITION
-*******************************************************************************
+ *******************************************************************************
  *    Define                | Default Value              | Description
  *    :---------------------|------------------------------------------------------
  *    MAX_SERVICE_NUMBER    |              5             | Service number in the node
@@ -42,7 +42,7 @@
  *    MAX_MSG_NB            |   2*MAX_SERVICE_NUMBER   | Message number in Luos buffer
  *    NBR_PORT              |              2             | PTP Branch number Max 8
  *    NBR_RETRY             |              10            | Send Retry number in case of NACK or collision
-******************************************************************************/
+ ******************************************************************************/
 
 #define MAX_SERVICE_NUMBER 2
 #define MSG_BUFFER_SIZE    2048
@@ -56,7 +56,7 @@
  *    MCUFREQ                 | Put your the MCU frequency (value in Hz)
  *    TIMERDIV                | Timer divider clock (see your clock configuration)
  *    USE_CRC_HW              | define to 0 if there is no Module CRC in your MCU
- *    USE_TX_IT               | define to 1 to not use DMA transfert for Luos Tx 
+ *    USE_TX_IT               | define to 1 to not use DMA transfert for Luos Tx
  *
  *    PORT_CLOCK_ENABLE       | Enable clock for port
  *    PTPx                    | A,B,C,D etc. PTP Branch Pin/Port/IRQ

@@ -169,10 +169,10 @@ void ControllerMotor_Loop(void)
 
         if (servo_motor.mode.mode_compliant)
         {
-            //Motor is compliant, only manage motor limits
+            // Motor is compliant, only manage motor limits
             if (servo_motor.angular_position < servo_motor.limit_angular_position[MINI])
             {
-                //re-enable motor to avoid bypassing motors limits
+                // re-enable motor to avoid bypassing motors limits
                 ll_motor_enable(MOTOR_ENABLE);
                 ll_motor_Command(servo_motor.mode.mode_compliant, 100.0 * (servo_motor.limit_angular_position[MINI] - servo_motor.angular_position));
             }
