@@ -87,7 +87,7 @@ void Convert_DataToLuos(service_t *service, char *data)
     }
     if (json_getProperty(root, "baudrate") != NULL)
     {
-        //create a message to setup the new baudrate
+        // create a message to setup the new baudrate
         json_t const *object = json_getProperty(root, "baudrate");
         if (json_getType(object) == JSON_INTEGER)
         {
@@ -98,7 +98,7 @@ void Convert_DataToLuos(service_t *service, char *data)
     }
     if (json_getProperty(root, "benchmark") != NULL)
     {
-        //manage benchmark
+        // manage benchmark
         json_t const *parameters = json_getProperty(root, "benchmark");
         if (json_getType(parameters) == JSON_OBJ)
         {
@@ -420,7 +420,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
         msg->header.size = sizeof(data);
         Luos_SendMsg(service, msg);
     }
-    //offset
+    // offset
     item = json_getProperty(jobj, "offset");
     if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
     {
@@ -769,7 +769,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             // clean data to be used as string
             if (msg->header.size < MAX_DATA_MSG_SIZE)
             {
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
             }
             break;
@@ -777,7 +777,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             // clean data to be used as string
             if (msg->header.size < MAX_DATA_MSG_SIZE)
             {
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"luos_revision\":\"%d.%d.%d\",", msg->data[0], msg->data[1], msg->data[2]);
             }
             break;
@@ -801,7 +801,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
             if (msg->header.size == sizeof(char))
             {
                 // Size ok, now fill the struct from msg data
-                //create the Json content
+                // create the Json content
                 if (msg->data[0])
                 {
                     memcpy(data, "\"io_state\":true,", sizeof("\"io_state\":true,"));
@@ -859,7 +859,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 // Size ok, now fill the struct from msg data
                 float value[4];
                 memcpy(value, msg->data, msg->header.size);
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"quaternion\":[%s,", Convert_Float(value[0]));
                 sprintf(data, "%s%s,", data, Convert_Float(value[1]));
                 sprintf(data, "%s%s,", data, Convert_Float(value[2]));
@@ -873,7 +873,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 // Size ok, now fill the struct from msg data
                 float value[9];
                 memcpy(value, msg->data, msg->header.size);
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"rotational_matrix\":[%s,", Convert_Float(value[0]));
                 sprintf(data, "%s%s,", data, Convert_Float(value[1]));
                 sprintf(data, "%s%s,", data, Convert_Float(value[2]));
@@ -892,7 +892,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 // Size ok, now fill the struct from msg data
                 float value;
                 memcpy(&value, msg->data, msg->header.size);
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"heading\":%s,", Convert_Float(value));
             }
             break;
@@ -903,7 +903,7 @@ uint16_t Convert_MsgToData(msg_t *msg, char *data)
                 // Size ok, now fill the struct from msg data
                 unsigned long value[2];
                 memcpy(value, msg->data, msg->header.size);
-                //create the Json content
+                // create the Json content
                 sprintf(data, "\"pedometer\":%2ld,\"walk_time\":%2ld,", value[0], value[1]);
             }
             break;
@@ -986,7 +986,7 @@ void Convert_RoutingTableData(service_t *service)
     routing_table_t *routing_table = RoutingTB_Get();
     int last_entry                 = RoutingTB_GetLastEntry();
     int i                          = 0;
-    //for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only services.
+    // for (uint8_t i = 0; i < last_entry; i++) { //TODO manage all entries, not only services.
     while (i < last_entry)
     {
         if (routing_table[i].mode == NODE)
@@ -1050,9 +1050,9 @@ void Convert_RoutingTableData(service_t *service)
     *(--json_ptr) = '\0';
     // End the Json message
     sprintf(json_ptr, "]}\n");
-    //reset all the msg in pipe link
+    // reset all the msg in pipe link
     PipeLink_Reset(service);
-    //call Luos loop to generap a Luos Task with this msg
+    // call Luos loop to generap a Luos Task with this msg
     Luos_Loop();
     // Send the message to pipe
     PipeLink_Send(service, json, strlen(json));

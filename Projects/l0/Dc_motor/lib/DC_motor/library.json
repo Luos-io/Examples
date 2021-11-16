@@ -10,8 +10,7 @@
     "licence": "MIT",
     "licence": "MIT",
     "build": {
-        "flags": [
-        ]
+        "flags": []
     },
     "dependencies": [
         {

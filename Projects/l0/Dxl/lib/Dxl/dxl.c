@@ -57,8 +57,8 @@ void Dxl_Loop(void)
 {
     static int index                              = 0;
     static uint32_t last_temp[MAX_SERVICE_NUMBER] = {0};
-    //check motor values one by one
-    // Get motor info
+    // check motor values one by one
+    //  Get motor info
     if (dxl[index].id == 0)
         index = 0;
     if (dxl[index].id != 0)
@@ -206,12 +206,12 @@ static void Dxl_MsgHandler(service_t *service, msg_t *msg)
             // check if it is a void service or not
             if (dxl[0].id == 0)
             {
-                //If it is a void service send it to general call
+                // If it is a void service send it to general call
                 servo_factory_reset(SERVO_BROADCAST_ID, DXL_TIMEOUT);
             }
             else
             {
-                //else reset a specific ID
+                // else reset a specific ID
                 servo_factory_reset(dxl[index].id, DXL_TIMEOUT);
             }
         }
@@ -385,7 +385,7 @@ static void discover_dxl(void)
         error = servo_ping(i, DXL_TIMEOUT);
         if (error)
         {
-            //The first try fail, retry
+            // The first try fail, retry
             error = servo_ping(i, DXL_TIMEOUT);
         }
         if (!error)
