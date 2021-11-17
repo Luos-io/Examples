@@ -54,7 +54,7 @@ void Gate_Loop(void)
     static uint32_t last_time         = 0;
 
     // Check the detection status.
-    if (RoutingTB_IDFromService(gate) == 0)
+    if (!Luos_IsNodeDetected())
     {
 #ifndef NODETECTION
         // We don't have any ID, meaning no detection occure or detection is occuring.
