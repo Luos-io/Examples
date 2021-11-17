@@ -49,10 +49,9 @@ void Inspector_Loop(void)
             // We dont have spotted any pipe yet. Try to find one
             pipe_id = PipeLink_Find(inspector);
         }
-        msg_t *msg;
-        if (Luos_ReadFromService(inspector, msg->header.source, &msg) == SUCCEED)
+        if (Luos_NbrAvailableMsg() > 0)
         {
-            DataManager_GetPipeMsg(inspector, msg);
+            DataManager_GetServiceMsg(inspector);
         }
     }
     else

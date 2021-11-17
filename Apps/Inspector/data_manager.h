@@ -22,4 +22,4 @@ typedef enum
 void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg);
 uint8_t DataManager_GetInspectorState(void);
 void DataManager_SendRoutingTB(service_t *service);
-void DataManager_AddAssertMsg(msg_t *msg);
+void DataManager_GetServiceMsg(service_t *service);

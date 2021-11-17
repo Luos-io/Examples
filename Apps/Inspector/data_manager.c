@@ -8,13 +8,18 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define MAX_ASSERT_NUMBER  3
+#define MAX_TOTAL_MSG_SIZE 135
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 uint8_t inspector_state = STARTED;
-msg_t assert_msg[5];
-
+// assert messages counter
+uint8_t assert_num = 0;
+// assert buffer for storing the messages
+uint8_t assert_buf[MAX_ASSERT_NUMBER][MAX_TOTAL_MSG_SIZE];
+// table with all the complete sizes of the assert messages
+uint8_t assert_buf_size[MAX_ASSERT_NUMBER] = {0};
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -60,7 +65,7 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     int *pointer;
     msg_t msg;
     uint8_t cmd;
-
+    // pipe sent the streaming channel
     if (data_msg->header.cmd == PARAMETERS)
     {
         // link the address of the streaming channel L2P
@@ -73,20 +78,26 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     //  This message is a command from pipe
     switch (cmd)
     {
-        case GET_RTB:
+        case RTB_CMD:
             // first message for the inspector
             // send the routing table using pipe
             DataManager_SendRoutingTB(service);
             break;
-        case SERVICE_START:
-            // if we receive a start we should desactivate the filtering
-            Luos_SetFilterState(false, RoutingTB_IDFromService(service));
-            inspector_state = STARTED;
-            break;
-        case SERVICE_STOP:
-            // if we receive a stop we should reactivate the filtering
-            Luos_SetFilterState(true, RoutingTB_IDFromService(service));
-            inspector_state = STOPPED;
+        case CONTROL:
+            // if we receive a CONTROL we should desactivate or activate the filtering
+            if (data_msg->data[7] == true)
+            {
+                // check if data is true so that the inspector needs to start
+                Luos_SetFilterState(false, service);
+                inspector_state = STARTED;
+            }
+            else
+            {
+                // if we receive a false we should reactivate the filtering - inspector stopped
+                Luos_SetFilterState(true, service);
+                inspector_state = STOPPED;
+            }
+
             break;
         case LUOS_STATISTICS:
             // extract service that we want the stats
@@ -113,20 +124,83 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
             Luos_SendMsg(service, &msg);
             break;
         case VERBOSE:
+            // Not yet implemented
             break;
-        case GET_ASSERT:
-        // not yet implemented
+        case ASSERT:
+            if (((data_msg->data[6] << 8) + data_msg->data[5]) == 0)
+            {
+                for (uint8_t i = 0; i < assert_num; i++)
+                {
+                    //  send all the existing assert messages
+                    PipeLink_Send(service, &assert_buf[i][0], assert_buf_size[i]);
+                }
+                assert_num = 0;
+            }
+            // empty the assert messages buffer by turning the counter to 0
+            break;
         default:
             break;
     }
 }
 /******************************************************************************
- * @brief add a new assert message to the assert buffer
+ * @brief function to pull the messages from services
  * @param service pointer
  * @return None
  ******************************************************************************/
-void DataManager_AddAssertMsg(msg_t *msg)
+void DataManager_GetServiceMsg(service_t *service)
 {
+    // loop into services.
+    msg_t *data_msg;
+    int i = 0;
+    while (RoutingTB_GetMode(i) != CLEAR)
+    {
+        // check all services in routing table
+        if (RoutingTB_GetMode(i) == SERVICE && RoutingTB_GetServiceID(i))
+        {
+            // pull available messages
+            if (Luos_ReadFromService(service, RoutingTB_GetServiceID(i), &data_msg) == SUCCEED)
+            {
+                // drop the messages that are destined to pipe
+                if (data_msg->header.target == PipeLink_GetId())
+                {
+                    i++;
+                    continue;
+                }
+                // check if this is an assert
+                if ((data_msg->header.cmd == ASSERT) && (data_msg->header.size > 0))
+                {
+                    if (assert_num >= MAX_ASSERT_NUMBER)
+                    {
+                        // if we reached the maximum number of asserts delete the older and keep the newer
+                        for (uint8_t j = 1; j < MAX_ASSERT_NUMBER; j++)
+                        {
+                            memcpy(&assert_buf[j - 1][0], &assert_buf[j][0], assert_buf_size[j]);
+                            assert_buf_size[j - 1] = assert_buf_size[j];
+                        }
+                        assert_num--;
+                    }
+                    // save the assert message to the assert messages buffer
+                    memcpy(&assert_buf[assert_num][0], data_msg->stream, sizeof(header_t) + data_msg->header.size);
+                    // store the size of this message
+                    assert_buf_size[assert_num] = sizeof(header_t) + data_msg->header.size;
+                    assert_num++;
+                    i++;
+                    continue;
+                }
+                // Check if this is a message from pipe
+                if (data_msg->header.source == PipeLink_GetId())
+                {
+                    // treat message from pipe
+                    DataManager_GetPipeMsg(service, data_msg);
+                    i++;
+                    continue;
+                }
+                // send any other message to pipe
+                PipeLink_Send(service, data_msg->stream, (sizeof(uint8_t) * data_msg->header.size) + sizeof(header_t));
+            }
+        }
+        i++;
+    }
 }
 /******************************************************************************
  * @brief get if the inspector is started or stopped
