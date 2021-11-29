@@ -10,6 +10,7 @@
 #include "data_manager.h"
 #include "convert.h"
 #include "pipe_link.h"
+#include "routing_table.h"
 
 /*******************************************************************************
  * Definitions
@@ -95,8 +96,7 @@ void Gate_Loop(void)
                 {
                     // This is the first time we perform a convertion
                     // Evaluate the time needed to convert all the data of this configuration and update refresh rate
-                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 2;
-                    update_time             = TimeOD_TimeFrom_ms(execution_time);
+                    update_time = (float)RoutingTB_BigestID() * 0.01;
                     // Update refresh rate for all services of the network
                     DataManager_collect(gate);
                     first_conversion = 0;
