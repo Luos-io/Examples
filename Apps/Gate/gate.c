@@ -96,7 +96,16 @@ void Gate_Loop(void)
                 {
                     // This is the first time we perform a convertion
                     // Evaluate the time needed to convert all the data of this configuration and update refresh rate
-                    update_time = (float)RoutingTB_BigestID() * 0.01;
+                    uint16_t bigest_id = RoutingTB_BigestID();
+                    if (bigest_id)
+                    {
+                        update_time = (float)RoutingTB_BigestID() * 0.01;
+                    }
+                    else
+                    {
+                        update_time = GATE_REFRESH_TIME_S;
+                    }
+
                     // Update refresh rate for all services of the network
                     DataManager_collect(gate);
                     first_conversion = 0;
