@@ -8,7 +8,7 @@ https://github.com/Luos-io/Examples/blob/master/LICENSE)
 
 # Luos examples
 
-This repository is a submodule of the [Luos library](https://github.com/Luos-io/Luos) repository. It contains examples of Containers and Apps for using Luos. This repository can be used on it's own, or as a submodule for the Luos Library directly.
+This repository is a submodule of the [Luos library](https://github.com/Luos-io/Luos) repository. It contains examples of services and Apps for using Luos. This repository can be used on it's own, or as a submodule for the Luos Library directly.
 
 Feel free to use these examples as a starting point for your own projects, and don't forget to share your creations on the [Luos forum](https://community.luos.io/)!
 
@@ -16,7 +16,7 @@ Feel free to use these examples as a starting point for your own projects, and d
 
 ### Apps folder
 
-This folder contains the container's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/pages/tutorials/tutorials.html?highlight=servo#demo-boards-tutorials) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
+This folder contains the service's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/tutorials/demo-boards/servomotor) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
 
 ### Projects folder
 
