@@ -40,14 +40,14 @@ void PipeCom_Init(void)
     // TX
     GPIO_InitStruct.Pin       = PIPE_TX_PIN;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_PULLUP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = PIPE_TX_AF;
     HAL_GPIO_Init(PIPE_TX_PORT, &GPIO_InitStruct);
     // RX
     GPIO_InitStruct.Pin       = PIPE_RX_PIN;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_PULLUP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = PIPE_RX_AF;
     HAL_GPIO_Init(PIPE_RX_PORT, &GPIO_InitStruct);
@@ -60,7 +60,8 @@ void PipeCom_Init(void)
     LL_USART_InitTypeDef USART_InitStruct;
     // Initialise USART3
     LL_USART_Disable(PIPE_COM);
-    USART_InitStruct.BaudRate            = 9600;
+    USART_InitStruct.BaudRate            = 1000000;
+    USART_InitStruct.PrescalerValue      = LL_USART_PRESCALER_DIV1;
     USART_InitStruct.DataWidth           = LL_USART_DATAWIDTH_8B;
     USART_InitStruct.StopBits            = LL_USART_STOPBITS_1;
     USART_InitStruct.Parity              = LL_USART_PARITY_NONE;
@@ -76,8 +77,6 @@ void PipeCom_Init(void)
 
     HAL_NVIC_EnableIRQ(PIPE_COM_IRQ);
     HAL_NVIC_SetPriority(PIPE_COM_IRQ, 1, 1);
-
-    LL_USART_TransmitData8(PIPE_COM, 0x55);
 
     PipeBuffer_Init();
     PipeCom_DMAInit();
