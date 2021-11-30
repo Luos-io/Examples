@@ -16,7 +16,7 @@ Feel free to use these examples as a starting point for your own projects, and d
 
 ### Apps folder
 
-This folder contains the container's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/pages/tutorials/tutorials.html?highlight=servo#demo-boards-tutorials) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
+This folder contains the container's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/tutorials/demo-boards/servomotor) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
 
 ### Projects folder
 
