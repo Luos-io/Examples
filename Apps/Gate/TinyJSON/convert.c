@@ -347,6 +347,26 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
         AngularOD_SpeedToMsg(&angular_speed, msg);
         Luos_SendMsg(service, msg);
     }
+    if ((item != NULL) && (json_getType(item) == JSON_ARRAY))
+    {
+        int i = 0;
+        // this is a trajectory
+        int size = (int)json_getInteger(json_getChild(item));
+        // find the first \r of the current buf
+        for (i = 0; i < GATE_BUFF_SIZE; i++)
+        {
+            if (bin_data[i] == '\n')
+            {
+                i++;
+                break;
+            }
+        }
+        if (i < GATE_BUFF_SIZE - 1)
+        {
+            msg->header.cmd = ANGULAR_SPEED;
+            Luos_SendData(service, msg, &bin_data[i], (unsigned int)size);
+        }
+    }
     // target linear position
     item = json_getProperty(jobj, "target_trans_position");
     if ((item != NULL) && ((json_getType(item) == JSON_REAL) || (json_getType(item) == JSON_INTEGER)))
