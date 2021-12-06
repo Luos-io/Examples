@@ -129,6 +129,12 @@ void DataManager_Format(service_t *service)
                         i++;
                         continue;
                     }
+                    if (data_msg->header.cmd == END_DETECTION)
+                    {
+                        end_detection = 1;
+                        i++;
+                        continue;
+                    }
                     // check if a node send a bootloader message
                     if (data_msg->header.cmd == BOOTLOADER_RESP)
                     {
