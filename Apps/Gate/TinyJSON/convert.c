@@ -113,7 +113,7 @@ void Convert_DataToLuos(service_t *service, char *data)
                 int index = 0;
                 for (index = 0; index < GATE_BUFF_SIZE; index++)
                 {
-                    if (data[index] == '\r')
+                    if (data[index] == '\n')
                     {
                         index++;
                         break;
@@ -253,7 +253,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
         // find the first \r of the current buf
         for (i = 0; i < GATE_BUFF_SIZE; i++)
         {
-            if (bin_data[i] == '\r')
+            if (bin_data[i] == '\n')
             {
                 i++;
                 break;
@@ -363,7 +363,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
         // find the first \r of the current buf
         for (i = 0; i < GATE_BUFF_SIZE; i++)
         {
-            if (bin_data[i] == '\r')
+            if (bin_data[i] == '\n')
             {
                 i++;
                 break;
@@ -501,7 +501,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
             // find the first \r of the current buf
             for (i = 0; i < GATE_BUFF_SIZE; i++)
             {
-                if (bin_data[i] == '\r')
+                if (bin_data[i] == '\n')
                 {
                     i++;
                     break;
@@ -621,7 +621,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
             // find the first \r of the current buf
             for (i = 0; i < GATE_BUFF_SIZE; i++)
             {
-                if (bin_data[i] == '\r')
+                if (bin_data[i] == '\n')
                 {
                     i++;
                     break;
@@ -662,7 +662,7 @@ void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const 
             // find the first \r of the current buf
             for (i = 0; i < GATE_BUFF_SIZE; i++)
             {
-                if (bin_data[i] == '\r')
+                if (bin_data[i] == '\n')
                 {
                     i++;
                     break;
