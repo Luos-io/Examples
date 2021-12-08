@@ -132,7 +132,7 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 // find the first \r of the current buf
                 for (i = 0; i < GATE_BUFF_SIZE; i++)
                 {
-                    if (bin_data[i] == '\r')
+                    if (bin_data[i] == '\n')
                     {
                         i++;
                         break;
