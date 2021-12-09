@@ -160,6 +160,13 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 Luos_SendMsg(service, &boot_msg);
                 break;
 
+            case BOOTLOADER_APP_SAVED:
+                // send app saved command to bootloader app
+                boot_msg.header.size = sizeof(char);
+                boot_msg.data[0]     = BOOTLOADER_APP_SAVED;
+                Luos_SendMsg(service, &boot_msg);
+                break;
+
             default:
                 break;
         }
