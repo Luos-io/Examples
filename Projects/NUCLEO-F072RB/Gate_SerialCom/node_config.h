@@ -86,4 +86,20 @@
  *    ADDRESS_LAST_PAGE_FLASH | Page to write alias
 ******************************************************************************/
 
+/*******************************************************************************
+ * GATE SERIAL COM DEFINITION
+ *******************************************************************************
+ *    Define                    | Default Value              | Description
+ *    :-------------------------|------------------------------------------------------
+ *    MAX_RTB_ENTRY             |              40            | max number entry in routing table
+ *    GATE_BUFF_SIZE            |             1024           | Json receive buffer size
+ *    PIPE_TO_LUOS_BUFFER_SIZE  |             1024           | Receive pipe buffer size
+ *    LUOS_TO_PIPE_BUFFER_SIZE  |             2048           | Transmit pipe buffer size
+ ******************************************************************************/
+
+#define MAX_RTB_ENTRY            40
+#define GATE_BUFF_SIZE           1024
+#define PIPE_TO_LUOS_BUFFER_SIZE 1024
+#define LUOS_TO_PIPE_BUFFER_SIZE 2048
+
 #endif /* _NODE_CONFIG_H_ */
