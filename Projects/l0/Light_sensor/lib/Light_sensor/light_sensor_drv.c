@@ -34,9 +34,9 @@ void LightSensorDrv_Init(void)
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(LIGHT_GPIO_Port, &GPIO_InitStruct);
-    //Init ADC
+    // Init ADC
     LightSensorADC_Init();
-    //Init DMA
+    // Init DMA
     LightSensorDMA_Init();
 }
 /******************************************************************************
@@ -103,7 +103,7 @@ void LightSensorDMA_Init(void)
     HAL_ADC_Start_DMA(&LightSensor_adc, (uint32_t *)analog_input.unmap, sizeof(analog_input.unmap) / sizeof(uint32_t));
 }
 /******************************************************************************
- * @brief Illuminance read 
+ * @brief Illuminance read
  * @param illuminance
  * @return error value
  ******************************************************************************/

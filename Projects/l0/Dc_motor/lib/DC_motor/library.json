@@ -10,13 +10,12 @@
     "licence": "MIT",
     "licence": "MIT",
     "build": {
-        "flags": [
-        ]
+        "flags": []
     },
     "dependencies": [
         {
             "name": "luos/Luos",
-            "version": "^2.0.0"
+            "version": "^2.0.1"
         }
     ]
 }

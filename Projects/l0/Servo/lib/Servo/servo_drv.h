@@ -43,7 +43,7 @@ typedef struct
     servo_control_t control;
 } servo_t;
 
-//HW definition
+// HW definition
 #define SERVONUMBER 4
 
 #define DEFAULT_PRESACALER 60

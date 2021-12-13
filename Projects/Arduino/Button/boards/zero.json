@@ -1,7 +1,7 @@
 {
   "build": {
     "arduino": {
-        "ldscript": "flash_with_bootloader.ld"
+      "ldscript": "flash_with_bootloader.ld"
     },
     "core": "arduino",
     "cpu": "cortex-m0plus",
@@ -21,7 +21,7 @@
     "usb_product": "Arduino Zero",
     "variant": "arduino_zero",
     "zephyr": {
-       "variant": "arduino_zero"
+      "variant": "arduino_zero"
     }
   },
   "debug": {

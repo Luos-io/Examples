@@ -68,7 +68,7 @@ void Bootloader_LuosToJson(service_t *service, msg_t *msg)
 
 /******************************************************************************
  * @brief Process Host commands and send them to the node
- * @param service pointer, binary data and json object received 
+ * @param service pointer, binary data and json object received
  * @return None
  ******************************************************************************/
 void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *bootloader_json)
@@ -132,7 +132,7 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 // find the first \r of the current buf
                 for (i = 0; i < GATE_BUFF_SIZE; i++)
                 {
-                    if (bin_data[i] == '\r')
+                    if (bin_data[i] == '\n')
                     {
                         i++;
                         break;
@@ -157,6 +157,13 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 // send crc test command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_CRC_TEST;
+                Luos_SendMsg(service, &boot_msg);
+                break;
+
+            case BOOTLOADER_APP_SAVED:
+                // send app saved command to bootloader app
+                boot_msg.header.size = sizeof(char);
+                boot_msg.data[0]     = BOOTLOADER_APP_SAVED;
                 Luos_SendMsg(service, &boot_msg);
                 break;
 

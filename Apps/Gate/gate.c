@@ -10,6 +10,7 @@
 #include "data_manager.h"
 #include "convert.h"
 #include "pipe_link.h"
+#include "routing_table.h"
 
 /*******************************************************************************
  * Definitions
@@ -31,7 +32,7 @@ time_luos_t update_time = GATE_REFRESH_TIME_S;
  ******************************************************************************/
 void Gate_Init(void)
 {
-    revision_t revision = {.major = 1, .minor = 0, .build = 0};
+    revision_t revision = {.major = 1, .minor = 0, .build = 1};
     gate                = Luos_CreateService(0, GATE_TYPE, "gate", revision);
 }
 
@@ -95,14 +96,22 @@ void Gate_Loop(void)
                 {
                     // This is the first time we perform a convertion
                     // Evaluate the time needed to convert all the data of this configuration and update refresh rate
-                    uint32_t execution_time = ((Luos_GetSystick() - last_time) * 2) + 1;
-                    update_time             = TimeOD_TimeFrom_ms(execution_time);
+                    uint16_t bigest_id = RoutingTB_BigestID();
+                    if (bigest_id)
+                    {
+                        update_time = (float)RoutingTB_BigestID() * 0.001;
+                    }
+                    else
+                    {
+                        update_time = GATE_REFRESH_TIME_S;
+                    }
+
                     // Update refresh rate for all services of the network
                     DataManager_collect(gate);
                     first_conversion = 0;
                 }
 #else
-                update_time = 0.0;
+                update_time = 0.005;
 #endif
             }
         }

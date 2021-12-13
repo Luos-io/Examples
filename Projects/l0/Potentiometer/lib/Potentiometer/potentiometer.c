@@ -46,7 +46,7 @@ void Potentiometer_Loop(void)
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
- *        
+ *
  * @param Service destination
  * @param Msg receive
  * @return None

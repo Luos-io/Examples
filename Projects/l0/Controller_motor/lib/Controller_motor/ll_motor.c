@@ -113,7 +113,7 @@ void ll_motor_init(void)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /**ADC GPIO Configuration
-    */
+     */
     GPIO_InitStruct.Pin  = FB_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
