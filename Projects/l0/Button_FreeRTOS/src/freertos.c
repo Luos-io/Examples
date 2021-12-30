@@ -50,20 +50,6 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-    .name       = "defaultTask",
-    .stack_size = 128 * 4,
-    .priority   = (osPriority_t)osPriorityNormal,
-};
-/* Definitions for IdleOS */
-osThreadId_t IdleOSHandle;
-const osThreadAttr_t IdleOS_attributes = {
-    .name       = "IdleOS",
-    .stack_size = 128 * 4,
-    .priority   = (osPriority_t)osPriorityNormal,
-};
 /* Definitions for LuosTask */
 osThreadId_t LuosTaskHandle;
 const osThreadAttr_t LuosTask_attributes = {
@@ -76,14 +62,14 @@ osThreadId_t ButtonTaskHandle;
 const osThreadAttr_t ButtonTask_attributes = {
     .name       = "Button",
     .stack_size = 128 * 4,
-    .priority   = (osPriority_t)osPriorityAboveNormal,
+    .priority   = (osPriority_t)osPriorityNormal,
 };
 
 osThreadId_t LedTaskHandle;
 const osThreadAttr_t LedTask_attributes = {
     .name       = "Led",
     .stack_size = 128 * 4,
-    .priority   = (osPriority_t)osPriorityAboveNormal,
+    .priority   = (osPriority_t)osPriorityNormal,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,8 +77,6 @@ const osThreadAttr_t LedTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
-void StartIdleOS(void *argument);
 void StartLuosTask(void *argument);
 void StartButtonTask(void *argument);
 void StartLedTask(void *argument);
@@ -127,11 +111,6 @@ void MX_FREERTOS_Init(void)
     /* USER CODE END RTOS_QUEUES */
 
     /* Create the thread(s) */
-    /* creation of defaultTask */
-    defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
-    /* creation of IdleOS */
-    IdleOSHandle = osThreadNew(StartIdleOS, NULL, &IdleOS_attributes);
 
     /* creation of LuosTask */
     Luos_Init();
@@ -149,43 +128,6 @@ void MX_FREERTOS_Init(void)
     /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
     /* USER CODE END RTOS_EVENTS */
-}
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
- * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-    /* USER CODE BEGIN StartDefaultTask */
-    /* Infinite loop */
-    while (1)
-    {
-        osDelay(1);
-    }
-    /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_StartIdleOS */
-/**
- * @brief Function implementing the IdleOS thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartIdleOS */
-void StartIdleOS(void *argument)
-{
-    /* USER CODE BEGIN StartIdleOS */
-    /* Infinite loop */
-    while (1)
-    {
-        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-        osDelay(500);
-    }
-    /* USER CODE END StartIdleOS */
 }
 
 /* USER CODE BEGIN Header_StartLuosTask */
