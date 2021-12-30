@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "luos.h"
 #include "button.h"
+#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +69,21 @@ osThreadId_t LuosTaskHandle;
 const osThreadAttr_t LuosTask_attributes = {
     .name       = "LuosTask",
     .stack_size = 1024 * 4,
-    .priority   = (osPriority_t)osPriorityNormal,
+    .priority   = (osPriority_t)osPriorityHigh,
+};
+
+osThreadId_t ButtonTaskHandle;
+const osThreadAttr_t ButtonTask_attributes = {
+    .name       = "Button",
+    .stack_size = 128 * 4,
+    .priority   = (osPriority_t)osPriorityAboveNormal,
+};
+
+osThreadId_t LedTaskHandle;
+const osThreadAttr_t LedTask_attributes = {
+    .name       = "Led",
+    .stack_size = 128 * 4,
+    .priority   = (osPriority_t)osPriorityAboveNormal,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,6 +94,8 @@ const osThreadAttr_t LuosTask_attributes = {
 void StartDefaultTask(void *argument);
 void StartIdleOS(void *argument);
 void StartLuosTask(void *argument);
+void StartButtonTask(void *argument);
+void StartLedTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -117,7 +134,13 @@ void MX_FREERTOS_Init(void)
     IdleOSHandle = osThreadNew(StartIdleOS, NULL, &IdleOS_attributes);
 
     /* creation of LuosTask */
-    LuosTaskHandle = osThreadNew(StartLuosTask, NULL, &LuosTask_attributes);
+    Luos_Init();
+    Button_Init();
+    Led_Init();
+
+    LuosTaskHandle   = osThreadNew(StartLuosTask, NULL, &LuosTask_attributes);
+    ButtonTaskHandle = osThreadNew(StartButtonTask, NULL, &ButtonTask_attributes);
+    LedTaskHandle    = osThreadNew(StartLedTask, NULL, &LedTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
@@ -175,13 +198,34 @@ void StartIdleOS(void *argument)
 void StartLuosTask(void *argument)
 {
     /* USER CODE BEGIN StartLuosTask */
-    LUOS_ADD_PACKAGE(Button);
     /* Infinite loop */
     while (1)
     {
-        Luos_Run();
+        Luos_Loop();
     }
     /* USER CODE END StartLuosTask */
+}
+
+void StartButtonTask(void *argument)
+{
+    /* USER CODE BEGIN StartButtonTask */
+    /* Infinite loop */
+    while (1)
+    {
+        Button_Loop();
+    }
+    /* USER CODE END StartButtonTask */
+}
+
+void StartLedTask(void *argument)
+{
+    /* USER CODE BEGIN StartLedTask */
+    /* Infinite loop */
+    while (1)
+    {
+        Led_Loop();
+    }
+    /* USER CODE END StartLedTask */
 }
 
 /* Private application code --------------------------------------------------*/
