@@ -17,6 +17,7 @@
  * Variables
  ******************************************************************************/
 profile_state_t button;
+service_t *app;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -35,7 +36,7 @@ void Button_Init(void)
     // Profile configuration
     button.access = READ_ONLY_ACCESS;
     // Service creation following state profile
-    ProfileState_CreateService(&button, 0, "button", revision);
+    app = ProfileState_CreateService(&button, 0, "button", revision);
 }
 
 /******************************************************************************
@@ -46,4 +47,16 @@ void Button_Init(void)
 void Button_Loop(void)
 {
     ll_button_read(&button.state);
+
+    // Get the ID of our LED from the routing table
+    int8_t id_led = RoutingTB_IDFromAlias("led_service");
+
+    // Now send a message
+    msg_t led_msg;
+    led_msg.header.target      = id_led;
+    led_msg.header.cmd         = IO_STATE;
+    led_msg.header.target_mode = IDACK;
+    led_msg.header.size        = sizeof(char);
+    led_msg.data[0]            = !(uint8_t)button.state;
+    Luos_SendMsg(app, &led_msg);
 }

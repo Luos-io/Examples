@@ -30,7 +30,7 @@ void ll_button_init(void)
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     // configure gpio clock
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
     /*Configure GPIO pin : button pin */
     GPIO_InitStruct.Pin  = BTN_Pin;

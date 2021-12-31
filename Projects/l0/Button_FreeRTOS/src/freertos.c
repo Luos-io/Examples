@@ -54,8 +54,8 @@
 osThreadId_t LuosTaskHandle;
 const osThreadAttr_t LuosTask_attributes = {
     .name       = "LuosTask",
-    .stack_size = 1024 * 4,
-    .priority   = (osPriority_t)osPriorityHigh,
+    .stack_size = 128 * 4,
+    .priority   = (osPriority_t)osPriorityNormal,
 };
 
 osThreadId_t ButtonTaskHandle;
@@ -144,6 +144,8 @@ void StartLuosTask(void *argument)
     while (1)
     {
         Luos_Loop();
+
+        taskYIELD();
     }
     /* USER CODE END StartLuosTask */
 }
@@ -155,6 +157,8 @@ void StartButtonTask(void *argument)
     while (1)
     {
         Button_Loop();
+
+        taskYIELD();
     }
     /* USER CODE END StartButtonTask */
 }
@@ -166,6 +170,8 @@ void StartLedTask(void *argument)
     while (1)
     {
         Led_Loop();
+
+        taskYIELD();
     }
     /* USER CODE END StartLedTask */
 }
