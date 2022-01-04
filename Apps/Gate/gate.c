@@ -20,7 +20,11 @@
  * Variables
  ******************************************************************************/
 service_t *gate;
-char detection_ask      = 0;
+volatile gate_state_t gate_running = NOT_RUNNING;
+#ifndef GATE_POLLING
+volatile bool first_conversion = false;
+#endif
+
 time_luos_t update_time = GATE_REFRESH_TIME_S;
 /*******************************************************************************
  * Function
@@ -43,18 +47,13 @@ void Gate_Init(void)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-#ifndef GATE_POLLING
-    static uint8_t first_conversion = 1;
-#endif
-    static short pipe_id = 0;
 #ifndef NODETECTION
     static short previous_id = -1;
 #endif
-    static volatile bool gate_running = false;
-    static uint32_t last_time         = 0;
+    static uint32_t last_time = 0;
 
     // Check the detection status.
-    if (RoutingTB_IDFromService(gate) == 0)
+    if (Luos_IsNodeDetected() == false)
     {
 #ifndef NODETECTION
         // We don't have any ID, meaning no detection occure or detection is occuring.
@@ -65,26 +64,19 @@ void Gate_Loop(void)
             if (Luos_GetSystick() > 20)
             {
                 // No detection occure, do it
-                RoutingTB_DetectServices(gate);
+                Luos_Detect(gate);
                 previous_id = 0;
 #ifndef GATE_POLLING
-                first_conversion = 1;
-                update_time      = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
+                update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
 #endif
             }
         }
 #endif
-        pipe_id = 0;
     }
     else
     {
         // Network have been detected, We are good to go
-        if (pipe_id == 0)
-        {
-            // We dont have spotted any pipe yet. Try to find one
-            pipe_id = PipeLink_Find(gate);
-        }
-        if (gate_running && !detection_ask)
+        if (gate_running == RUNNING)
         {
             // Manage input and output data
             if ((Luos_GetSystick() - last_time >= TimeOD_TimeTo_ms(update_time)) && (Luos_GetSystick() > last_time))
@@ -118,23 +110,6 @@ void Gate_Loop(void)
         else
         {
             DataManager_RunPipeOnly(gate);
-        }
-        if (detection_ask)
-        {
-            // Run detection
-            RoutingTB_DetectServices(gate);
-            pipe_id = PipeLink_Find(gate);
-            // Create data from service
-            Convert_RoutingTableData(gate);
-#ifndef GATE_POLLING
-            // Set update frequency
-            update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
-            DataManager_collect(gate);
-            last_time        = Luos_GetSystick() + (uint32_t)(TimeOD_TimeTo_ms(GATE_REFRESH_TIME_S) / 2);
-            first_conversion = 1;
-#endif
-            gate_running  = true;
-            detection_ask = 0;
         }
     }
 }
