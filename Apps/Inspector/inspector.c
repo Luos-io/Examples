@@ -40,9 +40,15 @@ void Inspector_Init(void)
  ******************************************************************************/
 void Inspector_Loop(void)
 {
+#ifndef NODETECTION
+    static uint8_t init_flag = 1;
+#endif
     // check if the network is detected
     if (Luos_IsNodeDetected())
     {
+#ifndef NODETECTION
+        init_flag = 0;
+#endif
         // Network have been detected, We are good to go
         if (pipe_id == 0)
         {
@@ -60,5 +66,12 @@ void Inspector_Loop(void)
         pipe_id = 0;
         // send to Luos a flag in order to filter the messages
         Luos_SetFilterState(true, inspector);
+#ifndef NODETECTION
+        if (init_flag && (Luos_GetSystick() > 20))
+        {
+            Luos_Detect(inspector);
+            init_flag = 0;
+        }
+#endif
     }
 }

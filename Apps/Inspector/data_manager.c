@@ -78,6 +78,9 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     //  This message is a command from pipe
     switch (cmd)
     {
+        case ASK_DETECTION:
+            Luos_Detect(service);
+            break;
         case RTB:
             // first message for the inspector
             // send the routing table using pipe
@@ -97,7 +100,6 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
                 Luos_SetFilterState(true, service);
                 inspector_state = STOPPED;
             }
-
             break;
         case LUOS_STATISTICS:
             // extract service that we want the stats
@@ -178,6 +180,14 @@ void DataManager_GetServiceMsg(service_t *service)
                     i++;
                     continue;
                 }
+                // Check if this is a message from pipe
+                if (data_msg->header.source == PipeLink_GetId())
+                {
+                    // treat message from pipe
+                    DataManager_GetPipeMsg(service, data_msg);
+                    i++;
+                    continue;
+                }
                 // check if this is an assert
                 if ((data_msg->header.cmd == ASSERT) && (data_msg->header.size > 0))
                 {
@@ -199,11 +209,8 @@ void DataManager_GetServiceMsg(service_t *service)
                     i++;
                     continue;
                 }
-                // Check if this is a message from pipe
-                if (data_msg->header.source == PipeLink_GetId())
+                if ((data_msg->header.cmd == END_DETECTION) || (data_msg->header.cmd == ASK_DETECTION))
                 {
-                    // treat message from pipe
-                    DataManager_GetPipeMsg(service, data_msg);
                     i++;
                     continue;
                 }
