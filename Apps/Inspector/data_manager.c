@@ -30,7 +30,7 @@ uint8_t assert_buf_size[MAX_ASSERT_NUMBER] = {0};
  ******************************************************************************/
 void DataManager_SendRoutingTB(service_t *service)
 {
-    uint8_t data[2048] = {0};
+    uint8_t data[MAX_RTB_ENTRY * sizeof(routing_table_t)] = {0};
     // store the address of the RoutingTB
     routing_table_t *routing_table = RoutingTB_Get();
     msg_t msg;
@@ -38,7 +38,7 @@ void DataManager_SendRoutingTB(service_t *service)
     msg.header.target      = DEFAULTID;
     msg.header.target_mode = ID;
     msg.header.source      = RoutingTB_IDFromService(service);
-    msg.header.cmd         = RTB_CMD;
+    msg.header.cmd         = RTB;
     msg.header.size        = RoutingTB_GetLastEntry() * sizeof(routing_table_t);
 
     memcpy(data, msg.stream, sizeof(header_t));
@@ -78,7 +78,7 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     //  This message is a command from pipe
     switch (cmd)
     {
-        case RTB_CMD:
+        case RTB:
             // first message for the inspector
             // send the routing table using pipe
             DataManager_SendRoutingTB(service);
