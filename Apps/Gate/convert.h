@@ -25,6 +25,9 @@ typedef struct
     };
 } servo_parameters_t;
 
+// Received data validations (size and CRC)
+int Convert_CheckDataIntegrity(char *data, uint32_t data_size);
+
 // Luos data to Luos messages convertion
 void Convert_DataToLuos(service_t *service, char *data);
 

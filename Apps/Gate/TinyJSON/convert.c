@@ -58,22 +58,83 @@ const char *Convert_Float(float value)
 }
 
 /*******************************************************************************
+ * Received data validations (size and CRC)
+ ******************************************************************************/
+/******************************************************************************
+ * @brief This function check the integrity of the received frame using size validation or CRC
+ * @param data data pointer to check
+ * @param data_size size of the data to check
+ * @return number of missing data. Negative values are corrupted frames.
+ ******************************************************************************/
+
+json_t pool[MAX_JSON_FIELDS];
+json_t *root = NULL;
+int Convert_CheckDataIntegrity(char *data, uint32_t data_size)
+{
+    if (data[data_size - 1] != '\n')
+    {
+        // Frames always finish with '\r', there is missing data but we don't know how many
+        return 1;
+    }
+
+    // Check if we have a complete Json
+    root = NULL;
+    root = (json_t *)json_create(data, pool, MAX_JSON_FIELDS);
+    // Check json integrity
+    if (root == NULL)
+    {
+        // Error
+        return -1;
+    }
+    // This Json is ok, now check if we have a binary after that
+    json_t *item = root;
+    while ((item != NULL))
+    {
+        if (json_getType(item) != JSON_OBJ)
+        {
+        if (json_getType(item) == JSON_ARRAY)
+        {
+            item = (json_t *)json_getChild(item);
+            if (json_getSibling(item) == NULL)
+            {
+                // This is an array with only 1 field, this is a binary
+                // We have to check it's size to know if we have everything.
+                int size = (int)json_getInteger(item);
+                int i;
+                // find the first \n of the current buf
+                for (i = 0; i < GATE_BUFF_SIZE; i++)
+                {
+                    if (data[i] == '\n')
+                    {
+                        // This is the begining of the binary data
+                        i++;
+                        break;
+                    }
+                }
+                // Now we know the end of JSON check if we received the entire binary
+                return size - (data_size - (i+1));
+            }
+        } else {
+            return 0;
+        }
+        }
+        else
+        {
+            // Go deeper on the Json
+            item = (json_t *)json_getChild(item);
+        }
+    }
+    return 0;
+}
+
+/*******************************************************************************
  * Luos Json data to Luos messages convertion
  ******************************************************************************/
 // Convert a Json into messages
 void Convert_DataToLuos(service_t *service, char *data)
 {
-    json_t pool[MAX_JSON_FIELDS];
     msg_t msg;
 
-    // check if we have a complete received command
-    json_t const *root = json_create(data, pool, MAX_JSON_FIELDS);
-    // check json integrity
-    if (root == NULL)
-    {
-        // Error
-        return;
-    }
     // check if this is a detection cmd
     if (json_getProperty(root, "detection") != NULL)
     {
