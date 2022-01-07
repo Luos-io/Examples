@@ -169,7 +169,12 @@ void PIPE_COM_IRQHANDLER()
             P2L_DMA_CLEAR_TC(P2L_DMA);
             P2L_FlagOverFlow = true;
         }
-        LastData = PIPE_TO_LUOS_BUFFER_SIZE - LL_DMA_GetDataLength(P2L_DMA, P2L_DMA_CHANNEL);
+        uint32_t dma_size = LL_DMA_GetDataLength(P2L_DMA, P2L_DMA_CHANNEL);
+        if (dma_size == 0)
+        {
+            return;
+        }
+        LastData = PIPE_TO_LUOS_BUFFER_SIZE - dma_size;
         if (LastData == 0)
         {
             LastData         = PIPE_TO_LUOS_BUFFER_SIZE - 1;

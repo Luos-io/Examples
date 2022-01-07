@@ -103,46 +103,43 @@ void PipeBuffer_ClearP2LTask(void)
  ******************************************************************************/
 void PipeBuffer_AllocP2LTask(uint16_t PositionLastData, uint8_t overflow)
 {
-    if ((P2L_Buffer[PositionLastData - 1] == '\r') && (P2L_Buffer[PositionLastData] == '\n'))
+    if ((overflow == true) && (P2LBuffer_PrevStartData < PositionLastData))
     {
-        if ((overflow == true) && (P2LBuffer_PrevStartData < PositionLastData))
-        {
-            LUOS_ASSERT(0);
-        }
-        while (PipeBuffer_P2LTaskNeedClear(PositionLastData) != false)
-            ;
-        LUOS_ASSERT(P2LTaskID < PIPE_TO_LUOS_MAX_TASK);
-        for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
-        {
-            if (P2LTask[i].data_pt == 0)
-            {
-                P2LTask[i].data_pt = &P2L_Buffer[P2LBuffer_PrevStartData];
-                P2LTask[i].end     = &P2L_Buffer[PositionLastData];
-                PositionLastData++;
-                if (P2LBuffer_PrevStartData < PositionLastData)
-                {
-                    P2LTask[i].size = PositionLastData - P2LBuffer_PrevStartData;
-                }
-                else
-                {
-                    P2LTask[i].size = (((PIPE_TO_LUOS_BUFFER_SIZE)-P2LBuffer_PrevStartData) + PositionLastData);
-                }
-                Stream_AddAvailableSampleNB(get_P2L_StreamChannel(), P2LTask[i].size);
-                if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
-                {
-                    P2LBuffer_PrevStartData = PositionLastData;
-                }
-                else
-                {
-                    P2LBuffer_PrevStartData = 0;
-                }
-                P2LTaskID++;
-                return;
-            }
-        }
-        // No more space
         LUOS_ASSERT(0);
     }
+    while (PipeBuffer_P2LTaskNeedClear(PositionLastData) != false)
+        ;
+    LUOS_ASSERT(P2LTaskID < PIPE_TO_LUOS_MAX_TASK);
+    for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
+    {
+        if (P2LTask[i].data_pt == 0)
+        {
+            P2LTask[i].data_pt = &P2L_Buffer[P2LBuffer_PrevStartData];
+            P2LTask[i].end     = &P2L_Buffer[PositionLastData];
+            PositionLastData++;
+            if (P2LBuffer_PrevStartData < PositionLastData)
+            {
+                P2LTask[i].size = PositionLastData - P2LBuffer_PrevStartData;
+            }
+            else
+            {
+                P2LTask[i].size = (((PIPE_TO_LUOS_BUFFER_SIZE)-P2LBuffer_PrevStartData) + PositionLastData);
+            }
+            Stream_AddAvailableSampleNB(get_P2L_StreamChannel(), P2LTask[i].size);
+            if (PositionLastData < PIPE_TO_LUOS_BUFFER_SIZE)
+            {
+                P2LBuffer_PrevStartData = PositionLastData;
+            }
+            else
+            {
+                P2LBuffer_PrevStartData = 0;
+            }
+            P2LTaskID++;
+            return;
+        }
+    }
+    // No more space
+    LUOS_ASSERT(0);
 }
 /******************************************************************************
  * @brief init must be call in project init
