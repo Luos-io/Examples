@@ -67,7 +67,7 @@ void PipeCom_ReceiveP2L(void)
         data = Serial.read();
         Stream_PutSample(get_P2L_StreamChannel(), &data, 1);
         size_to_receive++;
-        if ((data == '\n') && (saved_data == '\r'))
+        if ((data == '\n'))
         {
             PipeBuffer_AllocP2LTask(size_to_receive);
             size_to_receive = 0;
