@@ -71,6 +71,7 @@ json_t pool[MAX_JSON_FIELDS];
 json_t *root = NULL;
 int Convert_CheckDataIntegrity(char *data, uint32_t data_size)
 {
+    static bool new_frame = true;
     if (data[data_size - 1] != '\n')
     {
         // Frames always finish with '\r', there is missing data but we don't know how many
@@ -78,12 +79,17 @@ int Convert_CheckDataIntegrity(char *data, uint32_t data_size)
     }
 
     // Check if we have a complete Json
-    root = NULL;
-    root = (json_t *)json_create(data, pool, MAX_JSON_FIELDS);
+    if (new_frame == true)
+    {
+        root      = NULL;
+        root      = (json_t *)json_create(data, pool, MAX_JSON_FIELDS);
+        new_frame = false;
+    }
     // Check json integrity
     if (root == NULL)
     {
         // Error
+        new_frame = true;
         return -1;
     }
     // This Json is ok, now check if we have a binary after that
@@ -92,31 +98,41 @@ int Convert_CheckDataIntegrity(char *data, uint32_t data_size)
     {
         if (json_getType(item) != JSON_OBJ)
         {
-        if (json_getType(item) == JSON_ARRAY)
-        {
-            item = (json_t *)json_getChild(item);
-            if (json_getSibling(item) == NULL)
+            if (json_getType(item) == JSON_ARRAY)
             {
-                // This is an array with only 1 field, this is a binary
-                // We have to check it's size to know if we have everything.
-                int size = (int)json_getInteger(item);
-                int i;
-                // find the first \n of the current buf
-                for (i = 0; i < GATE_BUFF_SIZE; i++)
+                item = (json_t *)json_getChild(item);
+                if (json_getSibling(item) == NULL)
                 {
-                    if (data[i] == '\n')
+                    // This is an array with only 1 field, this is a binary
+                    // We have to check it's size to know if we have everything.
+                    int size = (int)json_getInteger(item);
+                    int i;
+                    // find the first \n of the current buf
+                    for (i = 0; i < GATE_BUFF_SIZE; i++)
                     {
-                        // This is the begining of the binary data
-                        i++;
-                        break;
+                        if (data[i] == '\n')
+                        {
+                            // This is the begining of the binary data
+                            i++;
+                            break;
+                        }
                     }
+                    // Now we know the end of JSON check if we received the entire binary
+                    int missing_data = size - (data_size - 1 - i);
+                    if (missing_data <= 0)
+                    {
+                        // End of frame
+                        new_frame = true;
+                    }
+                    return missing_data;
                 }
-                // Now we know the end of JSON check if we received the entire binary
-                return size - (data_size - (i+1));
             }
-        } else {
-            return 0;
-        }
+            else
+            {
+                // End of frame
+                new_frame = true;
+                return 0;
+            }
         }
         else
         {
@@ -124,6 +140,8 @@ int Convert_CheckDataIntegrity(char *data, uint32_t data_size)
             item = (json_t *)json_getChild(item);
         }
     }
+    // End of frame
+    new_frame = true;
     return 0;
 }
 
