@@ -51,21 +51,18 @@
 
 /* USER CODE END Variables */
 /* Definitions for LuosTask */
-osThreadId_t LuosTaskHandle;
 const osThreadAttr_t LuosTask_attributes = {
     .name       = "LuosTask",
     .stack_size = 128 * 4,
     .priority   = (osPriority_t)osPriorityNormal,
 };
 
-osThreadId_t ButtonTaskHandle;
 const osThreadAttr_t ButtonTask_attributes = {
     .name       = "Button",
     .stack_size = 128 * 4,
     .priority   = (osPriority_t)osPriorityNormal,
 };
 
-osThreadId_t LedTaskHandle;
 const osThreadAttr_t LedTask_attributes = {
     .name       = "Led",
     .stack_size = 128 * 4,
@@ -117,9 +114,9 @@ void MX_FREERTOS_Init(void)
     Button_Init();
     Led_Init();
 
-    LuosTaskHandle   = osThreadNew(StartLuosTask, NULL, &LuosTask_attributes);
-    ButtonTaskHandle = osThreadNew(StartButtonTask, NULL, &ButtonTask_attributes);
-    LedTaskHandle    = osThreadNew(StartLedTask, NULL, &LedTask_attributes);
+    osThreadNew(StartLuosTask, NULL, &LuosTask_attributes);
+    osThreadNew(StartButtonTask, NULL, &ButtonTask_attributes);
+    osThreadNew(StartLedTask, NULL, &LedTask_attributes);
 
     /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
