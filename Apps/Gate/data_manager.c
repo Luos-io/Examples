@@ -45,7 +45,7 @@ void DataManager_collect(service_t *service)
             }
 #endif
 #else
-            // This contaiiner is a sensor so create a msg to enable auto update
+            // This container is a sensor so create a msg to enable auto update
             update_msg.header.target = i;
             TimeOD_TimeToMsg(&update_time, &update_msg);
             update_msg.header.cmd = UPDATE_PUB;
@@ -97,6 +97,25 @@ void DataManager_RunPipeOnly(service_t *service)
             Convert_DataToLuos(service, data_cmd);
         }
     }
+    if (Luos_ReadMsg(service, &data_msg) == SUCCEED)
+    {
+        // Check if a node send a end detection
+        if (data_msg->header.cmd == END_DETECTION)
+        {
+            // Find a pipe
+            PipeLink_Find(service);
+            if (gate_running == PREPARING)
+            {
+                // Generate routing table datas
+                Convert_RoutingTableData(service);
+                // Run the gate
+                gate_running = RUNNING;
+#ifndef GATE_POLLING
+                first_conversion = true;
+#endif
+            }
+        }
+    }
 }
 
 // This function will create a data string for services datas
@@ -133,6 +152,14 @@ void DataManager_Format(service_t *service)
                     if (data_msg->header.cmd == BOOTLOADER_RESP)
                     {
                         Bootloader_LuosToJson(service, data_msg);
+                        continue;
+                    }
+                    // check if a node send a end detection
+                    if (data_msg->header.cmd == END_DETECTION)
+                    {
+                        // find a pipe
+                        PipeLink_Find(service);
+                        i++;
                         continue;
                     }
                     // Check if this is a message from pipe
