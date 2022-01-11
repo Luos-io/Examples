@@ -11,11 +11,22 @@
  * Definitions
  ******************************************************************************/
 
+// Define the different states of the Gate
+typedef enum
+{
+    NOT_RUNNING, // No user ask the gate to run.
+    PREPARING,   // A user ask the gate to run.
+    RUNNING      // user ask the gate to run and everything is ready to do.
+} gate_state_t;
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 extern time_luos_t update_time;
-extern char detection_ask;
+extern volatile gate_state_t gate_running;
+#ifndef GATE_POLLING
+extern volatile bool first_conversion;
+#endif
 
 /*******************************************************************************
  * Function

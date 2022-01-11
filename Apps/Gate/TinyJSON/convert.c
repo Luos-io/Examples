@@ -77,7 +77,10 @@ void Convert_DataToLuos(service_t *service, char *data)
     // check if this is a detection cmd
     if (json_getProperty(root, "detection") != NULL)
     {
-        detection_ask++;
+        // Launch a detection
+        Luos_Detect(service);
+        // Run the Gate
+        gate_running = PREPARING;
         return;
     }
     if (json_getProperty(root, "discover") != NULL)

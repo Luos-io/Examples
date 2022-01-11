@@ -7,6 +7,7 @@
 #include "vl53l0x_drv.h"
 
 #include "distance.h"
+#include "timestamp.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -18,6 +19,7 @@
 
 linear_position_t dist = -0.001;
 bool new_data_ready    = false;
+timestamp_token_t distance_timestamp;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -45,6 +47,7 @@ void Distance_Loop(void)
     if (vl53l0x_DrvRead(&dist) == SUCCEED)
     {
         new_data_ready = true;
+        Timestamp_Tag(&distance_timestamp, &dist);
     }
 }
 /******************************************************************************
@@ -65,6 +68,10 @@ static void Distance_MsgHandler(service_t *service, msg_t *msg)
             pub_msg.header.target      = msg->header.source;
             LinearOD_PositionToMsg(&dist, &pub_msg);
             new_data_ready = false;
+            if (Timestamp_GetToken(&dist))
+            {
+                Timestamp_EncodeMsg(&pub_msg, &dist);
+            }
             Luos_SendMsg(service, &pub_msg);
         }
     }

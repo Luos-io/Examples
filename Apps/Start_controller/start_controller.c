@@ -10,9 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define LIGHT_INTENSITY 255
-
-#define UPDATE_PERIOD_MS 10
+#define LIGHT_INTENSITY   255
+#define DETECTION_LATENCY 50
+#define UPDATE_PERIOD_MS  10
 
 typedef enum
 {
@@ -28,7 +28,7 @@ volatile control_t control_app;
 uint8_t lock           = 1;
 uint8_t last_btn_state = 0;
 uint8_t state_switch   = 0;
-uint8_t init           = 0;
+uint8_t end_detection  = 1;
 
 /*******************************************************************************
  * Function
@@ -55,63 +55,47 @@ void StartController_Init(void)
  ******************************************************************************/
 void StartController_Loop(void)
 {
-    static short previous_id       = -1;
     static uint32_t switch_date    = 0;
     static uint8_t animation_state = 0;
-    static uint32_t detection_date = 0;
+    static uint32_t last_detection = 0;
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
-    if (previous_id != RoutingTB_IDFromService(app))
+    if (Luos_IsNodeDetected())
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        // Make services configurations
+        int id = RoutingTB_IDFromAlias("lock");
+        if (id > 0)
         {
-            // We don't have any ID, meaning no detection occure or detection is occuring.
-            if (previous_id == -1)
+            if (end_detection)
             {
-                // This is the really first init, we have to make it.
-                // Be sure the network is powered up 1000 ms before starting a detection
-                if (Luos_GetSystick() > 1000)
+                msg_t msg;
+                msg.header.target      = id;
+                msg.header.target_mode = IDACK;
+                // Setup auto update each UPDATE_PERIOD_MS on button
+                // This value is resetted on all service at each detection
+                // It's important to setting it each time.
+                time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
+                TimeOD_TimeToMsg(&time, &msg);
+                msg.header.cmd = UPDATE_PUB;
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
                 {
-                    // No detection occure, do it
-                    RoutingTB_DetectServices(app);
-                    detection_date = Luos_GetSystick();
+                    Luos_Loop();
                 }
-            }
-            else
-            {
-                // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup service at the end of detection
-                previous_id    = 0;
-                detection_date = Luos_GetSystick();
+                end_detection = 0;
+                return;
             }
         }
-        else
+    }
+    else
+    {
+        if (Luos_GetSystick() - last_detection >= DETECTION_LATENCY)
         {
-            if ((Luos_GetSystick() - detection_date) > 100)
-            {
-                // Make services configurations
-                int id = RoutingTB_IDFromAlias("lock");
-                if (id > 0)
-                {
-                    msg_t msg;
-                    msg.header.target      = id;
-                    msg.header.target_mode = IDACK;
-                    // Setup auto update each UPDATE_PERIOD_MS on button
-                    // This value is resetted on all service at each detection
-                    // It's important to setting it each time.
-                    time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    msg.header.cmd = UPDATE_PUB;
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
-                }
-                previous_id = RoutingTB_IDFromService(app);
-            }
+            Luos_Detect(app);
+            last_detection = Luos_GetSystick();
         }
         return;
     }
+    last_detection = Luos_GetSystick();
     // ********** non blocking button management ************
     if (state_switch & (control_app.flux == PLAY) & (animation_state == 0))
     {
@@ -292,5 +276,9 @@ static void StartController_MsgHandler(service_t *service, msg_t *msg)
     {
         control_app.unmap = msg->data[0];
         return;
+    }
+    if (msg->header.cmd == END_DETECTION)
+    {
+        end_detection = 1;
     }
 }
