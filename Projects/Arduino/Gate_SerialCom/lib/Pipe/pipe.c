@@ -77,7 +77,7 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
             pub_msg.header.target_mode = ID;
             pub_msg.header.target      = msg->header.source;
             pub_msg.header.size        = size;
-            Luos_SendStreaming(service, &pub_msg, &P2L_StreamChannel);
+            Luos_SendStreamingSize(service, &pub_msg, &P2L_StreamChannel, size);
         }
     }
     else if (msg->header.cmd == SET_CMD)
