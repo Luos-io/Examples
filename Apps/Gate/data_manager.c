@@ -92,16 +92,23 @@ void DataManager_RunPipeOnly(service_t *service)
         }
         else
         {
-            uint32_t data_size = Luos_ReceiveData(service, data_msg, data_cmd);
-            if (data_size >= 8)
+            static uint32_t data_size = 0;
+            data_size += Luos_ReceiveData(service, data_msg, &data_cmd[data_size]);
+            if (data_size > 2)
             {
 
                 int missing_data = Convert_CheckDataIntegrity(data_cmd, data_size);
                 if (missing_data == 0)
                 {
                     // We finish to receive this data, execute the received command
+
                     Convert_DataToLuos(service, data_cmd);
+                    data_size = 0;
                 }
+            }
+            else
+            {
+                data_size = 0;
             }
         }
     }
@@ -177,18 +184,18 @@ void DataManager_Format(service_t *service)
                         {
                             // This message is a command from pipe
                             static char data_cmd[GATE_BUFF_SIZE];
-                            static char *data_ptr = data_cmd;
+                            static char *pipe_data_ptr = data_cmd;
                             // Convert the received data into Luos commands
                             static uint32_t data_size = 0;
 
-                            data_size += Luos_ReceiveData(service, data_msg, data_ptr);
+                            data_size += Luos_ReceiveData(service, data_msg, pipe_data_ptr);
                             if (data_size > 0)
                             {
-                                if (data_size < 8)
+                                if (data_size < 2)
                                 {
                                     // less than 8 bytes are probably glitchs, reset
-                                    data_ptr  = data_cmd;
-                                    data_size = 0;
+                                    pipe_data_ptr = data_cmd;
+                                    data_size     = 0;
                                 }
                                 else
                                 {
@@ -197,25 +204,27 @@ void DataManager_Format(service_t *service)
                                     int missing_data = Convert_CheckDataIntegrity(data_cmd, data_size);
                                     if (missing_data == 0)
                                     {
+
                                         // Execute the received command
                                         if (data_msg->header.cmd == SET_CMD)
                                         {
                                             Convert_DataToLuos(service, data_cmd);
                                         }
                                         // reinit the data pointer to the begining of the buffer
-                                        data_ptr  = data_cmd;
-                                        data_size = 0;
+
+                                        pipe_data_ptr = data_cmd;
+                                        data_size     = 0;
                                     }
                                     else if (missing_data > 0)
                                     {
                                         // This data is incomplete, move the data pointer into the buffer to add the next reception after
-                                        data_ptr = &data_cmd[data_size];
+                                        pipe_data_ptr = &data_cmd[data_size];
                                     }
                                     else if (missing_data < 0)
                                     {
                                         // This is an error drop the message
-                                        data_ptr  = data_cmd;
-                                        data_size = 0;
+                                        pipe_data_ptr = data_cmd;
+                                        data_size     = 0;
                                     }
                                 }
                             }
