@@ -180,57 +180,68 @@ void DataManager_Format(service_t *service)
                     // Check if this is a message from pipe
                     if (data_msg->header.source == PipeLink_GetId())
                     {
-                        do
+
+                        if (data_msg->header.cmd == PARAMETERS)
                         {
-                            // This message is a command from pipe
-                            static char data_cmd[GATE_BUFF_SIZE];
-                            static char *pipe_data_ptr = data_cmd;
-                            // Convert the received data into Luos commands
-                            static uint32_t data_size = 0;
-
-                            data_size += Luos_ReceiveData(service, data_msg, pipe_data_ptr);
-                            if (data_size > 0)
+                            int pointer;
+                            memcpy(&pointer, data_msg->data, sizeof(void *));
+                            PipeLink_SetStreamingChannel((void *)pointer);
+                        }
+                        else
+                        {
+                            do
                             {
-                                if (data_size < 2)
-                                {
-                                    // less than 8 bytes are probably glitchs, reset
-                                    pipe_data_ptr = data_cmd;
-                                    data_size     = 0;
-                                }
-                                else
-                                {
-                                    // We finish to receive this data,
-                                    // This could be only a piece of the actual command. We have to validate the complitude of the data
-                                    int missing_data = Convert_CheckDataIntegrity(data_cmd, data_size);
-                                    if (missing_data == 0)
-                                    {
+                                // This message is a command from pipe
+                                static char data_cmd[GATE_BUFF_SIZE];
+                                static char *pipe_data_ptr = data_cmd;
+                                // Convert the received data into Luos commands
+                                static uint32_t data_size = 0;
 
-                                        // Execute the received command
-                                        if (data_msg->header.cmd == SET_CMD)
+                                data_size += Luos_ReceiveData(service, data_msg, pipe_data_ptr);
+                                if (data_size > 0)
+                                {
+                                    if (data_size < 2)
+                                    {
+                                        // less than 8 bytes are probably glitchs, reset
+                                        pipe_data_ptr = data_cmd;
+                                        data_size     = 0;
+                                    }
+                                    else
+                                    {
+                                        // We finish to receive this data,
+                                        // This could be only a piece of the actual command. We have to validate the complitude of the data
+                                        int missing_data = Convert_CheckDataIntegrity(data_cmd, data_size);
+                                        if (missing_data == 0)
                                         {
-                                            Convert_DataToLuos(service, data_cmd);
-                                        }
-                                        // reinit the data pointer to the begining of the buffer
 
-                                        pipe_data_ptr = data_cmd;
-                                        data_size     = 0;
-                                    }
-                                    else if (missing_data > 0)
-                                    {
-                                        // This data is incomplete, move the data pointer into the buffer to add the next reception after
-                                        pipe_data_ptr = &data_cmd[data_size];
-                                    }
-                                    else if (missing_data < 0)
-                                    {
-                                        // This is an error drop the message
-                                        pipe_data_ptr = data_cmd;
-                                        data_size     = 0;
+                                            // Execute the received command
+                                            if (data_msg->header.cmd == SET_CMD)
+                                            {
+                                                Convert_DataToLuos(service, data_cmd);
+                                            }
+                                            // reinit the data pointer to the begining of the buffer
+
+                                            pipe_data_ptr = data_cmd;
+                                            data_size     = 0;
+                                        }
+                                        else if (missing_data > 0)
+                                        {
+
+                                            // This data is incomplete, move the data pointer into the buffer to add the next reception after
+                                            pipe_data_ptr = &data_cmd[data_size];
+                                        }
+                                        else if (missing_data < 0)
+                                        {
+                                            // This is an error drop the message
+                                            pipe_data_ptr = data_cmd;
+                                            data_size     = 0;
+                                        }
                                     }
                                 }
-                            }
-                        } while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED);
-                        i++;
-                        continue;
+                            } while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED);
+                            i++;
+                            continue;
+                        }
                     }
                     // get the source of this message
                     // Create service description
