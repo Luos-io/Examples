@@ -51,11 +51,10 @@ void Pipe_Loop(void)
  ******************************************************************************/
 static void Pipe_MsgHandler(service_t *service, msg_t *msg)
 {
-    uint8_t *data = 0;
     uint16_t size = 0;
     if (msg->header.cmd == GET_CMD)
     {
-        if (true == PipeBuffer_GetP2LTask(&data, &size))
+        while (false != PipeBuffer_GetP2LTask(&size))
         {
             // fill the message infos
             msg_t pub_msg;
@@ -67,7 +66,6 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
     }
     else if (msg->header.cmd == SET_CMD)
     {
-        uint16_t size = 0;
         if (msg->header.size > 0)
         {
             Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel);
