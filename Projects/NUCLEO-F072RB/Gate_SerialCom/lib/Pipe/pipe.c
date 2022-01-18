@@ -66,7 +66,6 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
     }
     else if (msg->header.cmd == SET_CMD)
     {
-        uint16_t size = 0;
         if (msg->header.size > 0)
         {
             Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel);

@@ -61,8 +61,10 @@ uint8_t PipeBuffer_GetP2LTask(uint16_t *task)
     if (P2LTaskID != 0)
     {
         *task = P2LTask[0];
+        __disable_irq();
         P2LBuffer_NbrdataIn -= P2LTask[0];
         PipeBuffer_ClearP2LTask();
+        __enable_irq();
         return true;
     }
     return false;
@@ -92,26 +94,29 @@ void PipeBuffer_ClearP2LTask(void)
  ******************************************************************************/
 void PipeBuffer_AllocP2LTask(uint16_t size)
 {
-    P2LBuffer_NbrdataIn += size;
-    if (P2LBuffer_NbrdataIn > PIPE_TO_LUOS_BUFFER_SIZE)
+    if (size != 0)
     {
-        LUOS_ASSERT(0);
-    }
-    else
-    {
-        for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
+        P2LBuffer_NbrdataIn += size;
+        if (P2LBuffer_NbrdataIn > PIPE_TO_LUOS_BUFFER_SIZE)
         {
-            if (P2LTask[i] == 0)
+            LUOS_ASSERT(0);
+        }
+        else
+        {
+            for (uint8_t i = 0; i < PIPE_TO_LUOS_MAX_TASK; i++)
             {
-                P2LTask[i] = size;
-                P2LTaskID++;
-                Stream_AddAvailableSampleNB(get_P2L_StreamChannel(), size);
-                return;
+                if (P2LTask[i] == 0)
+                {
+                    P2LTask[i] = size;
+                    P2LTaskID++;
+                    Stream_AddAvailableSampleNB(get_P2L_StreamChannel(), size);
+                    return;
+                }
             }
         }
+        // No more space
+        LUOS_ASSERT(0);
     }
-    // No more space
-    LUOS_ASSERT(0);
 }
 /******************************************************************************
  * @brief init must be call in project init
