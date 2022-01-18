@@ -26,7 +26,7 @@
  ******************************************************************************/
 void PipeBuffer_Init(void);
 uint8_t *PipeBuffer_GetP2LBuffer(void);
-uint8_t PipeBuffer_GetP2LTask(uint8_t **data, uint16_t *size);
+uint8_t PipeBuffer_GetP2LTask(uint16_t *task);
 void PipeBuffer_AllocP2LTask(uint16_t size);
 
 uint8_t *PipeBuffer_GetL2PBuffer(void);
