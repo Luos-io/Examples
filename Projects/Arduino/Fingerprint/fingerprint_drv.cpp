@@ -14,7 +14,6 @@ extern "C"
 #endif
 
 #include "fingerprint_drv.h"
-#include "luos_hal.h"
 
 #ifdef __cplusplus
 }

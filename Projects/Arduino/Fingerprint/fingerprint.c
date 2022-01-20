@@ -4,9 +4,7 @@
  * @author mariebidouille
  * @version 0.0.0
  ******************************************************************************/
-#include "fingerprint.h"
 #include "fingerprint_drv.h"
-#include "luos_hal.h"
 
 /*******************************************************************************
  * Definitions

@@ -12,7 +12,6 @@ extern "C"
 {
 #endif
 
-#include "luos_hal.h"
 #include "servo_drv.h"
 
 #ifdef __cplusplus
