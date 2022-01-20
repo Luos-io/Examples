@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file biometric_security
- * @brief app example 
- * @author mariebidouille
+ * @brief biometric security system app
+ * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
 #include "biometric_security.h"

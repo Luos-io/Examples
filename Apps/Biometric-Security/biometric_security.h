@@ -1,14 +1,13 @@
 /******************************************************************************
  * @file biometric_security
  * @brief app example 
- * @author mariebidouille
+ * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
 #ifndef BIOMETRIC_SECURITY_H
 #define BIOMETRIC_SECURITY_H
 
 #include "luos.h"
-#include "luos_hal.h"
 
 /*******************************************************************************
  * Definitions

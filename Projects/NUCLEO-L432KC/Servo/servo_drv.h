@@ -8,7 +8,6 @@
 #define SERVO_DRV_H
 
 #include "luos.h"
-#include "luos_hal.h"
 
 /*******************************************************************************
  * Definitions
