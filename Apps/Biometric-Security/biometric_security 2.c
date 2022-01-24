@@ -1,16 +1,5 @@
 /******************************************************************************
  * @file biometric_security
-<<<<<<< Updated upstream
- * @brief biometric security system app
- * @author MarieBidouille
- * @version 0.0.0
- ******************************************************************************/
-#include "biometric_security.h"
-#include "button.h"
-#include "lcd.h"
-#include "fingerprint.h"
-#include "servo.h"
-=======
  * @brief This is an app exemple for a Biometric Security System. It won't work 
  * as is so if you want to see it inside of a project, I made multiple version
  * that you can go check on my github :
@@ -21,25 +10,17 @@
 
 //#include "product_config.h" //if your are using it into a project you need to uncomment this line 
 #include "biometric_security.h"
->>>>>>> Stashed changes
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-<<<<<<< Updated upstream
-=======
 #define UPDATE_PERIOD_MS 200
->>>>>>> Stashed changes
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 static service_t *app;
 static angular_position_t angle;
-<<<<<<< Updated upstream
-static short previous_id = -1;
-=======
->>>>>>> Stashed changes
 
 uint8_t enroll_last_state;
 uint8_t delete_last_state;
@@ -68,13 +49,9 @@ void BiometricSecurity_Init(void)
 {
     revision_t revision = {0};
     
-<<<<<<< Updated upstream
-    app = Luos_CreateService(BiometricSecurity_MsgHandler, BIOMETRIC_SECURITY_TYPE, "Garage", revision);
-=======
     app = Luos_CreateService(BiometricSecurity_MsgHandler, BIOMETRIC_APP, "Garage", revision);
 
     Luos_Detect(app);
->>>>>>> Stashed changes
 }
 
 /******************************************************************************
@@ -84,77 +61,6 @@ void BiometricSecurity_Init(void)
  ******************************************************************************/
 void BiometricSecurity_Loop(void)
 {
-<<<<<<< Updated upstream
-    static short previous_id = -1;
-    static uint32_t detection_date = 0;
-
-
-    if (previous_id != RoutingTB_IDFromService(app))
-    {
-        if (RoutingTB_IDFromService(app) == 0)
-        {
-            if (previous_id == -1)
-            {
-                if (Luos_GetSystick()>1000)
-                {
-                    RoutingTB_DetectServices(app);   
-                    detection_date = Luos_GetSystick();
-                }
-            }
-            else 
-            {
-                previous_id = 0;
-                detection_date = Luos_GetSystick();
-            }
-        }
-        else
-        {   
-            if ((Luos_GetSystick()-detection_date) > 100)
-            {
-                int id_btn[4];
-                id_btn[0] = RoutingTB_IDFromAlias("btn_enroll");
-                id_btn[1] = RoutingTB_IDFromAlias("btn_delete"); 
-                id_btn[2] = RoutingTB_IDFromAlias("btn_up"); 
-                id_btn[3] = RoutingTB_IDFromAlias("btn_down"); 
-
-                for (int i=0; i<4; i++)
-                {
-                    if (id_btn[i]>0)
-                    {
-                        msg_t pub_msg;
-                        pub_msg.header.target = id_btn[i];
-                        pub_msg.header.target_mode = IDACK;
-                        time_luos_t time = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
-                        TimeOD_TimeToMsg(&time, &pub_msg);
-                        pub_msg.header.cmd = UPDATE_PUB;
-                        while (Luos_SendMsg(app, &pub_msg) != SUCCEED)
-                        {
-                            Luos_Loop();
-                        }
-                    }
-                }
-
-                if (RoutingTB_IDFromType(LCD_TYPE)>0)
-                {
-                    msg_t pub_msg;
-                    pub_msg.header.target = RoutingTB_IDFromType(LCD_TYPE);
-                    pub_msg.header.target_mode = ID;
-                    pub_msg.header.cmd = REINIT;
-                    Luos_SendMsg(app, &pub_msg);
-
-                    BiometricSecurity_LcdPrint("Security System", sizeof("Security System")-1);
-                }
-
-                angle = 0;
-                BiometricSecurity_ControlLed(0);
-                BiometricSecurity_SetServoPosition();
-
-                previous_id = RoutingTB_IDFromService(app);
-            }
-        }
-        return;
-    }
-=======
     static uint32_t detection_date = 0;
     static uint8_t system_init = 0;
 
@@ -198,7 +104,6 @@ void BiometricSecurity_Loop(void)
         system_init = 1;
     }
     return;
->>>>>>> Stashed changes
 }
 
 /******************************************************************************
@@ -243,11 +148,7 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
                 angle = 0;
                 if (BiometricSecurity_SetServoPosition())
                 {
-<<<<<<< Updated upstream
-                    BiometricSecurity_LcdPrint("Door closed.", sizeof("Door closed.")-1);
-=======
                     BiometricSecurity_LcdPrint("Door closed", sizeof("Door closed")-1);
->>>>>>> Stashed changes
                 }
             }
             down_last_state = msg->data[0];
@@ -436,11 +337,7 @@ uint8_t BiometricSecurity_LcdPrint(char* text, uint16_t length)
     if (RoutingTB_IDFromType(LCD_TYPE)>0)
     {
         msg_t txt_msg;
-<<<<<<< Updated upstream
-        txt_msg.header.cmd = SET_CMD;
-=======
         txt_msg.header.cmd = TEXT;
->>>>>>> Stashed changes
         txt_msg.header.size = length;
         txt_msg.header.target_mode = ID;
         txt_msg.header.target = RoutingTB_IDFromType(LCD_TYPE);
