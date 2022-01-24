@@ -1,13 +1,9 @@
 /******************************************************************************
  * @file biometric_security
-<<<<<<< Updated upstream
- * @brief app example 
-=======
  * @brief This is an app exemple for a Biometric Security System. It won't work 
  * as is so if you want to see it inside of a project, I made multiple version
  * that you can go check on my github :
  * https://github.com/mariebidouille
->>>>>>> Stashed changes
  * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
@@ -19,15 +15,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-<<<<<<< Updated upstream
-#define UPDATE_PERIOD_MS 200
-
-typedef enum 
-{
-    BIOMETRIC_SECURITY_TYPE = LUOS_LAST_TYPE
-}security_system_type_t;
-=======
->>>>>>> Stashed changes
 
 /*******************************************************************************
  * Variables

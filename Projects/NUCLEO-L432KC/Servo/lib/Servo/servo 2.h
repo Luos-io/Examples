@@ -1,33 +1,18 @@
 /******************************************************************************
- * @file biometric_security
-<<<<<<< Updated upstream
- * @brief app example 
-=======
- * @brief This is an app exemple for a Biometric Security System. It won't work 
- * as is so if you want to see it inside of a project, I made multiple version
- * that you can go check on my github :
- * https://github.com/mariebidouille
->>>>>>> Stashed changes
+ * @file servo
+ * @brief This is a simple driver for a servo motor. It will work as is
+ * but if you want to see it inside of a project, I am using it to create a 
+ * biometric security system using Luos. You can go check this project on my github :
+ * https://github.com/mariebidouille/L432KC-Luos-Biometric-Security-System
  * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
-#ifndef BIOMETRIC_SECURITY_H
-#define BIOMETRIC_SECURITY_H
-
-#include "luos.h"
+#ifndef SERVO_H
+#define SERVO_H
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-<<<<<<< Updated upstream
-#define UPDATE_PERIOD_MS 200
-
-typedef enum 
-{
-    BIOMETRIC_SECURITY_TYPE = LUOS_LAST_TYPE
-}security_system_type_t;
-=======
->>>>>>> Stashed changes
 
 /*******************************************************************************
  * Variables
@@ -36,7 +21,7 @@ typedef enum
 /*******************************************************************************
  * Functions
  ******************************************************************************/
-void BiometricSecurity_Init(void);
-void BiometricSecurity_Loop(void);
+void Servo_Init(void);
+void Servo_Loop(void);
 
-#endif /* BIOMETRIC_SECURITY_H */
+#endif /* SERVO_H */
