@@ -88,10 +88,13 @@ void Gate_Loop(void)
                 {
                     // This is the first time we perform a convertion
                     // Evaluate the time needed to convert all the data of this configuration and update refresh rate
-                    uint16_t bigest_id = RoutingTB_BigestID();
-                    if (bigest_id)
+                    search_result_t result;
+                    RTFilter_Reset(&result);
+                    // find the biggest id
+                    if (result.result_table[result.result_nbr - 1]->id)
                     {
-                        update_time = (float)RoutingTB_BigestID() * 0.001;
+                        // update time is related to the biggest id
+                        update_time = (float)result.result_table[result.result_nbr - 1]->id * 0.001;
                     }
                     else
                     {
