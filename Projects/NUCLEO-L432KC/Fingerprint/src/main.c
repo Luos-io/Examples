@@ -84,7 +84,6 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  
   /* USER CODE BEGIN 2 */
   Luos_Init();
   Fingerprint_Init();
