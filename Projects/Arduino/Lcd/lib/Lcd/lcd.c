@@ -4,6 +4,7 @@
  * but if you want to see it inside of a project, I am using it to create a 
  * biometric security system using Luos. You can go check this project on my github :
  * https://github.com/mariebidouille/Arduino-Luos-Biometric-Security-System
+ * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
 #include "lcd.h"
@@ -22,21 +23,21 @@ typedef enum
  ******************************************************************************/
 lcd_mode_t mode;
 static service_t *service_lcd;
-
+uint8_t i = 0;
 /*******************************************************************************
  * Functions
  ******************************************************************************/
 void Lcd_MsgHandler(service_t *service, msg_t *msg);
 
 /******************************************************************************
- * @brief init must be call in project init
+ * @brief Service init must be call in project init
  * @param None
  * @return None
  ******************************************************************************/
 void Lcd_Init(void)
 {
     LcdDrv_Init();
-    revision_t revision = {0, 0, 0};
+    revision_t revision = {{0, 0, 0}};
 
     mode.mode_display = 1; 
     mode.mode_cursor = 0;
@@ -49,7 +50,7 @@ void Lcd_Init(void)
 }
 
 /******************************************************************************
- * @brief loop must be call in project loop
+ * @brief Service loop must be call in project loop
  * @param None
  * @return None
  ******************************************************************************/
@@ -59,17 +60,17 @@ void Lcd_Loop(void)
     {
         if(mode.mode_right_to_left)
         {
-            LcdDrv_SetParameter(LCD_SCROLL_DISPLAY_LEFT, true);
+            LcdDrv_SetParameter(LCD_SCROLL_DISPLAY_LEFT, 1);
         }
         else
         {
-            LcdDrv_SetParameter(LCD_SCROLL_DISPLAY_RIGHT, true);
+            LcdDrv_SetParameter(LCD_SCROLL_DISPLAY_RIGHT, 1);
         }
     }
 }
 
 /******************************************************************************
- * @brief handle messages
+ * @brief Handle messages
  * @param service
  * @param msg
  * @return None

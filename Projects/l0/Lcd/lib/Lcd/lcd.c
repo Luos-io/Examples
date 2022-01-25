@@ -4,7 +4,7 @@
  * but if you want to see it inside of a project, I am using it to create a 
  * biometric security system using Luos. You can go check this project on my github :
  * https://github.com/mariebidouille/STM32F0-Luos-Biometric-Security-System
- * @author mariebidouille
+ * @author MarieBidouille
  * @version 0.0.0
  ******************************************************************************/
 #include "lcd.h"
@@ -23,7 +23,7 @@ typedef enum
  ******************************************************************************/
 lcd_mode_t mode;
 static service_t *service_lcd;
-
+uint8_t i = 0;
 /*******************************************************************************
  * Functions
  ******************************************************************************/
@@ -37,7 +37,7 @@ void Lcd_MsgHandler(service_t *service, msg_t *msg);
 void Lcd_Init(void)
 {
     LcdDrv_Init();
-    revision_t revision = {0, 0, 0};
+    revision_t revision = {{0, 0, 0}};
 
     mode.mode_display = 1; 
     mode.mode_cursor = 0;
