@@ -6,8 +6,8 @@
  * https://github.com/mariebidouille/Arduino-Luos-Biometric-Security-System
  * @version 0.0.0
  ******************************************************************************/
-#include "servo_drv.h"
 #include "servo_motor.h"
+#include "servo_drv.h"
 
 /*******************************************************************************
  * Definitions
