@@ -71,83 +71,37 @@ void RunMotor_Init(void)
  ******************************************************************************/
 void RunMotor_Loop(void)
 {
-    static short previous_id       = -1;
-    static uint32_t detection_date = 0;
-
-    // ********** hot plug management ************
-    // Check if we have done the first init or if service Id have changed
-    if (previous_id != RoutingTB_IDFromService(app))
+    // Check if we the node is detected
+    if (Luos_IsNodeDetected())
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        // check if we need to change the selected motor
+        // if new target has been received, update selected motor
+        // and reset unselected motor to their default position
+        if (next_motor_target != current_motor_target)
         {
-            // someone is making a detection, let it finish.
-            // reset the init state to be ready to setup service at the end of detection
-            previous_id    = -1;
-            detection_date = Luos_GetSystick();
-        }
-        else
-        {
-            if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
+            // send play command to selected motor
+            if (current_motor_target != NO_MOTOR)
             {
-                // A detection just finished
-                // Make services configurations
-                // ask for the motor's position to move
-                int id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
-                if (id > 0)
-                {
-                    // Setup auto update each UPDATE_PERIOD_MS on imu
-                    // This value is resetted on all service at each detection
-                    // It's important to setting it each time.
-                    msg_t msg;
-                    msg.header.target      = id;
-                    msg.header.target_mode = IDACK;
-                    time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    msg.header.cmd = UPDATE_PUB;
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
-                }
-                // init motor on the first run
-                sort_motors();
-                for (int i = 0; i < motor_found; i++)
-                {
-                    motor_init(motor_table[i]);
-                }
-                previous_id = RoutingTB_IDFromService(app);
+                motor_stream(motor_table[current_motor_target - 1], PAUSE);
             }
+            if (next_motor_target != NO_MOTOR)
+            {
+                motor_stream(motor_table[next_motor_target - 1], PLAY);
+            }
+            current_motor_target = next_motor_target;
         }
-        next_motor_target = NO_MOTOR;
-        return;
-    }
-    // check if we need to change the selected motor
-    // if new target has been received, update selected motor
-    // and reset unselected motor to their default position
-    if (next_motor_target != current_motor_target)
-    {
-        // send play command to selected motor
-        if (current_motor_target != NO_MOTOR)
-        {
-            motor_stream(motor_table[current_motor_target - 1], PAUSE);
-        }
-        if (next_motor_target != NO_MOTOR)
-        {
-            motor_stream(motor_table[next_motor_target - 1], PLAY);
-        }
-        current_motor_target = next_motor_target;
-    }
 
-    // send trajectory data at a fixed period
-    if ((Luos_GetSystick() - trajectory_refresh > (uint32_t)TRAJECTORY_PERIOD * 1000))
-    {
-        // reset command_refresh
-        trajectory_refresh = Luos_GetSystick();
-
-        // send trajectory to the current motor
-        for (int i = 0; i < motor_found; i++)
+        // send trajectory data at a fixed period
+        if ((Luos_GetSystick() - trajectory_refresh > (uint32_t)TRAJECTORY_PERIOD * 1000))
         {
-            motor_SendTrajectory(motor_table[i]);
+            // reset command_refresh
+            trajectory_refresh = Luos_GetSystick();
+
+            // send trajectory to the current motor
+            for (int i = 0; i < motor_found; i++)
+            {
+                motor_SendTrajectory(motor_table[i]);
+            }
         }
     }
 }
@@ -157,6 +111,36 @@ void RunMotor_EventHandler(service_t *service, msg_t *msg)
     if (msg->header.cmd == SET_CMD)
     {
         next_motor_target = msg->data[0];
+    }
+    else if (msg->header.cmd == END_DETECTION)
+    {
+        // A detection just finished
+        // Make services configurations
+        // ask for the motor's position to move
+        int id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
+        if (id > 0)
+        {
+            // Setup auto update each UPDATE_PERIOD_MS on imu
+            // This value is resetted on all service at each detection
+            // It's important to setting it each time.
+            msg_t update_msg;
+            update_msg.header.target      = id;
+            update_msg.header.target_mode = IDACK;
+            time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
+            TimeOD_TimeToMsg(&time, &update_msg);
+            update_msg.header.cmd = UPDATE_PUB;
+            while (Luos_SendMsg(app, &update_msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
+        }
+        // init motor on the first run
+        sort_motors();
+        for (int i = 0; i < motor_found; i++)
+        {
+            motor_init(motor_table[i]);
+        }
+        next_motor_target = NO_MOTOR;
     }
 }
 

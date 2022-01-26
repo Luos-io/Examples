@@ -48,34 +48,20 @@ void DetectionButton_Loop(void)
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
-    if (previous_id != RoutingTB_IDFromService(app))
+    if (Luos_IsNodeDetected() == false)
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        // We don't have any ID, meaning no detection occure or detection is occuring.
+        if (previous_id == -1)
         {
-            // We don't have any ID, meaning no detection occure or detection is occuring.
-            if (previous_id == -1)
+            // This is the really first init, we have to make it.
+            // Be sure the network is powered up 1500 ms before starting a detection
+            if (Luos_GetSystick() > 100)
             {
-                // This is the really first init, we have to make it.
-                // Be sure the network is powered up 1500 ms before starting a detection
-                if (Luos_GetSystick() > 100)
-                {
-                    // No detection occure, do it
-                    RoutingTB_DetectServices(app);
-                    last_detection_date_ms = Luos_GetSystick();
-                }
-            }
-            else
-            {
-                // someone is making a detection, let it finish.
-                // reset the init state to be ready to setup service at the end of detection
+                // No detection occure, do it
+                Luos_Detect(app);
+                last_detection_date_ms = Luos_GetSystick();
                 previous_id = 0;
             }
-        }
-        else
-        {
-            // Make services configurations
-            Setup_button();
-            previous_id = RoutingTB_IDFromService(app);
         }
         return;
     }
@@ -94,12 +80,14 @@ static void DetectionButton_MsgHandler(service_t *service, msg_t *msg)
         if (((!last_btn_state) & (last_btn_state != msg->data[0])) && ((Luos_GetSystick() - last_detection_date_ms) > MIN_TIME_BETWEEN_DETEC_MS))
         {
             last_btn_state         = msg->data[0];
+            Luos_Detect(app);
             last_detection_date_ms = Luos_GetSystick();
-            RoutingTB_DetectServices(app);
-            last_detection_date_ms = Luos_GetSystick();
-            Setup_button();
         }
         last_btn_state = msg->data[0];
+    }
+    else if (msg->header.cmd == END_DETECTION)
+    {
+        Setup_button();
     }
 }
 
