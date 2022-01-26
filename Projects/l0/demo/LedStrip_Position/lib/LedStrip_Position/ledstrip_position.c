@@ -38,7 +38,8 @@ ledstrip_position_OperationMode_t parameter = DISTANCE_DISPLAY;
 float radius             = 0.0;
 volatile int motor_found = 0;
 bool motor_run_mode      = false;
-bool detection_animation   = false;
+bool detection_animation = false;
+bool end_detection       = false;
 
 /*******************************************************************************
  * Function
@@ -73,30 +74,62 @@ void LedStripPosition_Init(void)
 void LedStripPosition_Loop(void)
 {
     static uint32_t lastframe_time_ms = 0;
-
+    search_result_t result;
     // Check if we have done the first init or if service Id have changed
     if (Luos_IsNodeDetected())
     {
+        if (end_detection)
+        {
+            search_result_t result;
+            motor_run_mode = false;
+            sort_motors();
+            // A detection just finished
+            // Make services configurations
+            // try to find a distance sensor
+            RTFilter_Type(RTFilter_Reset(&result), DISTANCE_TYPE);
+            if (result.result_nbr > 0)
+            {
+                // Setup auto update each UPDATE_PERIOD_MS on imu
+                // This value is resetted on all service at each detection
+                // It's important to setting it each time.
+                msg_t msg;
+                msg.header.target      = result.result_table[0]->id;
+                msg.header.target_mode = IDACK;
+                time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
+                TimeOD_TimeToMsg(&time, &msg);
+                msg.header.cmd = UPDATE_PUB;
+                while (Luos_SendMsg(app, &msg) != SUCCEED)
+                {
+                    Luos_Loop();
+                }
+                // Reset detection animation
+                detection_display(0);
+            }
+            // Start the detection animation
+            detection_animation = true;
+            end_detection       = false;
+            lastframe_time_ms   = Luos_GetSystick();
+        }
         // ********** frame management ************
         // Update the frame
         if (Luos_GetSystick() - lastframe_time_ms >= FRAMERATE_MS)
         {
             distance_filtering();
-            int id = RoutingTB_IDFromType(COLOR_TYPE);
+            RTFilter_Type(RTFilter_Reset(&result), COLOR_TYPE);
             // Check if there is a led_strip detected
-            if (id > 0)
+            if (result.result_nbr > 0)
             {
                 if (detection_animation)
                 {
-                    detection_animation = detection_display(id);
+                    detection_animation = detection_display(result.result_table[0]->id);
                 }
                 else if (parameter == DISTANCE_DISPLAY)
                 {
-                    distance_based_display(id);
+                    distance_based_display(result.result_table[0]->id);
                 }
                 else if (parameter == MOTOR_COPY_DISPLAY)
                 {
-                    motor_copy_display(id);
+                    motor_copy_display(result.result_table[0]->id);
                 }
             }
             lastframe_time_ms = Luos_GetSystick();
@@ -106,7 +139,7 @@ void LedStripPosition_Loop(void)
     {
         // someone is making a detection, let it finish.
         // reset the init state to be ready to setup service at the end of detection
-        parameter      = DISTANCE_DISPLAY;
+        parameter = DISTANCE_DISPLAY;
     }
 }
 /******************************************************************************
@@ -165,32 +198,7 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
     }
     else if (msg->header.cmd == END_DETECTION)
     {
-        motor_run_mode = false;
-        sort_motors();
-        // A detection just finished
-        // Make services configurations
-        // try to find a distance sensor
-        int id = RoutingTB_IDFromType(DISTANCE_TYPE);
-        if (id > 0)
-        {
-            // Setup auto update each UPDATE_PERIOD_MS on imu
-            // This value is resetted on all service at each detection
-            // It's important to setting it each time.
-            msg_t msg;
-            msg.header.target      = id;
-            msg.header.target_mode = IDACK;
-            time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
-            TimeOD_TimeToMsg(&time, &msg);
-            msg.header.cmd = UPDATE_PUB;
-            while (Luos_SendMsg(app, &msg) != SUCCEED)
-            {
-                Luos_Loop();
-            }
-            // Reset detection animation
-            detection_display(0);
-        }
-        // Start the detection animation
-        detection_animation = true;
+        end_detection = true;
     }
 }
 
@@ -274,7 +282,7 @@ void glowing_fade(float target)
 
 void distance_frame_compute(void)
 {
-    //memset((void *)&image[(uint16_t)(distance / SPACE_BETWEEN_LEDS)], 200, sizeof(color_t));
+    // memset((void *)&image[(uint16_t)(distance / SPACE_BETWEEN_LEDS)], 200, sizeof(color_t));
     const uint16_t radius_led_number = (uint16_t)round((radius) / SPACE_BETWEEN_LEDS) + 1;
     const int max_intensity          = 200;
     uint16_t middle_led              = (uint16_t)(distance / SPACE_BETWEEN_LEDS);
@@ -283,7 +291,7 @@ void distance_frame_compute(void)
         // Conpute the real position in mm of this led
         float real_position = i * SPACE_BETWEEN_LEDS;
         // Parabolic
-        //int intensity = max_intensity * (1 - ((real_position - distance) * (real_position - distance) / (radius * radius)));
+        // int intensity = max_intensity * (1 - ((real_position - distance) * (real_position - distance) / (radius * radius)));
         // Linear
         int intensity = max_intensity * (1 - (fabs(real_position - distance) / (radius)));
         if ((intensity > 0) && (i < LED_NUMBER) && (i > 0))
@@ -506,40 +514,9 @@ void motor_copy_display(int led_strip_id)
 
 void sort_motors(void)
 {
+    search_result_t result;
     motor_found = 0;
     // Parse routing table to find motors
-    int id = RoutingTB_IDFromAlias("servo_motor");
-    if (id != 0)
-    {
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor1");
-    if (id != 0)
-    {
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor2");
-    if (id != 0)
-    {
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor3");
-    if (id != 0)
-    {
-        motor_found++;
-    }
-    if (motor_found < 3)
-    {
-        // Then get the dxl
-        id = RoutingTB_IDFromAlias("dxl_2");
-        if (id == 0)
-        {
-            id = RoutingTB_IDFromAlias("dxl_3");
-        }
-        if (id != 0)
-        {
-            motor_found++;
-            // Now sort them
-        }
-    }
+    RTFilter_Type(RTFilter_Reset(&result), SERVO_MOTOR_TYPE);
+    motor_found = result.result_nbr;
 }

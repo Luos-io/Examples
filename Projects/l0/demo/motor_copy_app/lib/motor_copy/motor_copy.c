@@ -51,18 +51,19 @@ void MotorCopy_Init(void)
  ******************************************************************************/
 void MotorCopy_Loop(void)
 {
-    
+
     // Check if we have done the first init or if service Id have changed
     if (Luos_IsNodeDetected())
     {
         if (end_detection)
         {
+            search_result_t result;
             sort_motors();
-            int ledstrip_id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
-            if (ledstrip_id > 0)
+            RTFilter_Type(RTFilter_Reset(&result), LEDSTRIP_POSITION_APP);
+            if (result.result_nbr > 0)
             {
                 msg_t msg;
-
+                uint8_t ledstrip_id = result.result_table[0]->id;
                 // Switch the LEDSTRIP_POSITION_APP to copy mode
                 msg.header.target_mode = IDACK;
                 msg.header.target      = ledstrip_id;
@@ -73,17 +74,13 @@ void MotorCopy_Loop(void)
                 {
                     Luos_Loop();
                 }
-                int id = RoutingTB_IDFromAlias("dxl_2");
-                if (id == 0)
-                {
-                    id = RoutingTB_IDFromAlias("dxl_3");
-                }
-                if (id > 0)
+                RTFilter_Alias(RTFilter_Reset(&result), "dxl");
+                if (result.result_nbr > 0)
                 {
                     // Setup auto update each UPDATE_PERIOD_MS on dxl
                     // This value is resetted on all service at each detection
                     // It's important to setting it each time.
-                    msg.header.target      = id;
+                    msg.header.target      = result.result_table[0]->id;
                     msg.header.target_mode = IDACK;
                     time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
                     TimeOD_TimeToMsg(&time, &msg);
@@ -100,7 +97,7 @@ void MotorCopy_Loop(void)
                         .mode_angular_position = true,
                         .angular_position      = true};
 
-                    msg.header.target      = id;
+                    msg.header.target      = result.result_table[0]->id;
                     msg.header.cmd         = PARAMETERS;
                     msg.header.target_mode = IDACK;
                     msg.header.size        = sizeof(servo_motor_mode_t);
@@ -121,23 +118,13 @@ void MotorCopy_Loop(void)
                     Luos_Loop();
                 }
                 // find the other motors and configure them
-                id = RoutingTB_IDFromAlias("servo_motor");
-                if (id != 0)
+                RTFilter_Alias(RTFilter_Reset(&result), "servo");
+                for (uint8_t i = 0; i < result.result_nbr; i++)
                 {
-                    Motor_init(id);
+                    Motor_init(result.result_table[i]->id);
                 }
-                id = RoutingTB_IDFromAlias("servo_motor1");
-                if (id != 0)
-                {
-                    Motor_init(id);
-                }
-                id = RoutingTB_IDFromAlias("servo_motor2");
-                if (id != 0)
-                {
-                    Motor_init(id);
-                }
+                end_detection = false;
             }
-            end_detection = false;
         }
     }
 }
@@ -146,22 +133,13 @@ void MotorCopy_EventHandler(service_t *service, msg_t *msg)
 {
     if (msg->header.cmd == ANGULAR_POSITION)
     {
+        search_result_t result;
         angular_position_t target;
         AngularOD_PositionFromMsg(&target, msg);
-        int id = RoutingTB_IDFromAlias("servo_motor");
-        if (id != 0)
+        RTFilter_Alias(RTFilter_Reset(&result), "servo");
+        for (uint8_t i = 0; i < result.result_nbr; i++)
         {
-            motor_set(id, target);
-        }
-        id = RoutingTB_IDFromAlias("servo_motor1");
-        if (id != 0)
-        {
-            motor_set(id, target);
-        }
-        id = RoutingTB_IDFromAlias("servo_motor2");
-        if (id != 0)
-        {
-            motor_set(id, target);
+            motor_set(result.result_table[i]->id, target);
         }
     }
     else if (msg->header.cmd == END_DETECTION)
@@ -242,59 +220,22 @@ void motor_set(uint8_t motor_target, angular_position_t position)
 
 static void sort_motors(void)
 {
+    search_result_t result;
     // Parse routing table to find motors
     int motor_found = 0;
     position        = NO_MOTOR;
-    int id          = RoutingTB_IDFromAlias("servo_motor");
-    if (id != 0)
+    RTFilter_Type(RTFilter_Reset(&result), SERVO_MOTOR_TYPE);
+    for (motor_found = 0; motor_found < result.result_nbr; motor_found++)
     {
-        motor_table[motor_found] = id;
-        motor_found++;
+        motor_table[motor_found] = result.result_table[motor_found]->id;
     }
-    id = RoutingTB_IDFromAlias("servo_motor1");
-    if (id != 0)
+    motor_found = result.result_nbr;
+    for (uint8_t i = 0; i < result.result_nbr; i++)
     {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor2");
-    if (id != 0)
-    {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor3");
-    if (id != 0)
-    {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    if (motor_found < 3)
-    {
-        // Then get the dxl
-        id = RoutingTB_IDFromAlias("dxl_2");
-        if (id == 0)
+        if (strstr(result.result_table[i]->alias, "dxl") != 0)
         {
-            id = RoutingTB_IDFromAlias("dxl_3");
-        }
-        if (id != 0)
-        {
-            motor_table[motor_found] = id;
-            position                 = motor_found + 1;
-            // Now sort them
-            for (int y = motor_found; y > 0; y--)
-            {
-                if (id < motor_table[y - 1])
-                {
-                    motor_table[y]     = motor_table[y - 1];
-                    motor_table[y - 1] = id;
-                    position           = y; // (-1 + 1, because positions start at 1 not 0)
-                }
-            }
-        }
-        else
-        {
-            position = NO_MOTOR;
+            position = i + 1;
+            break;
         }
     }
 }
