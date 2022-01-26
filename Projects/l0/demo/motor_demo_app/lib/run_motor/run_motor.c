@@ -114,19 +114,20 @@ void RunMotor_EventHandler(service_t *service, msg_t *msg)
     }
     else if (msg->header.cmd == END_DETECTION)
     {
+        search_result_t result;
         // A detection just finished
         // Make services configurations
         // ask for the motor's position to move
-        int id = RoutingTB_IDFromType(LEDSTRIP_POSITION_APP);
-        if (id > 0)
+        RTFilter_Type(RTFilter_Reset(&result), LEDSTRIP_POSITION_APP);
+        if (result.result_nbr > 0)
         {
             // Setup auto update each UPDATE_PERIOD_MS on imu
             // This value is resetted on all service at each detection
             // It's important to setting it each time.
             msg_t update_msg;
-            update_msg.header.target      = id;
+            update_msg.header.target      = result.result_table[0]->id;
             update_msg.header.target_mode = IDACK;
-            time_luos_t time       = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
+            time_luos_t time              = TimeOD_TimeFrom_ms(REFRESH_POSITION_MOTOR);
             TimeOD_TimeToMsg(&time, &update_msg);
             update_msg.header.cmd = UPDATE_PUB;
             while (Luos_SendMsg(app, &update_msg) != SUCCEED)
@@ -148,7 +149,7 @@ void motor_init(uint8_t motor_target)
 {
     msg_t msg;
     // Do not send motor configuration to dxl
-    if (strcmp(RoutingTB_AliasFromId(motor_target), "dxl_2") || strcmp(RoutingTB_AliasFromId(motor_target), "dxl_3"))
+    if (strstr(RoutingTB_AliasFromId(motor_target), "dxl") == 0)
     {
         // Send sensor resolution
         float resolution       = 12.0;
@@ -251,55 +252,14 @@ void motor_stream(uint8_t motor_target, control_type_t control_type)
 
 static void sort_motors(void)
 {
+    search_result_t result;
     // Parse routing table to find motors
-    int id      = RoutingTB_IDFromAlias("servo_motor");
-    motor_found = 0;
-    if (id != 0)
+    RTFilter_Type(RTFilter_Reset(&result), SERVO_MOTOR_TYPE);
+    for (uint8_t i = 0; i < result.result_nbr; i++)
     {
-        motor_table[motor_found] = id;
-        motor_found++;
+        motor_table[i] = result.result_table[i]->id;
     }
-    id = RoutingTB_IDFromAlias("servo_motor1");
-    if (id != 0)
-    {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor2");
-    if (id != 0)
-    {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    id = RoutingTB_IDFromAlias("servo_motor3");
-    if (id != 0)
-    {
-        motor_table[motor_found] = id;
-        motor_found++;
-    }
-    if (motor_found < 3)
-    {
-        // Then get the dxl
-        id = RoutingTB_IDFromAlias("dxl_2");
-        if (id == 0)
-        {
-            id = RoutingTB_IDFromAlias("dxl_3");
-        }
-        if (id != 0)
-        {
-            motor_table[motor_found] = id;
-            // Now sort them
-            for (int y = motor_found; y > 0; y--)
-            {
-                if (id < motor_table[y - 1])
-                {
-                    motor_table[y]     = motor_table[y - 1];
-                    motor_table[y - 1] = id;
-                }
-            }
-            motor_found++;
-        }
-    }
+    motor_found = result.result_nbr;
 }
 
 void compute_trajectory(void)

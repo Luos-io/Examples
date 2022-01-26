@@ -60,7 +60,7 @@ void DetectionButton_Loop(void)
                 // No detection occure, do it
                 Luos_Detect(app);
                 last_detection_date_ms = Luos_GetSystick();
-                previous_id = 0;
+                previous_id            = 0;
             }
         }
         return;
@@ -79,7 +79,7 @@ static void DetectionButton_MsgHandler(service_t *service, msg_t *msg)
     {
         if (((!last_btn_state) & (last_btn_state != msg->data[0])) && ((Luos_GetSystick() - last_detection_date_ms) > MIN_TIME_BETWEEN_DETEC_MS))
         {
-            last_btn_state         = msg->data[0];
+            last_btn_state = msg->data[0];
             Luos_Detect(app);
             last_detection_date_ms = Luos_GetSystick();
         }
@@ -93,11 +93,12 @@ static void DetectionButton_MsgHandler(service_t *service, msg_t *msg)
 
 void Setup_button(void)
 {
-    int id = RoutingTB_IDFromAlias("button");
-    if (id > 0)
+    search_result_t result;
+    RTFilter_Type(RTFilter_Reset(&result), STATE_TYPE);
+    if (result.result_nbr > 0)
     {
         msg_t msg;
-        msg.header.target      = id;
+        msg.header.target      = result.result_table[0]->id;
         msg.header.target_mode = IDACK;
         // Setup auto update each UPDATE_PERIOD_MS on button
         // This value is resetted on all service at each detection
