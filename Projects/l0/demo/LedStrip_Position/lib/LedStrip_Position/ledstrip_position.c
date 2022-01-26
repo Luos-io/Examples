@@ -38,6 +38,7 @@ ledstrip_position_OperationMode_t parameter = DISTANCE_DISPLAY;
 float radius             = 0.0;
 volatile int motor_found = 0;
 bool motor_run_mode      = false;
+bool detection_animation   = false;
 
 /*******************************************************************************
  * Function
@@ -72,81 +73,40 @@ void LedStripPosition_Init(void)
 void LedStripPosition_Loop(void)
 {
     static uint32_t lastframe_time_ms = 0;
-    static short previous_id          = -1;
-    static bool detection_animation   = false;
-    static uint32_t detection_date    = 0;
 
-    // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
-    if (previous_id != RoutingTB_IDFromService(app))
+    if (Luos_IsNodeDetected())
     {
-        if (RoutingTB_IDFromService(app) == 0)
+        // ********** frame management ************
+        // Update the frame
+        if (Luos_GetSystick() - lastframe_time_ms >= FRAMERATE_MS)
         {
-            // someone is making a detection, let it finish.
-            // reset the init state to be ready to setup service at the end of detection
-            previous_id    = -1;
-            parameter      = DISTANCE_DISPLAY;
-            detection_date = Luos_GetSystick();
-        }
-        else
-        {
-            if ((Luos_GetSystick() - detection_date) > STARTUP_DELAY_MS)
+            distance_filtering();
+            int id = RoutingTB_IDFromType(COLOR_TYPE);
+            // Check if there is a led_strip detected
+            if (id > 0)
             {
-                motor_run_mode = false;
-                sort_motors();
-                // A detection just finished
-                // Make services configurations
-                // try to find a distance sensor
-                int id = RoutingTB_IDFromType(DISTANCE_TYPE);
-                if (id > 0)
+                if (detection_animation)
                 {
-                    // Setup auto update each UPDATE_PERIOD_MS on imu
-                    // This value is resetted on all service at each detection
-                    // It's important to setting it each time.
-                    msg_t msg;
-                    msg.header.target      = id;
-                    msg.header.target_mode = IDACK;
-                    time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
-                    TimeOD_TimeToMsg(&time, &msg);
-                    msg.header.cmd = UPDATE_PUB;
-                    while (Luos_SendMsg(app, &msg) != SUCCEED)
-                    {
-                        Luos_Loop();
-                    }
-                    // Reset detection animation
-                    detection_display(0);
+                    detection_animation = detection_display(id);
                 }
-                previous_id = RoutingTB_IDFromService(app);
-                // Start the detection animation
-                detection_animation = true;
+                else if (parameter == DISTANCE_DISPLAY)
+                {
+                    distance_based_display(id);
+                }
+                else if (parameter == MOTOR_COPY_DISPLAY)
+                {
+                    motor_copy_display(id);
+                }
             }
+            lastframe_time_ms = Luos_GetSystick();
         }
-        return;
     }
-
-    // ********** frame management ************
-    // Update the frame
-    if ((Luos_GetSystick() - lastframe_time_ms >= FRAMERATE_MS) && (RoutingTB_IDFromService(app) != 0))
+    else
     {
-        distance_filtering();
-        int id = RoutingTB_IDFromType(COLOR_TYPE);
-        // Check if there is a led_strip detected
-        if (id > 0)
-        {
-            if (detection_animation)
-            {
-                detection_animation = detection_display(id);
-            }
-            else if (parameter == DISTANCE_DISPLAY)
-            {
-                distance_based_display(id);
-            }
-            else if (parameter == MOTOR_COPY_DISPLAY)
-            {
-                motor_copy_display(id);
-            }
-        }
-        lastframe_time_ms = Luos_GetSystick();
+        // someone is making a detection, let it finish.
+        // reset the init state to be ready to setup service at the end of detection
+        parameter      = DISTANCE_DISPLAY;
     }
 }
 /******************************************************************************
@@ -202,6 +162,35 @@ static void LedStripPosition_MsgHandler(service_t *service, msg_t *msg)
             parameter = MOTOR_COPY_DISPLAY;
         }
         motor_run_mode = false;
+    }
+    else if (msg->header.cmd == END_DETECTION)
+    {
+        motor_run_mode = false;
+        sort_motors();
+        // A detection just finished
+        // Make services configurations
+        // try to find a distance sensor
+        int id = RoutingTB_IDFromType(DISTANCE_TYPE);
+        if (id > 0)
+        {
+            // Setup auto update each UPDATE_PERIOD_MS on imu
+            // This value is resetted on all service at each detection
+            // It's important to setting it each time.
+            msg_t msg;
+            msg.header.target      = id;
+            msg.header.target_mode = IDACK;
+            time_luos_t time       = TimeOD_TimeFrom_ms(MAX_DISTANCE_UPDATE_MS);
+            TimeOD_TimeToMsg(&time, &msg);
+            msg.header.cmd = UPDATE_PUB;
+            while (Luos_SendMsg(app, &msg) != SUCCEED)
+            {
+                Luos_Loop();
+            }
+            // Reset detection animation
+            detection_display(0);
+        }
+        // Start the detection animation
+        detection_animation = true;
     }
 }
 
