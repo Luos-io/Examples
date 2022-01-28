@@ -22,9 +22,9 @@
 #define D2_PIN 9
 #define D3_PIN 8
 
-#define N_ROWS 2
-#define N_COLS 16
-#define MAX_TEXT_SIZE 2*N_COLS
+#define N_ROWS        2
+#define N_COLS        16
+#define MAX_TEXT_SIZE 2 * N_COLS
 
 //scroll delay in ms
 #define LCD_SCROLL_DELAY 100
@@ -48,7 +48,7 @@ enum
  * Functions
  ******************************************************************************/
 void LcdDrv_Init(void);
-void LcdDrv_Print(char* text, uint16_t size);
+void LcdDrv_Print(char *text, uint16_t size);
 void LcdDrv_SetParameter(uint8_t mode, uint8_t value);
 
 #endif /*LCD_DRV_H*/

@@ -49,7 +49,6 @@ void Fingerprint_Init(void)
     service_fingerprint = Luos_CreateService(Fingerprint_MsgHandler, FINGERPRINT_TYPE, "fingerprint", revision);
 }
 
-
 /******************************************************************************
  * @brief loop must be call in project loop
  * @param None
@@ -68,10 +67,10 @@ void Fingerprint_Loop(void)
 void Fingerprint_MsgHandler(service_t *service, msg_t *msg)
 {
     msg_t pub_msg;
-    pub_msg.header.target = msg->header.source;
+    pub_msg.header.target      = msg->header.source;
     pub_msg.header.target_mode = msg->header.target_mode;
-    pub_msg.header.cmd = msg->header.cmd;
-    pub_msg.header.size = sizeof(char);
+    pub_msg.header.cmd         = msg->header.cmd;
+    pub_msg.header.size        = sizeof(char);
 
     switch (msg->header.cmd)
     {

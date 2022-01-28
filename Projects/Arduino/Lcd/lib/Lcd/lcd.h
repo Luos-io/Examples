@@ -20,7 +20,7 @@ typedef struct __attribute__((__packed__))
     {
         struct __attribute__((__packed__))
         {
-            uint8_t mode_display : 1; 
+            uint8_t mode_display : 1;
             uint8_t mode_cursor : 1;
             uint8_t mode_blink : 1;
             uint8_t mode_autoscroll : 1;

@@ -27,7 +27,6 @@
 /* SYS init function */
 void MX_SYS_Init(void)
 {
-
 }
 
 /* USER CODE BEGIN 1 */
