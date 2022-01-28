@@ -10,6 +10,7 @@
 ./Projects/l0/Imu/lib/Imu/motion_driver_6.12
 ./Projects/l0/Load/lib/Load/HX711
 ./Projects/l0/Dxl/lib/Dxl/Dynamixel_Servo
+./Projects/l0/Button_FreeRTOS/lib/FreeRTOS/Source
 ./.*
 *.json
 */.vscode
