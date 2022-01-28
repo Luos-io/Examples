@@ -166,7 +166,7 @@ void PIPE_COM_IRQHANDLER()
     if (LL_USART_IsActiveFlag_IDLE(PIPE_COM))
     {
         LL_USART_ClearFlag_IDLE(PIPE_COM);
-        if(LL_DMA_GetDataLength(P2L_DMA, P2L_DMA_CHANNEL) == 0)
+        if (LL_DMA_GetDataLength(P2L_DMA, P2L_DMA_CHANNEL) == 0)
         {
             return;
         }
