@@ -11,7 +11,7 @@
  * Definitions
  ******************************************************************************/
 #define LIGHT_INTENSITY   255
-#define DETECTION_LATENCY 50
+#define DETECTION_LATENCY 80
 #define UPDATE_PERIOD_MS  10
 
 typedef enum
