@@ -36,7 +36,6 @@ void Servo_Init(void)
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
 
     service_servo = Luos_CreateService(Servo_MsgHandler, SERVO_MOTOR_TYPE, "servo", revision);
-    
 }
 
 /******************************************************************************

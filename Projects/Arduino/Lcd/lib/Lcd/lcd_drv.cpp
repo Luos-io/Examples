@@ -29,17 +29,17 @@ extern "C"
  * Variables
  ******************************************************************************/
 #ifdef RW_PIN
-    #ifdef D4_PIN && D5_PIN && D6_PIN && D7_PIN
-        LiquidCrystal mydisplay(RS_PIN, RW_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN);
-    #else
-        LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN);
-    #endif 
-#else 
-    #ifdef D7_PIN
-        LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN);
-    #else 
-        LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN); 
-    #endif
+#ifdef D4_PIN &&D5_PIN &&D6_PIN &&D7_PIN
+LiquidCrystal mydisplay(RS_PIN, RW_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN);
+#else
+LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN);
+#endif
+#else
+#ifdef D7_PIN
+LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN);
+#else
+LiquidCrystal mydisplay(RS_PIN, EN_PIN, D0_PIN, D1_PIN, D2_PIN, D3_PIN);
+#endif
 #endif
 
 /*******************************************************************************
@@ -58,7 +58,7 @@ void LcdDrv_Init(void)
 
     for (int i = 1; i < LCD_RIGHT_TO_LEFT; i++)
     {
-        LcdDrv_SetParameter(i,false);
+        LcdDrv_SetParameter(i, false);
     }
 }
 
@@ -68,7 +68,7 @@ void LcdDrv_Init(void)
  * @param size
  * @return None
  ******************************************************************************/
-void LcdDrv_Print(char* text, uint16_t size)
+void LcdDrv_Print(char *text, uint16_t size)
 {
     mydisplay.clear();
     mydisplay.print(text);
@@ -84,38 +84,37 @@ void LcdDrv_SetParameter(uint8_t mode, uint8_t value)
 {
     switch (mode)
     {
-    case LCD_DISPLAY:
-        (value) ? mydisplay.display() : mydisplay.noDisplay();
-        break;
+        case LCD_DISPLAY:
+            (value) ? mydisplay.display() : mydisplay.noDisplay();
+            break;
 
-    case LCD_CURSOR:
-        (value) ? mydisplay.cursor() : mydisplay.noCursor();
-        break;
+        case LCD_CURSOR:
+            (value) ? mydisplay.cursor() : mydisplay.noCursor();
+            break;
 
-    case LCD_BLINK:
-        (value) ? mydisplay.blink() : mydisplay.noBlink();
-        break;
+        case LCD_BLINK:
+            (value) ? mydisplay.blink() : mydisplay.noBlink();
+            break;
 
-    case LCD_AUTOSCROLL:
-        (value) ? mydisplay.autoscroll() : mydisplay.noAutoscroll();
-        break;
+        case LCD_AUTOSCROLL:
+            (value) ? mydisplay.autoscroll() : mydisplay.noAutoscroll();
+            break;
 
-    case LCD_SCROLL_DISPLAY_RIGHT:
-        (value) ? mydisplay.scrollDisplayRight() : mydisplay.clear();
-        delay(LCD_SCROLL_DELAY);
-        break;
+        case LCD_SCROLL_DISPLAY_RIGHT:
+            (value) ? mydisplay.scrollDisplayRight() : mydisplay.clear();
+            delay(LCD_SCROLL_DELAY);
+            break;
 
-    case LCD_SCROLL_DISPLAY_LEFT:
-        (value) ? mydisplay.scrollDisplayLeft() : mydisplay.clear();
-        delay(LCD_SCROLL_DELAY);
-        break;
+        case LCD_SCROLL_DISPLAY_LEFT:
+            (value) ? mydisplay.scrollDisplayLeft() : mydisplay.clear();
+            delay(LCD_SCROLL_DELAY);
+            break;
 
-    case LCD_RIGHT_TO_LEFT:
-        (value) ? mydisplay.rightToLeft() : mydisplay.leftToRight();
-        break;
+        case LCD_RIGHT_TO_LEFT:
+            (value) ? mydisplay.rightToLeft() : mydisplay.leftToRight();
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 }
-

@@ -16,19 +16,19 @@
  * Definitions
  ******************************************************************************/
 // Serial2 pin and pad definitions (in Arduino files Variant.h & Variant.cpp)
-#define PIN_FINGERPRINT_COM_RX       3               // Pin description number for PIO_SERCOM on D12
-#define PIN_FINGERPRINT_COM_TX       4               // Pin description number for PIO_SERCOM on D10
+#define PIN_FINGERPRINT_COM_RX 3 // Pin description number for PIO_SERCOM on D12
+#define PIN_FINGERPRINT_COM_TX 4 // Pin description number for PIO_SERCOM on D10
 
-#define PAD_FINGERPRINT_COM_TX       (UART_TX_PAD_0)      // SERCOM pad 0
-#define PAD_FINGERPRINT_COM_RX       (SERCOM_RX_PAD_1)    // SERCOM pad 1
+#define PAD_FINGERPRINT_COM_TX (UART_TX_PAD_0)   // SERCOM pad 0
+#define PAD_FINGERPRINT_COM_RX (SERCOM_RX_PAD_1) // SERCOM pad 1
 
 #define FINGERPRINT_BAUDRATE 57600
 
 #define FINGERPRINT_SERCOM sercom2
-#define FINGERPRINT_COM Serial2
+#define FINGERPRINT_COM    Serial2
 
 #define MAX_TEMPLATE 127
-#define MAX_TRY 500 
+#define MAX_TRY      500
 
 /*******************************************************************************
  * Variables

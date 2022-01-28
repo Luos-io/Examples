@@ -42,15 +42,15 @@ servo_motor_t servo;
 void ServoDrv_Init(void)
 {
     myservo.attach(SERVO_PIN);
-    
+
     servo_parameters_t param;
 
     param.max_angle      = 180.0;
     param.max_pulse_time = 1.5 / 1000;
     param.min_pulse_time = 0.5 / 1000;
 
-    servo.param           = param;
-    servo.angle           = 0.0;
+    servo.param = param;
+    servo.angle = 0.0;
 }
 
 /******************************************************************************
