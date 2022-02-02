@@ -47,16 +47,18 @@ void Button_Init(void)
 void Button_Loop(void)
 {
     ll_button_read(&button.state);
-
+    search_result_t result;
     // Get the ID of our LED from the routing table
-    int8_t id_led = RoutingTB_IDFromAlias("led_service");
-
-    // Now send a message
-    msg_t led_msg;
-    led_msg.header.target      = id_led;
-    led_msg.header.cmd         = IO_STATE;
-    led_msg.header.target_mode = IDACK;
-    led_msg.header.size        = sizeof(char);
-    led_msg.data[0]            = !(uint8_t)button.state;
-    Luos_SendMsg(app, &led_msg);
+    RTFilter_Alias(RTFilter_Reset(&result), "led_service");
+    if (result.result_nbr > 0)
+    {
+        // Now send a message
+        msg_t led_msg;
+        led_msg.header.target      = result.result_table[0]->id;
+        led_msg.header.cmd         = IO_STATE;
+        led_msg.header.target_mode = IDACK;
+        led_msg.header.size        = sizeof(char);
+        led_msg.data[0]            = !(uint8_t)button.state;
+        Luos_SendMsg(app, &led_msg);
+    }
 }
