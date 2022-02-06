@@ -1,70 +1,32 @@
-<a href="https://luos.io"><img src="https://uploads-ssl.webflow.com/601a78a2b5d030260a40b7ad/602f8d74abdf72db7f5e3ed9_Luos_Logo_animation_Black.gif" alt="Luos logo" title="Luos" align="right" height="60" /></a>
+<a href="https://luos.io"><img src="https://uploads-ssl.webflow.com/601a78a2b5d030260a40b7ad/603e0cc45afbb50963aa85f2_Gif%20noir%20rect.gif" alt="Luos logo" title="Luos" align="right" height="100" /></a>
 
+![](https://github.com/Luos-io/Examples/actions/workflows/build.yml/badge.svg)
+[![](https://img.shields.io/github/license/Luos-io/Examples)](https://github.com/Luos-io/Examples/blob/master/LICENSE)
 [![](http://certified.luos.io)](https://luos.io)
-[![](https://img.shields.io/github/license/Luos-io/Examples)](
-https://github.com/Luos-io/Examples/blob/master/LICENSE)
+[![](https://img.shields.io/badge/Luos-Documentation-BD99FF)](https://docs.luos.io)
 [![](https://img.shields.io/reddit/subreddit-subscribers/Luos?style=social)](https://www.reddit.com/r/Luos)
+[![](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Unleash%20electronic%20devices%20as%20microservices%20thanks%20to%20Luos&https://luos.io&via=Luos_io&hashtags=embeddedsystems,electronics,microservices,api)
 
-
-# Luos examples
-
-This repository is a submodule of the [Luos library](https://github.com/Luos-io/Luos) repository. It contains examples of services and Apps for using Luos. This repository can be used on it's own, or as a submodule for the Luos Library directly.
-
-Feel free to use these examples as a starting point for your own projects, and don't forget to share your creations on the [Luos forum](https://community.luos.io/)!
-
-## Content
-
-### Apps folder
-
-This folder contains the service's sources of each **App** project (See [demo boards tutorials](https://docs.luos.io/tutorials/demo-boards/servomotor) to try some apps). An App is the intelligence of your project, and the examples provided will show you how to set up an App for your project.
-
-### Projects folder
-
-This folder contains the sources of every examples.  It is sorted into two folders; Arduino for SAM-D based Arduino boards, and L0, for the Luos evaluation and prototyping boards. Inside these folders are a collection of different **drivers** and **projects** for you to use as they are, or to use as a starting point for your own projects.
-
-#### Prototyping boards projects
-
-Most of the projects are Luos prototyping boards (see [Demonstration boards tutorial](https://docs.luos.io/pages/tutorials/demo-boards/demo-boards-tuto.html) in documentation).
-
-#### Hardware folder
-
-This contains hardwares librairies used by Luos to inspire you to create your own designs:
- - **l0**: The base board for using Luos [demonstration boards](https://docs.luos.io/pages/tutorials/demo-boards/luos-demo-boards.html).
- - **l0-shields**: Different shields that can be used directly on the Luos L0 board for added functionality.
- - **stm32f0_disco_luos_shield**: a debugging shield equivalent to a Luos L0 for STM32F072B-DISCO dev board.
- - **Breakout_board**: a small add-on board to make any board compatible with Luos.
- - **wiring_and_power**: a set of projects for Luos wires and power input boards.
- - **00_Common_Libraries**: a set of Kicad libraries commonly used.
-
-##### How to start
-
-1. install KiCad: https://www.kicad.org/
-
-2. Once Kicad is installed, open it and setup libraries. There are 3 libs:
-
-	- **Schematic**: You must go on "Preferences" > "Manage Symbol Librairies". Click on the (+) button and type: Common_Lib in Nickname field  and type the path of the Common_Lib.lib file in Library Path field (Electronics/00_Common_Libraries/Common_Library/Common_Lib.lib).
-
-	- **PCB**: You must go on "Preferences" > "Manage Footprint Librairies". Click on the (+) button and type: Common_Footprint in Nickname field  and type the path of the Common_Footprint.pretty file in Library Path field(Electronics/00_Common_Libraries/Common_Footprint.pretty).
-
-	- **3D body**: You must go on "Preferences" > "Configure Paths". On the KISYS3DMOD line type the path of the Common_Mecanic Folder(Electronics\00_Common_Libraries\Common_Mecanic).
-
-
-3. Click on File > Open project
-
-4. Go to the KiCad project folder you want open and click on the .pro file.
+# Examples
+## The most for the developer​
+Luos provides a simple way to think your hardware products as a group of independant features. You can easily manage and share your hardware products' features with your team, external developers, or with the community. Luos is an open-source lightweight library that can be used on any MCU, leading to free and fast multi-electronic-boards products development. Choosing Luos to design a product will help you to develop, debug, validate, monitor, and manage it from the cloud.
+* → Go to the [tutorial section](https://docs.luos.io/tutorials/tutorials)
 
 ## The most for the community​
 Most of the embedded developments are made from scratch. By using Luos, you will be able to capitalize on the development you, your company, or the Luos community already did. The re-usability of features encapsulated in Luos services will fasten the time your products reach the market and reassure the robustness and the universality of your applications.
 
-* → Join the [Luos Slack Community](http://bit.ly/JoinLuosSlack)
-* → Join the [Luos Discord Community](http://bit.ly/JoinLuosDiscord)
+* → Join the [Luos Discord Community](https://discord.gg/luos)
 * → Join the [Luos Reddit Community](http://bit.ly/JoinLuosReddit)
-* → Join the [Luos Forum](http://bit.ly/JoinLuosForum)
 
-Need dedicated help with your project? Check out [Luos' support packages](https://www.luos.io/support).
+## Good practices with Luos​
+Luos proposes organized and effective development practices, guaranteeing development flexibility and evolutivity of your hardware product, from the idea to the maintenance of the industrialized product fleet.
 
-## Don't hesitate to read [our documentation](https://docs.luos.io), or to post your questions/issues on the [Luos' subreddit](https://www.reddit.com/r/Luos/). :books:
+## Let's do this​
+This section details the features of Luos technology as an embedded development platform, following these subjects:
 
-[![](https://img.shields.io/reddit/subreddit-subscribers/Luos?style=social)](https://www.reddit.com/r/Luos)
-[![](https://img.shields.io/badge/Luos-Documentation-34A3B4)](https://docs.luos.io)
-[![](https://img.shields.io/badge/LinkedIn-Follow%20us-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/company/luos)
+* Let's test through the [Luos get started](https://docs.luos.io/get-started/get-started/), to build, flash, run, and control your very first Luos code.
+* The [Basics of Luos](https://docs.luos.io/docs/luos-technology/basics/basics), explaining the general concepts and the project organization.
+* Definition of [Nodes](https://docs.luos.io/docs/luos-technology/node/node), and the relation between Luos and the physical world.
+* Definition of [Packages](https://docs.luos.io/docs/luos-technology/package/package), and how to make a portable and reusable development.
+* Definition of [Services](https://docs.luos.io/docs/luos-technology/services/services), how to create and declare features in your product.
+* Definition of [Messages](https://docs.luos.io/docs/luos-technology/message/message), when, why, and how to handle them, explaining the more advanced features of Luos.
