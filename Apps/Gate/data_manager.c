@@ -11,11 +11,13 @@
 #include "bootloader_ex.h"
 
 static void DataManager_Format(service_t *service);
+uint8_t DataManager_ServiceIsSensor(luos_type_t type);
 
 // This function will manage msg collection from sensors
 void DataManager_collect(service_t *service)
 {
     msg_t update_msg;
+    search_result_t result;
 #ifdef GATE_POLLING
     update_msg.header.cmd         = GET_CMD;
     update_msg.header.target_mode = ID;
@@ -23,15 +25,16 @@ void DataManager_collect(service_t *service)
 #else
     update_msg.header.target_mode = IDACK;
 #endif
+    RTFilter_Reset(&result);
     // ask services to publish datas
-    for (uint8_t i = 1; i <= RoutingTB_GetLastService(); i++)
+    for (uint8_t i = 0; i < result.result_nbr; i++)
     {
         // Check if this service is a sensor
-        if ((RoutingTB_ServiceIsSensor(RoutingTB_TypeFromID(i))) || (RoutingTB_TypeFromID(i) >= LUOS_LAST_TYPE))
+        if ((DataManager_ServiceIsSensor(result.result_table[i]->type)) || (result.result_table[i]->type >= LUOS_LAST_TYPE))
         {
 #ifdef GATE_POLLING
             // This service is a sensor so create a msg and send it
-            update_msg.header.target = i;
+            update_msg.header.target = result.result_table[i]->id;
             Luos_SendMsg(service, &update_msg);
 #ifdef GATE_TIMEOUT
             // Get the current number of message available
@@ -46,7 +49,7 @@ void DataManager_collect(service_t *service)
 #endif
 #else
             // This container is a sensor so create a msg to enable auto update
-            update_msg.header.target = i;
+            update_msg.header.target = result.result_table[i]->id;
             TimeOD_TimeToMsg(&update_time, &update_msg);
             update_msg.header.cmd = UPDATE_PUB;
             Luos_SendMsg(service, &update_msg);
@@ -126,78 +129,79 @@ void DataManager_Format(service_t *service)
     char *data_ptr  = data;
     msg_t *data_msg = 0;
     uint8_t data_ok = false;
+    search_result_t result;
+
+    RTFilter_Reset(&result);
+
     if ((Luos_NbrAvailableMsg() > 0))
     {
         // Init the data string
         data_ptr += Convert_StartData(data_ptr);
         // loop into services.
         int i = 0;
-        while (RoutingTB_GetMode(i) != CLEAR)
+        while (i < result.result_nbr)
         {
-            if (RoutingTB_GetMode(i) == SERVICE)
+            if (Luos_ReadFromService(service, result.result_table[i]->id, &data_msg) == SUCCEED)
             {
-                if (Luos_ReadFromService(service, RoutingTB_GetServiceID(i), &data_msg) == SUCCEED)
+                // check if this is an assert
+                if (data_msg->header.cmd == ASSERT)
                 {
-                    // check if this is an assert
-                    if (data_msg->header.cmd == ASSERT)
-                    {
-                        luos_assert_t assertion;
-                        memcpy(assertion.unmap, data_msg->data, data_msg->header.size);
-                        assertion.unmap[data_msg->header.size] = '\0';
-                        Convert_AssertToData(service, data_msg->header.source, assertion);
-                        i++;
-                        continue;
-                    }
-                    // check if a node send a bootloader message
-                    if (data_msg->header.cmd == BOOTLOADER_RESP)
-                    {
-                        Bootloader_LuosToJson(service, data_msg);
-                        continue;
-                    }
-                    // check if a node send a end detection
-                    if (data_msg->header.cmd == END_DETECTION)
-                    {
-                        // find a pipe
-                        PipeLink_Find(service);
-                        i++;
-                        continue;
-                    }
-                    // Check if this is a message from pipe
-                    if (data_msg->header.source == PipeLink_GetId())
-                    {
-                        do
-                        {
-                            // This message is a command from pipe
-                            static char data_cmd[GATE_BUFF_SIZE];
-                            // Convert the received data into Luos commands
-                            if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
-                            {
-                                // We finish to receive this data, execute the received command
-                                if (data_msg->header.cmd == SET_CMD)
-                                {
-                                    Convert_DataToLuos(service, data_cmd);
-                                }
-                            }
-                        } while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED);
-                        i++;
-                        continue;
-                    }
-                    // get the source of this message
-                    // Create service description
-                    char *alias;
-                    alias = RoutingTB_AliasFromId(data_msg->header.source);
-                    LUOS_ASSERT(alias != 0);
-                    data_ok = true;
-                    data_ptr += Convert_StartServiceData(data_ptr, alias);
-                    // Convert all msgs from this service into data
+                    luos_assert_t assertion;
+                    memcpy(assertion.unmap, data_msg->data, data_msg->header.size);
+                    assertion.unmap[data_msg->header.size] = '\0';
+                    Convert_AssertToData(service, data_msg->header.source, assertion);
+                    i++;
+                    continue;
+                }
+                // check if a node send a bootloader message
+                if (data_msg->header.cmd == BOOTLOADER_RESP)
+                {
+                    Bootloader_LuosToJson(service, data_msg);
+                    continue;
+                }
+                // check if a node send a end detection
+                if (data_msg->header.cmd == END_DETECTION)
+                {
+                    // find a pipe
+                    PipeLink_Find(service);
+                    i++;
+                    continue;
+                }
+                // Check if this is a message from pipe
+                if (data_msg->header.source == PipeLink_GetId())
+                {
                     do
                     {
-                        data_ptr += Convert_MsgToData(data_msg, data_ptr);
-                    } while (Luos_ReadFromService(service, data_msg->header.source, &data_msg) == SUCCEED);
-
-                    data_ptr += Convert_EndServiceData(data_ptr);
-                    LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
+                        // This message is a command from pipe
+                        static char data_cmd[GATE_BUFF_SIZE];
+                        // Convert the received data into Luos commands
+                        if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+                        {
+                            // We finish to receive this data, execute the received command
+                            if (data_msg->header.cmd == SET_CMD)
+                            {
+                                Convert_DataToLuos(service, data_cmd);
+                            }
+                        }
+                    } while (Luos_ReadFromService(service, PipeLink_GetId(), &data_msg) == SUCCEED);
+                    i++;
+                    continue;
                 }
+                // get the source of this message
+                // Create service description
+                char *alias;
+                alias = result.result_table[i]->alias;
+                LUOS_ASSERT(alias != 0);
+                data_ok = true;
+                data_ptr += Convert_StartServiceData(data_ptr, alias);
+                // Convert all msgs from this service into data
+                do
+                {
+                    data_ptr += Convert_MsgToData(data_msg, data_ptr);
+                } while (Luos_ReadFromService(service, data_msg->header.source, &data_msg) == SUCCEED);
+
+                data_ptr += Convert_EndServiceData(data_ptr);
+                LUOS_ASSERT((data_ptr - data) < GATE_BUFF_SIZE);
             }
             i++;
         }
@@ -233,4 +237,20 @@ void DataManager_Format(service_t *service)
             Convert_VoidData(service);
         }
     }
+}
+
+uint8_t DataManager_ServiceIsSensor(luos_type_t type)
+{
+    if ((type == ANGLE_TYPE)
+        || (type == STATE_TYPE)
+        || (type == DISTANCE_TYPE)
+        || (type == IMU_TYPE)
+        || (type == LOAD_TYPE)
+        || (type == VOLTAGE_TYPE)
+        || (type == LIGHT_TYPE)
+        || (type == SERVO_MOTOR_TYPE))
+    {
+        return 1;
+    }
+    return 0;
 }

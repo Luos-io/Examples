@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file biometric_security
- * @brief This is an app exemple for a Biometric Security System. It won't work 
+ * @brief This is an app exemple for a Biometric Security System. It won't work
  * as is so if you want to see it inside of a project, I made multiple version
  * that you can go check on my github :
  * https://github.com/mariebidouille
@@ -68,21 +68,18 @@ void BiometricSecurity_Loop(void)
 {
     static uint32_t detection_date = 0;
     static uint8_t system_init     = 0;
+    search_result_t result;
 
     if (Luos_IsNodeDetected() && !system_init)
     {
-        int id_btn[4];
-        id_btn[0] = RoutingTB_IDFromAlias("btn_enroll");
-        id_btn[1] = RoutingTB_IDFromAlias("btn_delete");
-        id_btn[2] = RoutingTB_IDFromAlias("btn_up");
-        id_btn[3] = RoutingTB_IDFromAlias("btn_down");
+        RTFilter_Alias(RTFilter_Reset(&result), "btn_");
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < result.result_nbr; i++)
         {
             if (id_btn[i] > 0)
             {
                 msg_t pub_msg;
-                pub_msg.header.target      = id_btn[i];
+                pub_msg.header.target      = result.result_table[i]->id;
                 pub_msg.header.target_mode = IDACK;
                 time_luos_t time           = TimeOD_TimeFrom_ms(UPDATE_PERIOD_MS);
                 TimeOD_TimeToMsg(&time, &pub_msg);
@@ -90,11 +87,11 @@ void BiometricSecurity_Loop(void)
                 Luos_SendMsg(app, &pub_msg);
             }
         }
-
-        if (RoutingTB_IDFromType(LCD_TYPE) > 0)
+        RTFilter_Type(RTFilter_Reset(&result), LCD_TYPE);
+        if (result.result_table[0]->id > 0)
         {
             msg_t pub_msg;
-            pub_msg.header.target      = RoutingTB_IDFromType(LCD_TYPE);
+            pub_msg.header.target      = result.result_table[0]->id;
             pub_msg.header.target_mode = ID;
             pub_msg.header.cmd         = REINIT;
             Luos_SendMsg(app, &pub_msg);
@@ -112,16 +109,19 @@ void BiometricSecurity_Loop(void)
 }
 
 /******************************************************************************
- * @brief message handler must be call in service init 
+ * @brief message handler must be call in service init
  * @param service
  * @param msg
  * @return None
  ******************************************************************************/
 void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
 {
-    if ((msg->header.cmd == IO_STATE) && (RoutingTB_TypeFromID(msg->header.source) == STATE_TYPE))
+    search_result_t result;
+    RTFilter_Type(RTFilter_Reset(&result), STATE_TYPE);
+    if ((msg->header.cmd == IO_STATE) && (result.result_nbr > 0) && (result.result_table[0]->id == msg->header.source))
     {
-        if (RoutingTB_IDFromAlias("btn_enroll") == msg->header.source)
+        RTFilter_Alias(RTFilter_Reset(&result), "btn_enroll");
+        if (result.result_table[0]->id == msg->header.source)
         {
             if ((!enroll_last_state) && (enroll_last_state != msg->data[0]))
             {
@@ -132,8 +132,8 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
             }
             enroll_last_state = msg->data[0];
         }
-
-        if (RoutingTB_IDFromAlias("btn_up") == msg->header.source)
+        RTFilter_Alias(RTFilter_Reset(&result), "btn_up");
+        if (result.result_table[0]->id == msg->header.source)
         {
             if ((!up_last_state) && (up_last_state != msg->data[0]))
             {
@@ -145,8 +145,8 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
             }
             up_last_state = msg->data[0];
         }
-
-        if (RoutingTB_IDFromAlias("btn_down") == msg->header.source)
+        RTFilter_Alias(RTFilter_Reset(&result), "btn_down");
+        if (result.result_table[0]->id == msg->header.source)
         {
             if ((!down_last_state) && (down_last_state != msg->data[0]) && (!fingerprint_busy))
             {
@@ -158,19 +158,20 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
             }
             down_last_state = msg->data[0];
         }
-
-        if (RoutingTB_IDFromAlias("btn_delete") == msg->header.source)
+        RTFilter_Alias(RTFilter_Reset(&result), "btn_delete");
+        if (result.result_table[0]->id == msg->header.source)
         {
             if ((!delete_last_state) && (delete_last_state != msg->data[0]))
             {
                 if ((!fingerprint_busy) && (angle == 0))
                 {
-                    if (RoutingTB_IDFromType(FINGERPRINT_TYPE) > 0)
+                    RTFilter_Type(RTFilter_Reset(&result), FINGERPRINT_TYPE);
+                    if (result.result_nbr > 0)
                     {
                         msg_t pub_msg;
                         pub_msg.header.target_mode = msg->header.target_mode;
                         pub_msg.header.cmd         = DELETE;
-                        pub_msg.header.target      = RoutingTB_IDFromType(FINGERPRINT_TYPE);
+                        pub_msg.header.target      = result.result_table[0]->id;
                         fingerprint_busy           = 1;
                         BiometricSecurity_LcdPrint("Checking auth..", sizeof("Checking auth..") - 1);
                         Luos_SendMsg(app, &pub_msg);
@@ -184,8 +185,8 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
             delete_last_state = msg->data[0];
         }
     }
-
-    if (RoutingTB_TypeFromID(msg->header.source) == FINGERPRINT_TYPE)
+    RTFilter_Type(RTFilter_Reset(&result), FINGERPRINT_TYPE);
+    if (msg->header.source == result.result_table[0]->id)
     {
         fingerprint_busy = 0;
         switch (msg->header.cmd)
@@ -210,7 +211,7 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
                     }
                     else
                     {
-                        if (RoutingTB_IDFromType(FINGERPRINT_TYPE) > 0)
+                        if (result.result_nbr > 0)
                         {
                             msg_t pub_msg;
                             pub_msg.header.target_mode = msg->header.target_mode;
@@ -247,11 +248,13 @@ void BiometricSecurity_MsgHandler(service_t *service, msg_t *msg)
  ******************************************************************************/
 uint8_t BiometricSecurity_SetServoPosition(void)
 {
-    if (RoutingTB_IDFromType(SERVO_MOTOR_TYPE) > 0)
+    search_result_t result;
+    RTFilter_Type(RTFilter_Reset(&result), SERVO_MOTOR_TYPE);
+    if (result.result_nbr > 0)
     {
         msg_t servo_msg;
         servo_msg.header.target_mode = ID;
-        servo_msg.header.target      = RoutingTB_IDFromType(SERVO_MOTOR_TYPE);
+        servo_msg.header.target      = result.result_table[0]->id;
 
         AngularOD_PositionToMsg(&angle, &servo_msg);
         while (Luos_SendMsg(app, &servo_msg) != SUCCEED)
@@ -276,14 +279,16 @@ uint8_t BiometricSecurity_SetServoPosition(void)
  ******************************************************************************/
 uint8_t BiometricSecurity_CheckFingerprint(void)
 {
-    if ((RoutingTB_IDFromType(FINGERPRINT_TYPE) > 0) && (!fingerprint_busy))
+    search_result_t result;
+    RTFilter_Type(RTFilter_Reset(&result), FINGERPRINT_TYPE);
+    if ((result.result_nbr > 0) && (!fingerprint_busy))
     {
 
         BiometricSecurity_LcdPrint("Checking auth..", sizeof("Checking auth..") - 1);
         msg_t fing_msg;
         fing_msg.header.cmd         = CHECK;
         fing_msg.header.target_mode = ID;
-        fing_msg.header.target      = RoutingTB_IDFromType(FINGERPRINT_TYPE);
+        fing_msg.header.target      = result.result_table[0]->id;
         fingerprint_busy            = 1;
         while (Luos_SendMsg(app, &fing_msg) != SUCCEED)
         {
@@ -305,13 +310,16 @@ uint8_t BiometricSecurity_CheckFingerprint(void)
  ******************************************************************************/
 uint8_t BiometricSecurity_ControlLed(uint8_t green_state)
 {
+    search_result_t result;
     msg_t led_msg;
     led_msg.header.size        = sizeof(char);
     led_msg.header.target_mode = ID;
     led_msg.header.cmd         = IO_STATE;
-    if (RoutingTB_IDFromAlias("led_green") > 0)
+
+    RTFilter_Alias(RTFilter_Reset(&result), "led_green");
+    if (result.result_nbr > 0)
     {
-        led_msg.header.target = RoutingTB_IDFromAlias("led_green");
+        led_msg.header.target = result.result_table[0]->id;
         led_msg.data[0]       = green_state;
         while (Luos_SendMsg(app, &led_msg) != SUCCEED)
         {
@@ -320,9 +328,10 @@ uint8_t BiometricSecurity_ControlLed(uint8_t green_state)
     }
     else
         return 0;
-    if (RoutingTB_IDFromAlias("led_red") > 0)
+    RTFilter_Alias(RTFilter_Reset(&result), "led_red");
+    if (result.result_nbr > 0)
     {
-        led_msg.header.target = RoutingTB_IDFromAlias("led_red");
+        led_msg.header.target = result.result_table[0]->id;
         led_msg.data[0]       = 1 - green_state;
         while (Luos_SendMsg(app, &led_msg) != SUCCEED)
         {
@@ -335,20 +344,22 @@ uint8_t BiometricSecurity_ControlLed(uint8_t green_state)
 }
 
 /******************************************************************************
- * @brief Display text on lcd screen 
+ * @brief Display text on lcd screen
  * @param text to display
- * @param length of the text to display 
+ * @param length of the text to display
  * @return whether or not the message was sent successfully
  ******************************************************************************/
 uint8_t BiometricSecurity_LcdPrint(char *text, uint16_t length)
 {
-    if (RoutingTB_IDFromType(LCD_TYPE) > 0)
+    search_result_t result;
+    RTFilter_Type(RTFilter_Reset(&result), LCD_TYPE);
+    if (result.result_nbr > 0)
     {
         msg_t txt_msg;
         txt_msg.header.cmd         = TEXT;
         txt_msg.header.size        = length;
         txt_msg.header.target_mode = ID;
-        txt_msg.header.target      = RoutingTB_IDFromType(LCD_TYPE);
+        txt_msg.header.target      = result.result_table[0]->id;
 
         memcpy(txt_msg.data, text, txt_msg.header.size);
 

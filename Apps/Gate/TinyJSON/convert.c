@@ -19,6 +19,7 @@
 
 static const char *Convert_Float(float value);
 static void Convert_JsonToMsg(service_t *service, uint16_t id, luos_type_t type, const json_t *jobj, msg_t *msg, char *bin_data);
+static const char *Convert_StringFromType(luos_type_t type);
 
 /*******************************************************************************
  * Tools
@@ -204,16 +205,16 @@ void Convert_DataToLuos(service_t *service, char *data)
         while (service_jsn != NULL)
         {
             // Create msg
+            search_result_t result;
             char *alias = (char *)json_getName(service_jsn);
-            uint16_t id = RoutingTB_IDFromAlias(alias);
-            if (id == 65535)
+            RTFilter_Alias(RTFilter_Reset(&result), alias);
+            if (result.result_nbr == 0)
             {
                 // If alias doesn't exist in our list id_from_alias send us back -1 = 65535
                 // So here there is an error in alias.
                 return;
             }
-            luos_type_t type = RoutingTB_TypeFromID(id);
-            Convert_JsonToMsg(service, id, type, service_jsn, &msg, (char *)data);
+            Convert_JsonToMsg(service, result.result_table[0]->id, result.result_table[0]->type, service_jsn, &msg, (char *)data);
             // Get next service
             service_jsn = json_getSibling(service_jsn);
         }
@@ -980,7 +981,9 @@ void Convert_AssertToData(service_t *service, uint16_t source, luos_assert_t ass
 void Convert_ExcludedServiceData(service_t *service)
 {
     char json[300];
-    sprintf(json, "{\"dead_service\":\"%s\"", RoutingTB_AliasFromId(service->ll_service->dead_service_spotted));
+    search_result_t result;
+    RTFilter_ID(RTFilter_Reset(&result), service->ll_service->dead_service_spotted);
+    sprintf(json, "{\"dead_service\":\"%s\"", result.result_table[0]->alias);
     sprintf(json, "%s}\n", json);
     // Send the message to pipe
     PipeLink_Send(service, json, strlen(json));
@@ -1052,7 +1055,7 @@ void Convert_RoutingTableData(service_t *service)
                 if (routing_table[i].mode == SERVICE)
                 {
                     // Create service description
-                    sprintf(json_ptr, "{\"type\":\"%s\",\"id\":%d,\"alias\":\"%s\"},", RoutingTB_StringFromType(routing_table[i].type), routing_table[i].id, routing_table[i].alias);
+                    sprintf(json_ptr, "{\"type\":\"%s\",\"id\":%d,\"alias\":\"%s\"},", Convert_StringFromType(routing_table[i].type), routing_table[i].id, routing_table[i].alias);
                     json_ptr += strlen(json_ptr);
                     i++;
                 }
@@ -1079,4 +1082,55 @@ void Convert_RoutingTableData(service_t *service)
     Luos_Loop();
     // Send the message to pipe
     PipeLink_Send(service, json, strlen(json));
+}
+/*******************************************************************************
+ * Convert a type number to Type string
+ ******************************************************************************/
+const char *Convert_StringFromType(luos_type_t type)
+{
+    switch (type)
+    {
+        case STATE_TYPE:
+            return "State";
+            break;
+        case COLOR_TYPE:
+            return "Color";
+            break;
+        case MOTOR_TYPE:
+            return "Motor";
+            break;
+        case SERVO_MOTOR_TYPE:
+            return "ServoMotor";
+            break;
+        case ANGLE_TYPE:
+            return "Angle";
+            break;
+        case DISTANCE_TYPE:
+            return "Distance";
+            break;
+        case GATE_TYPE:
+            return "Gate";
+            break;
+        case IMU_TYPE:
+            return "Imu";
+            break;
+        case LIGHT_TYPE:
+            return "Light";
+            break;
+        case VOID_TYPE:
+            return "Void";
+            break;
+        case LOAD_TYPE:
+            return "Load";
+            break;
+        case VOLTAGE_TYPE:
+            return "Voltage";
+            break;
+        case PIPE_TYPE:
+            return "Pipe";
+            break;
+        default:
+            return "Unknown";
+            break;
+    }
 }
