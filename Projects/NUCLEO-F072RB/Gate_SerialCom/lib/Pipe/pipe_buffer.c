@@ -67,9 +67,11 @@ uint8_t PipeBuffer_GetP2LTask(uint8_t **data, uint16_t *size)
 {
     if (P2LTaskID != 0)
     {
+        __disable_irq();
         *data = P2LTask[0].data_pt;
         *size = P2LTask[0].size;
         PipeBuffer_ClearP2LTask();
+        __enable_irq();
         return true;
     }
     return false;
