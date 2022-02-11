@@ -10,7 +10,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DETECTION_LATENCY 100
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -31,10 +30,11 @@ static void AlarmController_MsgHandler(service_t *service, msg_t *msg);
 void AlarmController_Init(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    // By default this app running
-    control_app.flux = PLAY;
     // Create App
     app = Luos_CreateService(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
+    Luos_Detect(app);
+   
+    
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -43,10 +43,9 @@ void AlarmController_Init(void)
  ******************************************************************************/
 void AlarmController_Loop(void)
 {
-    static uint8_t blink           = 0;
-    static uint8_t blink_nb        = BLINK_NUMBER * 2;
-    static uint32_t last_blink     = 0;
-    static uint32_t last_detection = 0;
+    static uint8_t blink       = 0;
+    static uint8_t blink_nb    = BLINK_NUMBER * 2;
+    static uint32_t last_blink = 0;
     search_result_t result;
 
     // ********** hot plug management ************
@@ -55,6 +54,8 @@ void AlarmController_Loop(void)
     {
         if (end_detection)
         {
+            // By default this app running
+            control_app.flux = PLAY;
             // Make services configurations
             // try to find a Fader app and set light transition time just to be fancy
             // we will use the first that we find
@@ -108,14 +109,8 @@ void AlarmController_Loop(void)
     }
     else
     {
-        if (Luos_GetSystick() - last_detection >= DETECTION_LATENCY)
-        {
-            Luos_Detect(app);
-            last_detection = Luos_GetSystick();
-        }
         return;
     }
-    last_detection = Luos_GetSystick();
     // ********** non blocking blink ************
     if (control_app.flux == PLAY)
     {
