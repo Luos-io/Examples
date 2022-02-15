@@ -94,7 +94,7 @@ void DataManager_RunPipeOnly(service_t *service)
             PipeLink_SetStreamingChannel((void *)pointer);
             continue;
         }
-        if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+        if (Luos_ReceiveData(service, data_msg, data_cmd) >0)
         {
             // We finish to receive this data, execute the received command
             Convert_DataToLuos(service, data_cmd);
@@ -175,7 +175,7 @@ void DataManager_Format(service_t *service)
                         // This message is a command from pipe
                         static char data_cmd[GATE_BUFF_SIZE];
                         // Convert the received data into Luos commands
-                        if (Luos_ReceiveData(service, data_msg, data_cmd) == SUCCEED)
+                        if (Luos_ReceiveData(service, data_msg, data_cmd) > 0)
                         {
                             // We finish to receive this data, execute the received command
                             if (data_msg->header.cmd == SET_CMD)
