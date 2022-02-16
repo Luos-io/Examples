@@ -17,6 +17,9 @@
 #ifndef LUOS_TO_PIPE_BUFFER_SIZE
 #define LUOS_TO_PIPE_BUFFER_SIZE 2048
 #endif
+
+#define SERIAL_HEADER 0x7E
+#define SERIAL_FOOTER 0x81
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -25,11 +28,8 @@
  * Function
  ******************************************************************************/
 void PipeBuffer_Init(void);
+uint8_t PipeBuffer_GetP2LTask(uint16_t *size);
 uint8_t *PipeBuffer_GetP2LBuffer(void);
-uint8_t PipeBuffer_GetP2LTask(uint8_t **data, uint16_t *size);
-void PipeBuffer_AllocP2LTask(uint16_t PositionLastData, uint8_t overflow);
-
 uint8_t *PipeBuffer_GetL2PBuffer(void);
-void PipeBuffer_PutL2PBuffer(uint8_t *data, uint16_t size);
 
 #endif /* PIPE_BUFFER_H */

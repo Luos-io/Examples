@@ -4,7 +4,6 @@
  * @author Luos
  * @version 0.1.0
  ******************************************************************************/
-#include <stdbool.h>
 #include "pipe.h"
 #include "pipe_com.h"
 
@@ -17,6 +16,8 @@
  ******************************************************************************/
 streaming_channel_t P2L_StreamChannel;
 streaming_channel_t L2P_StreamChannel;
+
+uint8_t L2P_CompleteMsg = true;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -51,11 +52,11 @@ void Pipe_Loop(void)
  ******************************************************************************/
 static void Pipe_MsgHandler(service_t *service, msg_t *msg)
 {
-    uint8_t *data = 0;
+    uint8_t data  = SERIAL_HEADER;
     uint16_t size = 0;
     if (msg->header.cmd == GET_CMD)
     {
-        if (true == PipeBuffer_GetP2LTask(&data, &size))
+        if (true == PipeBuffer_GetP2LTask(&size))
         {
             // fill the message infos
             msg_t pub_msg;
@@ -67,7 +68,6 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
     }
     else if (msg->header.cmd == SET_CMD)
     {
-        uint16_t size = 0;
         if (msg->header.size > 0)
         {
             Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel);
