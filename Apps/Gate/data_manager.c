@@ -94,7 +94,7 @@ void DataManager_RunPipeOnly(service_t *service)
             PipeLink_SetStreamingChannel((void *)pointer);
             continue;
         }
-        if (Luos_ReceiveData(service, data_msg, data_cmd) >0)
+        if (Luos_ReceiveData(service, data_msg, data_cmd) > 0)
         {
             // We finish to receive this data, execute the received command
             Convert_DataToLuos(service, data_cmd);
