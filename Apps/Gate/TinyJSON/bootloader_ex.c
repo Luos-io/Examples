@@ -167,6 +167,16 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 Luos_SendMsg(service, &boot_msg);
                 break;
 
+            case BOOTLOADER_RESET:
+                // send rescue command to nodes
+                boot_msg.header.target      = BROADCAST_VAL;
+                boot_msg.header.target_mode = BROADCAST;
+                boot_msg.header.cmd         = BOOTLOADER_CMD; // bootloader cmd
+                boot_msg.header.size        = sizeof(char);
+                boot_msg.data[0]            = BOOTLOADER_RESET;
+                Luos_SendMsg(service, &boot_msg);
+                break;
+
             default:
                 break;
         }
