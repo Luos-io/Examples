@@ -963,7 +963,7 @@ void Convert_EndData(service_t *service, char *data, char *data_ptr)
 void Convert_VoidData(service_t *service)
 {
     char data[sizeof("{}\n")] = "{}\n";
-    PipeLink_Send(service, data, sizeof("{}\n"));
+    PipeLink_Send(service, data, strlen("{}\n"));
 }
 
 /*******************************************************************************

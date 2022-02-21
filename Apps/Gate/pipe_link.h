@@ -22,6 +22,6 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size);
 short PipeLink_Find(service_t *service);
 void PipeLink_Reset(service_t *service);
 short PipeLink_GetId(void);
-void PipeLink_SetStreamingChannel(void *streamingChannel);
+void PipeLink_SetDirectPipeSend(void *PipeSend);
 
 #endif /* PIPE_LINK_H */

@@ -91,7 +91,7 @@ void DataManager_RunPipeOnly(service_t *service)
         {
             int pointer;
             memcpy(&pointer, data_msg->data, sizeof(void *));
-            PipeLink_SetStreamingChannel((void *)pointer);
+            PipeLink_SetDirectPipeSend((void *)pointer);
             continue;
         }
         if (Luos_ReceiveData(service, data_msg, data_cmd) > 0)

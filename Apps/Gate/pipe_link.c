@@ -8,6 +8,7 @@
 
 short pipe_id                             = 0;
 streaming_channel_t *pipeStreamingChannel = 0;
+void (*PipeDirectPutSample)(uint8_t *data, uint16_t size);
 
 void PipeLink_Send(service_t *service, void *data, uint32_t size)
 {
@@ -16,7 +17,7 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     msg.header.target      = pipe_id;
     msg.header.cmd         = SET_CMD;
     msg.header.target_mode = IDACK;
-    if (pipeStreamingChannel == 0)
+    if (PipeDirectPutSample == 0)
     {
         // We are not using localhost send the entire data trough the Luos network
         Luos_SendData(service, &msg, data, size);
@@ -25,7 +26,7 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     {
         // We have a localhost pipe
         // Copy the data directly into the local streaming channel without passing by Luos.
-        Stream_PutSample(pipeStreamingChannel, data, size);
+        PipeDirectPutSample(data, size);
         // Send a void set_cmd to strat data transmission on pipe.
         msg.header.size = 0;
         Luos_SendMsg(service, &msg);
@@ -91,9 +92,9 @@ void PipeLink_Reset(service_t *service)
     Luos_SendMsg(service, &msg);
 }
 
-void PipeLink_SetStreamingChannel(void *streamingChannel)
+void PipeLink_SetDirectPipeSend(void *PipeSend)
 {
-    pipeStreamingChannel = streamingChannel;
+    PipeDirectPutSample = PipeSend;
 }
 
 short PipeLink_GetId(void)
