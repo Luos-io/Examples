@@ -33,8 +33,6 @@ void AlarmController_Init(void)
     // Create App
     app = Luos_CreateService(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
     Luos_Detect(app);
-   
-    
 }
 /******************************************************************************
  * @brief loop must be call in project loop

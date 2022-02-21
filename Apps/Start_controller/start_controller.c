@@ -10,8 +10,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define LIGHT_INTENSITY   255
-#define UPDATE_PERIOD_MS  10
+#define LIGHT_INTENSITY  255
+#define UPDATE_PERIOD_MS 10
 
 typedef enum
 {
