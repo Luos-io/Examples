@@ -30,21 +30,13 @@ uint8_t L2P_Buffer[LUOS_TO_PIPE_BUFFER_SIZE] = {0};
 void PipeBuffer_SetL2PMsg(uint8_t *data, uint16_t size)
 {
     streaming_channel_t *StreamChannel = get_L2P_StreamChannel();
-    uint8_t Serial;
+    SerialProtocol_t SerialProtocol    = {SERIAL_HEADER, 0, SERIAL_FOOTER};
 
-    // send serial header
-    Serial = SERIAL_HEADER;
-    Stream_PutSample(StreamChannel, &Serial, 1);
-    // send serial size
-    Serial = size >> 8;
-    Stream_PutSample(StreamChannel, &Serial, 1);
-    Serial = size;
-    Stream_PutSample(StreamChannel, &Serial, 1);
-    // send serial data
+    SerialProtocol.Size = ((size>>8) & 0x00FF);
+    SerialProtocol.Size |= ((size<<8) & 0xFF00);
+    Stream_PutSample(StreamChannel, &SerialProtocol, 3);
     Stream_PutSample(StreamChannel, data, size);
-    // send serial footer
-    Serial = SERIAL_FOOTER;
-    Stream_PutSample(StreamChannel, &Serial, 1);
+    Stream_PutSample(StreamChannel, &SerialProtocol.Footer, 1);
 }
 /******************************************************************************
  * @brief init must be call in project init

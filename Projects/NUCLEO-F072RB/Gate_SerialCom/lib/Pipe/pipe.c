@@ -52,8 +52,8 @@ void Pipe_Loop(void)
  ******************************************************************************/
 static void Pipe_MsgHandler(service_t *service, msg_t *msg)
 {
-    uint16_t Serial = SERIAL_HEADER;
-    uint16_t size   = 0;
+    SerialProtocol_t SerialProtocol = {SERIAL_HEADER, 0, SERIAL_FOOTER};
+    uint16_t size                   = 0;
     if (msg->header.cmd == GET_CMD)
     {
         if (true == PipeBuffer_GetP2LMsg(&size))
@@ -72,19 +72,15 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
         {
             if (L2P_CompleteMsg == true)
             {
-                L2P_CompleteMsg = false;
-                // send serial header
-                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
-                // send serial size
-                Serial = msg->header.size >> 8;
-                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
-                Serial = msg->header.size;
-                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+                L2P_CompleteMsg     = false;
+                SerialProtocol.Size = ((msg->header.size >> 8) & 0x00FF);
+                SerialProtocol.Size |= ((msg->header.size << 8) & 0xFF00);
+                Stream_PutSample(&L2P_StreamChannel, &SerialProtocol, 3);
             }
             if (Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel) == SUCCEED)
             {
-                Serial = SERIAL_FOOTER;
-                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+                Stream_PutSample(&L2P_StreamChannel, &SerialProtocol.Footer, 1);
+                L2P_CompleteMsg = false;
             }
         }
         if (PipeCom_SendL2PPending() == false)
