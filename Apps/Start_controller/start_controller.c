@@ -10,9 +10,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define LIGHT_INTENSITY   255
-#define DETECTION_LATENCY 80
-#define UPDATE_PERIOD_MS  10
+#define LIGHT_INTENSITY  255
+#define UPDATE_PERIOD_MS 10
 
 typedef enum
 {
@@ -43,10 +42,9 @@ static void StartController_MsgHandler(service_t *service, msg_t *msg);
 void StartController_Init(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    // By default this app running
-    control_app.flux = PLAY;
     // Create App
     app = Luos_CreateService(StartController_MsgHandler, START_CONTROLLER_APP, "start_control", revision);
+    Luos_Detect(app);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -57,7 +55,6 @@ void StartController_Loop(void)
 {
     static uint32_t switch_date    = 0;
     static uint8_t animation_state = 0;
-    static uint32_t last_detection = 0;
     search_result_t result;
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
@@ -66,6 +63,8 @@ void StartController_Loop(void)
         // Make services configurations
         if (end_detection)
         {
+            // By default this app running
+            control_app.flux = PLAY;
             RTFilter_Alias(RTFilter_Reset(&result), "lock");
             if (result.result_nbr > 0)
             {
@@ -90,14 +89,8 @@ void StartController_Loop(void)
     }
     else
     {
-        if (Luos_GetSystick() - last_detection >= DETECTION_LATENCY)
-        {
-            Luos_Detect(app);
-            last_detection = Luos_GetSystick();
-        }
         return;
     }
-    last_detection = Luos_GetSystick();
     // ********** non blocking button management ************
     if (state_switch & (control_app.flux == PLAY) & (animation_state == 0))
     {

@@ -38,6 +38,9 @@ void Gate_Init(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 1};
     gate                = Luos_CreateService(0, GATE_TYPE, "gate", revision);
+#ifndef NODETECTION
+    Luos_Detect(gate);
+#endif
 }
 
 /******************************************************************************
@@ -47,30 +50,13 @@ void Gate_Init(void)
  ******************************************************************************/
 void Gate_Loop(void)
 {
-#ifndef NODETECTION
-    static short previous_id = -1;
-#endif
     static uint32_t last_time = 0;
 
     // Check the detection status.
     if (Luos_IsNodeDetected() == false)
     {
-#ifndef NODETECTION
-        // We don't have any ID, meaning no detection occure or detection is occuring.
-        if (previous_id == -1)
-        {
-            // This is the start period, we have to make a detection.
-            // Be sure the network is powered up 20 ms before starting a detection
-            if (Luos_GetSystick() > 20)
-            {
-                // No detection occure, do it
-                Luos_Detect(gate);
-                previous_id = 0;
 #ifndef GATE_POLLING
-                update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
-#endif
-            }
-        }
+        update_time = TimeOD_TimeFrom_s(GATE_REFRESH_TIME_S);
 #endif
     }
     else
