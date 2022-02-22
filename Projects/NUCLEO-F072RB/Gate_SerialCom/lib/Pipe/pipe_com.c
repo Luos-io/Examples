@@ -79,7 +79,6 @@ void PipeCom_Init(void)
     HAL_NVIC_SetPriority(PIPE_COM_IRQ, 1, 1);
 
     P2L_PrevPointerPosition = 0;
-    PipeBuffer_Init();
     PipeCom_DMAInit();
 }
 /******************************************************************************
@@ -137,19 +136,7 @@ void PipeCom_SendL2P(uint8_t *data, uint16_t size)
 {
     LUOS_ASSERT(size > 0);
 
-    if (is_sending == false)
-    {
-        is_sending = true;
-        while (!LL_USART_IsActiveFlag_TXE(PIPE_COM))
-            ;
-        LL_USART_TransmitData8(PIPE_COM, SERIAL_HEADER);
-        while (!LL_USART_IsActiveFlag_TXE(PIPE_COM))
-            ;
-        LL_USART_TransmitData8(PIPE_COM, size >> 8);
-        while (!LL_USART_IsActiveFlag_TXE(PIPE_COM))
-            ;
-        LL_USART_TransmitData8(PIPE_COM, size);
-    }
+    is_sending   = true;
     size_to_send = size;
     LL_DMA_DisableChannel(L2P_DMA, L2P_DMA_CHANNEL);
     LL_DMA_SetMemoryAddress(L2P_DMA, L2P_DMA_CHANNEL, (uint32_t)data);
@@ -224,9 +211,6 @@ void L2P_DMA_IRQHANDLER()
         else
         {
             is_sending = false;
-            while (!LL_USART_IsActiveFlag_TXE(PIPE_COM))
-                ;
-            LL_USART_TransmitData8(PIPE_COM, SERIAL_FOOTER);
         }
     }
 }

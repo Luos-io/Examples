@@ -27,8 +27,8 @@
 /*******************************************************************************
  * Function
  ******************************************************************************/
-void PipeBuffer_Init(void);
-uint8_t PipeBuffer_GetP2LTask(uint16_t *size);
+void PipeBuffer_SetL2PMsg(uint8_t *data, uint16_t size);
+uint8_t PipeBuffer_GetP2LMsg(uint16_t *size);
 uint8_t *PipeBuffer_GetP2LBuffer(void);
 uint8_t *PipeBuffer_GetL2PBuffer(void);
 

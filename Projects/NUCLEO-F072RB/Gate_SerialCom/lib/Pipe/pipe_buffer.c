@@ -5,6 +5,7 @@
  * @version 0.0.0
  ******************************************************************************/
 #include "pipe_com.h"
+#include "pipe_buffer.h"
 #include <stdbool.h>
 
 /*******************************************************************************
@@ -26,15 +27,31 @@ uint8_t L2P_Buffer[LUOS_TO_PIPE_BUFFER_SIZE] = {0};
  * @param None
  * @return None
  ******************************************************************************/
-void PipeBuffer_Init(void)
+void PipeBuffer_SetL2PMsg(uint8_t *data, uint16_t size)
 {
+    streaming_channel_t *StreamChannel = get_L2P_StreamChannel();
+    uint8_t Serial;
+
+    // send serial header
+    Serial = SERIAL_HEADER;
+    Stream_PutSample(StreamChannel, &Serial, 1);
+    // send serial size
+    Serial = size >> 8;
+    Stream_PutSample(StreamChannel, &Serial, 1);
+    Serial = size;
+    Stream_PutSample(StreamChannel, &Serial, 1);
+    // send serial data
+    Stream_PutSample(StreamChannel, data, size);
+    // send serial footer
+    Serial = SERIAL_FOOTER;
+    Stream_PutSample(StreamChannel, &Serial, 1);
 }
 /******************************************************************************
  * @brief init must be call in project init
  * @param None
  * @return None
  ******************************************************************************/
-uint8_t PipeBuffer_GetP2LTask(uint16_t *size)
+uint8_t PipeBuffer_GetP2LMsg(uint16_t *size)
 {
     streaming_channel_t *StreamChannel = get_P2L_StreamChannel();
     uint16_t TotalSize                 = Stream_GetAvailableSampleNB(StreamChannel);

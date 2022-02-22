@@ -52,11 +52,11 @@ void Pipe_Loop(void)
  ******************************************************************************/
 static void Pipe_MsgHandler(service_t *service, msg_t *msg)
 {
-    uint8_t data  = SERIAL_HEADER;
-    uint16_t size = 0;
+    uint16_t Serial = SERIAL_HEADER;
+    uint16_t size   = 0;
     if (msg->header.cmd == GET_CMD)
     {
-        if (true == PipeBuffer_GetP2LTask(&size))
+        if (true == PipeBuffer_GetP2LMsg(&size))
         {
             // fill the message infos
             msg_t pub_msg;
@@ -70,7 +70,22 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
     {
         if (msg->header.size > 0)
         {
-            Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel);
+            if (L2P_CompleteMsg == true)
+            {
+                L2P_CompleteMsg = false;
+                // send serial header
+                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+                // send serial size
+                Serial = msg->header.size >> 8;
+                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+                Serial = msg->header.size;
+                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+            }
+            if (Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel) == SUCCEED)
+            {
+                Serial = SERIAL_FOOTER;
+                Stream_PutSample(&L2P_StreamChannel, &Serial, 1);
+            }
         }
         if (PipeCom_SendL2PPending() == false)
         {
@@ -89,7 +104,7 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
         pub_msg.header.target_mode = IDACK;
         pub_msg.header.target      = msg->header.source;
         pub_msg.header.size        = sizeof(void *);
-        int value                  = (int)&L2P_StreamChannel;
+        int value                  = (int)&PipeBuffer_SetL2PMsg;
         memcpy(pub_msg.data, &value, sizeof(void *));
         Luos_SendMsg(service, &pub_msg);
     }
