@@ -73,7 +73,7 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     {
         // link the address of the streaming channel L2P
         memcpy(&pointer, data_msg->data, sizeof(void *));
-        PipeLink_SetStreamingChannel((void *)pointer);
+        PipeLink_SetDirectPipeSend((void *)pointer);
         return;
     }
 
