@@ -169,7 +169,7 @@ void DataManager_GetServiceMsg(service_t *service)
     // loop into services.
     msg_t *data_msg;
     search_result_t result;
-    int i = 0;
+    uint8_t i = 0;
 
     RTFilter_Reset(&result);
     while (i < result.result_nbr)
@@ -212,7 +212,13 @@ void DataManager_GetServiceMsg(service_t *service)
                 i++;
                 continue;
             }
-            if ((data_msg->header.cmd == END_DETECTION) || (data_msg->header.cmd == ASK_DETECTION))
+            if (data_msg->header.cmd == END_DETECTION)
+            {
+                PipeLink_Find(service);
+                i++;
+                continue;
+            }
+            if (data_msg->header.cmd == ASK_DETECTION)
             {
                 i++;
                 continue;
