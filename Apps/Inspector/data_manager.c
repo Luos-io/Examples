@@ -220,8 +220,8 @@ void DataManager_GetServiceMsg(service_t *service)
             // send any other message to pipe
             PipeLink_Send(service, data_msg->stream, (sizeof(uint8_t) * data_msg->header.size) + sizeof(header_t));
         }
+        i++;
     }
-    i++;
 }
 /******************************************************************************
  * @brief get if the inspector is started or stopped
