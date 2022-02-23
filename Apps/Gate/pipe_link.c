@@ -5,11 +5,25 @@
  ******************************************************************************/
 #include "pipe_link.h"
 #include "streaming.h"
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
 
-short pipe_id                             = 0;
-streaming_channel_t *pipeStreamingChannel = 0;
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+uint16_t pipe_id = 0;
 void (*PipeDirectPutSample)(uint8_t *data, uint16_t size);
 
+/*******************************************************************************
+ * Function
+ ******************************************************************************/
+
+/******************************************************************************
+ * @brief send  message to the connected pipe
+ * @param service pointer, data to send, size of data to send
+ * @return None
+ ******************************************************************************/
 void PipeLink_Send(service_t *service, void *data, uint32_t size)
 {
     LUOS_ASSERT(pipe_id > 0);
@@ -32,8 +46,12 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
         Luos_SendMsg(service, &msg);
     }
 }
-
-short PipeLink_Find(service_t *service)
+/******************************************************************************
+ * @brief find a pipe and get its id
+ * @param service pointer
+ * @return pipe_id
+ ******************************************************************************/
+uint16_t PipeLink_Find(service_t *service)
 {
     search_result_t result;
     uint8_t localhost = false;
@@ -80,7 +98,11 @@ short PipeLink_Find(service_t *service)
     }
     return pipe_id;
 }
-
+/******************************************************************************
+ * @brief reset the connection of pipe
+ * @param service pointer, msg received
+ * @return None
+ ******************************************************************************/
 void PipeLink_Reset(service_t *service)
 {
     LUOS_ASSERT(pipe_id > 0);
@@ -91,13 +113,21 @@ void PipeLink_Reset(service_t *service)
     msg.header.size        = 0;
     Luos_SendMsg(service, &msg);
 }
-
+/******************************************************************************
+ * @brief set fonction to direct send in buffer if pipe is in localhost
+ * @param streaming channel of pipe
+ * @return None
+ ******************************************************************************/
 void PipeLink_SetDirectPipeSend(void *PipeSend)
 {
     PipeDirectPutSample = PipeSend;
 }
-
-short PipeLink_GetId(void)
+/******************************************************************************
+ * @brief get id from pipe
+ * @param None
+ * @return pipe_id
+ ******************************************************************************/
+uint16_t PipeLink_GetId(void)
 {
     return pipe_id;
 }

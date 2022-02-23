@@ -5,8 +5,6 @@
  ******************************************************************************/
 #include "pipe_link.h"
 #include "streaming.h"
-#include <stdio.h>
-#include <string.h>
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -14,8 +12,8 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-uint16_t pipe_id                          = 0;
-streaming_channel_t *pipeStreamingChannel = 0;
+uint16_t pipe_id = 0;
+void (*PipeDirectPutSample)(uint8_t *data, uint16_t size);
 
 /*******************************************************************************
  * Function
@@ -32,8 +30,8 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     msg_t msg;
     msg.header.target      = pipe_id;
     msg.header.cmd         = SET_CMD;
-    msg.header.target_mode = ID;
-    if (pipeStreamingChannel == 0)
+    msg.header.target_mode = IDACK;
+    if (PipeDirectPutSample == 0)
     {
         // We are not using localhost send the entire data trough the Luos network
         Luos_SendData(service, &msg, data, size);
@@ -41,18 +39,13 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
     else
     {
         // We have a localhost pipe
-        // Add a delimiter to separate messages
-        char delimiter[4];
-        memcpy(delimiter, "~~~~", 4);
-        Stream_PutSample(pipeStreamingChannel, delimiter, 4);
-        //  Copy the data directly into the local streaming channel without passing by Luos.
-        Stream_PutSample(pipeStreamingChannel, data, size);
+        // Copy the data directly into the local streaming channel without passing by Luos.
+        PipeDirectPutSample(data, size);
         // Send a void set_cmd to strat data transmission on pipe.
         msg.header.size = 0;
         Luos_SendMsg(service, &msg);
     }
 }
-
 /******************************************************************************
  * @brief find a pipe and get its id
  * @param service pointer
@@ -90,7 +83,6 @@ uint16_t PipeLink_Find(service_t *service)
         while (Luos_SendMsg(service, &msg) != SUCCEED)
             ;
 
-        // Check if pipe is localhost
         if (localhost)
         {
             // This is a localhost pipe
@@ -106,7 +98,6 @@ uint16_t PipeLink_Find(service_t *service)
     }
     return pipe_id;
 }
-
 /******************************************************************************
  * @brief reset the connection of pipe
  * @param service pointer, msg received
@@ -122,17 +113,15 @@ void PipeLink_Reset(service_t *service)
     msg.header.size        = 0;
     Luos_SendMsg(service, &msg);
 }
-
 /******************************************************************************
- * @brief set the streaming channel if pipe is in localhost
+ * @brief set fonction to direct send in buffer if pipe is in localhost
  * @param streaming channel of pipe
  * @return None
  ******************************************************************************/
-void PipeLink_SetStreamingChannel(void *streamingChannel)
+void PipeLink_SetDirectPipeSend(void *PipeSend)
 {
-    pipeStreamingChannel = streamingChannel;
+    PipeDirectPutSample = PipeSend;
 }
-
 /******************************************************************************
  * @brief get id from pipe
  * @param None
