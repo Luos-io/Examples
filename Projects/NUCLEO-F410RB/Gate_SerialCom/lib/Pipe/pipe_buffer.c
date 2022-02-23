@@ -32,8 +32,7 @@ void PipeBuffer_SetL2PMsg(uint8_t *data, uint16_t size)
     streaming_channel_t *StreamChannel = get_L2P_StreamChannel();
     SerialProtocol_t SerialProtocol    = {SERIAL_HEADER, 0, SERIAL_FOOTER};
 
-    SerialProtocol.Size = ((size>>8) & 0x00FF);
-    SerialProtocol.Size |= ((size<<8) & 0xFF00);
+    SerialProtocol.Size = size;
     Stream_PutSample(StreamChannel, &SerialProtocol, 3);
     Stream_PutSample(StreamChannel, data, size);
     Stream_PutSample(StreamChannel, &SerialProtocol.Footer, 1);
@@ -59,20 +58,20 @@ uint8_t PipeBuffer_GetP2LMsg(uint16_t *size)
                 SizeUntilEnd = Stream_GetAvailableSampleNBUntilEndBuffer(StreamChannel);
                 if (SizeUntilEnd > 1)
                 {
-                    *size = (uint16_t)(*((uint8_t *)(StreamChannel->sample_ptr + 1)) << 8);
+                    *size = (uint16_t)(*((uint8_t *)(StreamChannel->sample_ptr + 1)));
                 }
                 else
                 {
-                    *size = (uint16_t)(*((uint8_t *)(StreamChannel->ring_buffer)) << 8);
+                    *size = (uint16_t)(*((uint8_t *)(StreamChannel->ring_buffer)));
                 }
 
                 if (SizeUntilEnd > 2)
                 {
-                    *size |= (uint16_t)(*((uint8_t *)(StreamChannel->sample_ptr + 2)));
+                    *size |= (uint16_t)(*((uint8_t *)(StreamChannel->sample_ptr + 2)) << 8);
                 }
                 else
                 {
-                    *size |= (uint16_t)(*((uint8_t *)(StreamChannel->ring_buffer)));
+                    *size |= (uint16_t)(*((uint8_t *)(StreamChannel->ring_buffer)) << 8);
                 }
                 if (TotalSize > *size)
                 {

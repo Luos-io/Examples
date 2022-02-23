@@ -73,8 +73,7 @@ static void Pipe_MsgHandler(service_t *service, msg_t *msg)
             if (L2P_CompleteMsg == true)
             {
                 L2P_CompleteMsg     = false;
-                SerialProtocol.Size = ((msg->header.size >> 8) & 0x00FF);
-                SerialProtocol.Size |= ((msg->header.size << 8) & 0xFF00);
+                SerialProtocol.Size = msg->header.size;
                 Stream_PutSample(&L2P_StreamChannel, &SerialProtocol, 3);
             }
             if (Luos_ReceiveStreaming(service, msg, &L2P_StreamChannel) == SUCCEED)
