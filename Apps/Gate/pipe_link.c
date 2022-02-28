@@ -34,7 +34,24 @@ void PipeLink_Send(service_t *service, void *data, uint32_t size)
 
 short PipeLink_Find(service_t *service)
 {
-    pipe_id = RoutingTB_IDFromType(PIPE_TYPE);
+    search_result_t result;
+    uint8_t localhost = false;
+    // search a pipe type in localhost
+    RTFilter_Node(RTFilter_Type(RTFilter_Reset(&result), PIPE_TYPE), RoutingTB_NodeIDFromID(service->ll_service->id));
+
+    if (result.result_nbr > 0)
+    {
+        // we found a pipe in the same node
+        localhost = true;
+    }
+    else
+    {
+        // pipe is not in the same node
+        RTFilter_Type(RTFilter_Reset(&result), PIPE_TYPE);
+    }
+    // keep pipe_id
+    pipe_id = result.result_table[0]->id;
+
     if (pipe_id > 0)
     {
         // We find one, ask it to auto-update at 1000Hz
@@ -47,8 +64,7 @@ short PipeLink_Find(service_t *service)
         while (Luos_SendMsg(service, &msg) != SUCCEED)
             ;
 
-        // Check if pipe is localhost
-        if (RoutingTB_NodeIDFromID(pipe_id) == RoutingTB_NodeIDFromID(service->ll_service->id))
+        if (localhost)
         {
             // This is a localhost pipe
             // Ask for a Streaming channel

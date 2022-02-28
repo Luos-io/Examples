@@ -30,14 +30,17 @@ uint8_t assert_buf_size[MAX_ASSERT_NUMBER] = {0};
  ******************************************************************************/
 void DataManager_SendRoutingTB(service_t *service)
 {
+    search_result_t result;
     uint8_t data[MAX_RTB_ENTRY * sizeof(routing_table_t)] = {0};
+
+    RTFilter_Service(RTFilter_Reset(&result), service);
     // store the address of the RoutingTB
     routing_table_t *routing_table = RoutingTB_Get();
     msg_t msg;
     msg.header.protocol    = 0;
     msg.header.target      = DEFAULTID;
     msg.header.target_mode = ID;
-    msg.header.source      = RoutingTB_IDFromService(service);
+    msg.header.source      = result.result_table[0]->id;
     msg.header.cmd         = RTB;
     msg.header.size        = RoutingTB_GetLastEntry() * sizeof(routing_table_t);
 
@@ -165,61 +168,60 @@ void DataManager_GetServiceMsg(service_t *service)
 {
     // loop into services.
     msg_t *data_msg;
+    search_result_t result;
     int i = 0;
-    while (RoutingTB_GetMode(i) != CLEAR)
+
+    RTFilter_Reset(&result);
+    while (i < result.result_nbr)
     {
-        // check all services in routing table
-        if (RoutingTB_GetMode(i) == SERVICE && RoutingTB_GetServiceID(i))
+        // pull available messages
+        if (Luos_ReadFromService(service, result.result_table[i]->id, &data_msg) == SUCCEED)
         {
-            // pull available messages
-            if (Luos_ReadFromService(service, RoutingTB_GetServiceID(i), &data_msg) == SUCCEED)
+            // drop the messages that are destined to pipe
+            if (data_msg->header.target == PipeLink_GetId())
             {
-                // drop the messages that are destined to pipe
-                if (data_msg->header.target == PipeLink_GetId())
-                {
-                    i++;
-                    continue;
-                }
-                // Check if this is a message from pipe
-                if (data_msg->header.source == PipeLink_GetId())
-                {
-                    // treat message from pipe
-                    DataManager_GetPipeMsg(service, data_msg);
-                    i++;
-                    continue;
-                }
-                // check if this is an assert
-                if ((data_msg->header.cmd == ASSERT) && (data_msg->header.size > 0))
-                {
-                    if (assert_num >= MAX_ASSERT_NUMBER)
-                    {
-                        // if we reached the maximum number of asserts delete the older and keep the newer
-                        for (uint8_t j = 1; j < MAX_ASSERT_NUMBER; j++)
-                        {
-                            memcpy(&assert_buf[j - 1][0], &assert_buf[j][0], assert_buf_size[j]);
-                            assert_buf_size[j - 1] = assert_buf_size[j];
-                        }
-                        assert_num--;
-                    }
-                    // save the assert message to the assert messages buffer
-                    memcpy(&assert_buf[assert_num][0], data_msg->stream, sizeof(header_t) + data_msg->header.size);
-                    // store the size of this message
-                    assert_buf_size[assert_num] = sizeof(header_t) + data_msg->header.size;
-                    assert_num++;
-                    i++;
-                    continue;
-                }
-                if ((data_msg->header.cmd == END_DETECTION) || (data_msg->header.cmd == ASK_DETECTION))
-                {
-                    i++;
-                    continue;
-                }
-                // send any other message to pipe
-                PipeLink_Send(service, data_msg->stream, (sizeof(uint8_t) * data_msg->header.size) + sizeof(header_t));
+                i++;
+                continue;
             }
+            // Check if this is a message from pipe
+            if (data_msg->header.source == PipeLink_GetId())
+            {
+                // treat message from pipe
+                DataManager_GetPipeMsg(service, data_msg);
+                i++;
+                continue;
+            }
+            // check if this is an assert
+            if ((data_msg->header.cmd == ASSERT) && (data_msg->header.size > 0))
+            {
+                if (assert_num >= MAX_ASSERT_NUMBER)
+                {
+                    // if we reached the maximum number of asserts delete the older and keep the newer
+                    for (uint8_t j = 1; j < MAX_ASSERT_NUMBER; j++)
+                    {
+                        memcpy(&assert_buf[j - 1][0], &assert_buf[j][0], assert_buf_size[j]);
+                        assert_buf_size[j - 1] = assert_buf_size[j];
+                    }
+                    assert_num--;
+                }
+                // save the assert message to the assert messages buffer
+                memcpy(&assert_buf[assert_num][0], data_msg->stream, sizeof(header_t) + data_msg->header.size);
+                // store the size of this message
+                assert_buf_size[assert_num] = sizeof(header_t) + data_msg->header.size;
+                assert_num++;
+                i++;
+                continue;
+            }
+            if ((data_msg->header.cmd == END_DETECTION) || (data_msg->header.cmd == ASK_DETECTION))
+            {
+                i++;
+                continue;
+            }
+            // send any other message to pipe
+            PipeLink_Send(service, data_msg->stream, (sizeof(uint8_t) * data_msg->header.size) + sizeof(header_t));
         }
-        i++;
     }
+    i++;
 }
 /******************************************************************************
  * @brief get if the inspector is started or stopped

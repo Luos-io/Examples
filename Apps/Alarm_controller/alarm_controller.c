@@ -10,7 +10,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DETECTION_LATENCY 52
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -31,10 +30,9 @@ static void AlarmController_MsgHandler(service_t *service, msg_t *msg);
 void AlarmController_Init(void)
 {
     revision_t revision = {.major = 1, .minor = 0, .build = 0};
-    // By default this app running
-    control_app.flux = PLAY;
     // Create App
     app = Luos_CreateService(AlarmController_MsgHandler, ALARM_CONTROLLER_APP, "alarm_control", revision);
+    Luos_Detect(app);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -43,10 +41,10 @@ void AlarmController_Init(void)
  ******************************************************************************/
 void AlarmController_Loop(void)
 {
-    static uint8_t blink           = 0;
-    static uint8_t blink_nb        = BLINK_NUMBER * 2;
-    static uint32_t last_blink     = 0;
-    static uint32_t last_detection = 0;
+    static uint8_t blink       = 0;
+    static uint8_t blink_nb    = BLINK_NUMBER * 2;
+    static uint32_t last_blink = 0;
+    search_result_t result;
 
     // ********** hot plug management ************
     // Check if we have done the first init or if service Id have changed
@@ -54,13 +52,16 @@ void AlarmController_Loop(void)
     {
         if (end_detection)
         {
+            // By default this app running
+            control_app.flux = PLAY;
             // Make services configurations
             // try to find a Fader app and set light transition time just to be fancy
-            int id = RoutingTB_IDFromType(COLOR_TYPE);
-            if (id > 0)
+            // we will use the first that we find
+            RTFilter_Type(RTFilter_Reset(&result), COLOR_TYPE);
+            if (result.result_nbr > 0)
             {
                 msg_t msg;
-                msg.header.target      = id;
+                msg.header.target      = result.result_table[0]->id;
                 msg.header.target_mode = IDACK;
                 time_luos_t time       = TimeOD_TimeFrom_s(0.5f);
                 TimeOD_TimeToMsg(&time, &msg);
@@ -74,13 +75,14 @@ void AlarmController_Loop(void)
             report.gyro  = 1;
             report.euler = 1;
             report.quat  = 0;
-            id           = RoutingTB_IDFromType(IMU_TYPE);
-            if (id > 0)
+
+            RTFilter_Type(RTFilter_Reset(&result), IMU_TYPE);
+            if (result.result_nbr > 0)
             {
                 msg_t msg;
                 msg.header.cmd         = PARAMETERS;
                 msg.header.size        = sizeof(imu_report_t);
-                msg.header.target      = id;
+                msg.header.target      = result.result_table[0]->id;
                 msg.header.target_mode = IDACK;
                 memcpy(msg.data, &report, sizeof(imu_report_t));
                 while (Luos_SendMsg(app, &msg) != SUCCEED)
@@ -105,14 +107,8 @@ void AlarmController_Loop(void)
     }
     else
     {
-        if (Luos_GetSystick() - last_detection >= DETECTION_LATENCY)
-        {
-            Luos_Detect(app);
-            last_detection = Luos_GetSystick();
-        }
         return;
     }
-    last_detection = Luos_GetSystick();
     // ********** non blocking blink ************
     if (control_app.flux == PLAY)
     {
@@ -121,12 +117,12 @@ void AlarmController_Loop(void)
             blink_state = 0;
             blink_nb    = 0;
             blink       = 0;
-            // try to reach a buzzer and drive it if there is
-            int id = RoutingTB_IDFromAlias("buzzer_mod");
-            if (id > 0)
+            // try to reach a buzzer and drive the first found if there is
+            RTFilter_Alias(RTFilter_Reset(&result), "buzzer_mod");
+            if (result.result_nbr > 0)
             {
                 msg_t msg;
-                msg.header.target      = id;
+                msg.header.target      = result.result_table[0]->id;
                 msg.header.target_mode = IDACK;
                 msg.header.cmd         = IO_STATE;
                 msg.header.size        = 1;
@@ -142,8 +138,8 @@ void AlarmController_Loop(void)
             if ((Luos_GetSystick() - last_blink) >= 500)
             {
                 blink_nb++;
-                int id = RoutingTB_IDFromType(COLOR_TYPE);
-                if (id > 0)
+                RTFilter_Type(RTFilter_Reset(&result), COLOR_TYPE);
+                if (result.result_nbr > 0)
                 {
                     // we get a led alarm, set color
                     color_t color;
@@ -156,7 +152,7 @@ void AlarmController_Loop(void)
                         color.r = LIGHT_INTENSITY;
                     }
                     msg_t msg;
-                    msg.header.target      = id;
+                    msg.header.target      = result.result_table[0]->id;
                     msg.header.target_mode = IDACK;
                     IlluminanceOD_ColorToMsg(&color, &msg);
                     while (Luos_SendMsg(app, &msg) != SUCCEED)
@@ -164,8 +160,8 @@ void AlarmController_Loop(void)
                         Luos_Loop();
                     }
                 }
-                id = RoutingTB_IDFromAlias("horn");
-                if (id > 0)
+                RTFilter_Alias(RTFilter_Reset(&result), "horn");
+                if (result.result_nbr > 0)
                 {
                     // we get a horn
                     uint8_t horn = 0;
@@ -175,7 +171,7 @@ void AlarmController_Loop(void)
                         horn = 1;
                     }
                     msg_t msg;
-                    msg.header.target      = id;
+                    msg.header.target      = result.result_table[0]->id;
                     msg.header.target_mode = IDACK;
                     msg.header.size        = sizeof(uint8_t);
                     msg.header.cmd         = IO_STATE;

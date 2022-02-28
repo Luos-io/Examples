@@ -41,6 +41,7 @@ void servo_init(uint32_t baud)
 {
     huart3.Init.BaudRate = baud;
     UART_SetConfig(&huart3);
+    LL_USART_DisableIT_RXNE(USART3); // Disable Rx IT
 
     HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
 }
@@ -724,7 +725,6 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
 
     *d++      = ~(uint8_t)checksum;
 #endif
-    LL_USART_DisableIT_RXNE(USART3); // Disable Rx IT
     HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_OUTPUT);
     // Delay was necessary when on solderless breadboard, but not on custom PCB (probably stray capacitance)
     // delayMicroseconds(10);
@@ -734,7 +734,6 @@ servo_error_t servo_send_instruction(uint8_t id, servo_instruction_t instruction
     // unnecessary, and without interrupts, flush won't know that the last byte has been transmitted
     // servo_serial->write(data, data_size-1);
     HAL_GPIO_WritePin(DXL_DIR_GPIO_Port, DXL_DIR_Pin, HALF_DUPLEX_DIRECTION_INPUT);
-    LL_USART_EnableIT_RXNE(USART3); // Enable Rx IT
 
     if (id != SERVO_BROADCAST_ID)
         error = servo_get_response(id, result, num_results, timeout_ms);

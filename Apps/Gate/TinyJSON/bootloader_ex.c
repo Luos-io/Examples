@@ -88,6 +88,7 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
         boot_msg.header.target_mode = NODEIDACK;      // msg send to the node
 
         uint32_t binary_size = 0;
+        json_t *item         = NULL;
         switch (type)
         {
             case BOOTLOADER_START:
@@ -124,7 +125,15 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
 
             case BOOTLOADER_BIN_CHUNK:
                 // find binary size in json header
-                binary_size = (uint8_t)json_getReal(json_getProperty(command_item, "size"));
+                item = (json_t *)json_getProperty(command_item, "size");
+                if (json_getType(item) == JSON_ARRAY)
+                {
+                    binary_size = (uint32_t)json_getInteger(json_getChild(item));
+                }
+                else
+                {
+                    binary_size = (uint32_t)json_getReal(item);
+                }
 
                 // send bin chunk command to bootloader app
                 boot_msg.data[0] = BOOTLOADER_BIN_CHUNK;
@@ -164,6 +173,16 @@ void Bootloader_JsonToLuos(service_t *service, char *bin_data, json_t const *boo
                 // send app saved command to bootloader app
                 boot_msg.header.size = sizeof(char);
                 boot_msg.data[0]     = BOOTLOADER_APP_SAVED;
+                Luos_SendMsg(service, &boot_msg);
+                break;
+
+            case BOOTLOADER_RESET:
+                // send rescue command to nodes
+                boot_msg.header.target      = BROADCAST_VAL;
+                boot_msg.header.target_mode = BROADCAST;
+                boot_msg.header.cmd         = BOOTLOADER_CMD; // bootloader cmd
+                boot_msg.header.size        = sizeof(char);
+                boot_msg.data[0]            = BOOTLOADER_RESET;
                 Luos_SendMsg(service, &boot_msg);
                 break;
 

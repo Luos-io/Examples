@@ -16,3 +16,6 @@
 */.vscode
 */.pio
 .github
+./Projects/l0/demo/**/src
+./Projects/l0/demo/**/inc
+./Projects/l0/demo/**/include
