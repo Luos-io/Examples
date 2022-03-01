@@ -73,7 +73,7 @@ void DataManager_GetPipeMsg(service_t *service, msg_t *data_msg)
     {
         // link the address of the streaming channel L2P
         memcpy(&pointer, data_msg->data, sizeof(void *));
-        PipeLink_SetStreamingChannel((void *)pointer);
+        PipeLink_SetDirectPipeSend((void *)pointer);
         return;
     }
 
@@ -169,7 +169,7 @@ void DataManager_GetServiceMsg(service_t *service)
     // loop into services.
     msg_t *data_msg;
     search_result_t result;
-    int i = 0;
+    uint8_t i = 0;
 
     RTFilter_Reset(&result);
     while (i < result.result_nbr)
@@ -212,7 +212,13 @@ void DataManager_GetServiceMsg(service_t *service)
                 i++;
                 continue;
             }
-            if ((data_msg->header.cmd == END_DETECTION) || (data_msg->header.cmd == ASK_DETECTION))
+            if (data_msg->header.cmd == END_DETECTION)
+            {
+                PipeLink_Find(service);
+                i++;
+                continue;
+            }
+            if (data_msg->header.cmd == ASK_DETECTION)
             {
                 i++;
                 continue;
@@ -220,8 +226,8 @@ void DataManager_GetServiceMsg(service_t *service)
             // send any other message to pipe
             PipeLink_Send(service, data_msg->stream, (sizeof(uint8_t) * data_msg->header.size) + sizeof(header_t));
         }
+        i++;
     }
-    i++;
 }
 /******************************************************************************
  * @brief get if the inspector is started or stopped
