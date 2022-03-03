@@ -47,6 +47,9 @@
 #define MAX_SERVICE_NUMBER 2
 #define MAX_MSG_NB         5
 
+#define ARDUINO_PTPA_PIN 19
+#define ARDUINO_PTPB_PIN 7
+
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
 *******************************************************************************
