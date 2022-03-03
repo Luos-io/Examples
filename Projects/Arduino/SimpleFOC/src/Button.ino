@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include "motor.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -9,7 +10,6 @@ extern "C"
 
 #include <luos.h>
 #include "button.h"
-#include "motor.h"
 
 #ifdef __cplusplus
 }

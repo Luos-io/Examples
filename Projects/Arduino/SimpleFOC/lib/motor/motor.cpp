@@ -4,8 +4,10 @@
  * @author Luos
  * @version 0.0.0
  ******************************************************************************/
+using namespace std;
 #include <Arduino.h>
 #include "motor.h"
+#include <SimpleFOC.h>
 
 /*******************************************************************************
  * Definitions
@@ -13,6 +15,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+MagneticSensorSPI sensor = MagneticSensorSPI(AS5047_SPI, 10);
 
 /*******************************************************************************
  * Function
@@ -25,7 +28,11 @@ static void Motor_MsgHandler(service_t *service, msg_t *msg);
  ******************************************************************************/
 void Motor_Init(void)
 {
-    revision_t revision = {.major = 1, .minor = 0, .build = 0};
+    // initialize sensor
+    sensor.init();
+
+    // initialize service
+    revision_t revision = {1, 0, 0};
     Luos_CreateService(Motor_MsgHandler, MOTOR_TYPE, "FOC_motor", revision);
 }
 /******************************************************************************
