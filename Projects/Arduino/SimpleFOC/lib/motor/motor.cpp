@@ -22,6 +22,10 @@ MagneticSensorSPI sensor = MagneticSensorSPI(AS5047_SPI, 10);
 BLDCMotor motor       = BLDCMotor(14);
 BLDCDriver3PWM driver = BLDCDriver3PWM(9, 5, 6, 8);
 
+#define GEAR_RATE 10
+
+// angular prosition command
+float angle_command = 0.0f;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -57,7 +61,7 @@ void Motor_Init(void)
 
     // initialize service
     revision_t revision = {1, 0, 0};
-    Luos_CreateService(Motor_MsgHandler, MOTOR_TYPE, "FOC_motor", revision);
+    Luos_CreateService(Motor_MsgHandler, SERVO_MOTOR_TYPE, "FOC_motor", revision);
 }
 /******************************************************************************
  * @brief loop must be call in project loop
@@ -70,7 +74,7 @@ void Motor_Loop(void)
     // velocity, position or voltage (defined in motor.controller)
     // this function can be run at much lower frequency than loopFOC() function
     // You can also use motor.move() and set the motor.target in the code
-    motor.move(150.0f);
+    motor.move(AngularOD_PositionTo_rad(angle_command) * GEAR_RATE);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
@@ -80,4 +84,8 @@ void Motor_Loop(void)
  ******************************************************************************/
 static void Motor_MsgHandler(service_t *service, msg_t *msg)
 {
+    if ((msg->header.cmd == ANGULAR_POSITION))
+    {
+        AngularOD_PositionFromMsg((angular_position_t *)&angle_command, msg);
+    }
 }
