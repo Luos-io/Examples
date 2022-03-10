@@ -22,7 +22,6 @@ MagneticSensorSPI sensor = MagneticSensorSPI(AS5047_SPI, 10);
 BLDCMotor motor       = BLDCMotor(14);
 BLDCDriver3PWM driver = BLDCDriver3PWM(9, 5, 6, 8);
 
-float target_angle = 150;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -44,29 +43,15 @@ void Motor_Init(void)
     // initialize motor
     motor.linkSensor(&sensor);
     motor.linkDriver(&driver);
-    // set motion control loop to be used
-    motor.controller = MotionControlType::angle;
 
-    // velocity PI controller parameters
-    motor.PID_velocity.P = 0.2f;
-    motor.PID_velocity.I = 20;
-    motor.PID_velocity.D = 0;
-    // maximal voltage to be set to the motor
-    motor.voltage_limit = 6;
+    // currnet = resistance*voltage, so try to be well under 1Amp
+    motor.voltage_limit = 0.8; // [V]
 
-    // velocity low pass filtering time constant
-    // the lower the less filtered
-    motor.LPF_velocity.Tf = 0.01f;
+    // open loop control config
+    motor.controller = MotionControlType::velocity_openloop;
 
-    // angle P controller
-    motor.P_angle.P = 20;
-    // maximal velocity of the position control
-    motor.velocity_limit = 20;
-
-    // initialize motor
+    // init motor hardware
     motor.init();
-    // // align sensor and start FOC
-    motor.initFOC();
 
     // initialize service
     revision_t revision = {1, 0, 0};
@@ -79,14 +64,11 @@ void Motor_Init(void)
  ******************************************************************************/
 void Motor_Loop(void)
 {
-    // main FOC algorithm function
-    motor.loopFOC();
-
     // Motion control function
     // velocity, position or voltage (defined in motor.controller)
     // this function can be run at much lower frequency than loopFOC() function
     // You can also use motor.move() and set the motor.target in the code
-    motor.move(target_angle);
+    motor.move(15.0f);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
