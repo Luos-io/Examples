@@ -46,11 +46,11 @@ void Motor_Init(void)
     motor.linkDriver(&driver);
 
     // currnet = resistance*voltage, so try to be well under 1Amp
-    motor.voltage_limit  = 0.8; // [V]
-    motor.velocity_limit = 5.0; // [rad/s] cca 50rpm
+    motor.voltage_limit  = 0.8;  // [V]
+    motor.velocity_limit = 12.0; // [rad/s] cca 50rpm
 
     // open loop control config
-    motor.controller = MotionControlType::velocity_openloop;
+    motor.controller = MotionControlType::angle_openloop;
 
     // init motor hardware
     motor.init();
@@ -70,7 +70,7 @@ void Motor_Loop(void)
     // velocity, position or voltage (defined in motor.controller)
     // this function can be run at much lower frequency than loopFOC() function
     // You can also use motor.move() and set the motor.target in the code
-    motor.move(10.0f);
+    motor.move(150.0f);
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
