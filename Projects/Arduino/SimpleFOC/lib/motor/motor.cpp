@@ -10,6 +10,7 @@ using namespace std;
 #include <SimpleFOC.h>
 #include "SPI.h"
 
+#include "wiring_private.h"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -40,6 +41,10 @@ void Motor_Init(void)
 {
     // initialize sensor
     sensor.init(&SPI_FOC);
+
+    pinPeripheral(11, PIO_SERCOM);
+    pinPeripheral(12, PIO_SERCOM);
+    pinPeripheral(13, PIO_SERCOM);
 
     // initialize driver
     driver.voltage_power_supply = 12;
