@@ -9,11 +9,13 @@ using namespace std;
 #include "motor.h"
 #include <SimpleFOC.h>
 #include "SPI.h"
-
 #include "wiring_private.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define GEAR_RATE 10.0
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -23,9 +25,8 @@ MagneticSensorSPI sensor = MagneticSensorSPI(AS5047_SPI, 10);
 BLDCMotor motor       = BLDCMotor(14);
 BLDCDriver3PWM driver = BLDCDriver3PWM(9, 5, 6, 8);
 
-#define GEAR_RATE 10
-
 // angular prosition command
+float reduction     = GEAR_RATE;
 float angle_command = 0.0f;
 float angle_read    = 0.0f;
 /*******************************************************************************
@@ -106,11 +107,10 @@ void Motor_Loop(void)
     // velocity, position or voltage (defined in motor.controller)
     // this function can be run at much lower frequency than loopFOC() function
     // You can also use motor.move() and set the motor.target in the code
-    motor.move(AngularOD_PositionTo_rad(angle_command) * GEAR_RATE);
+    motor.move(AngularOD_PositionTo_rad(angle_command) * reduction);
 
     // update sensor position
-    // don't know why there is a *5.7 coef to get the right value
-    angle_read = sensor.getAngle() * 5.724417123;
+    angle_read = AngularOD_PositionFrom_rad(sensor.getAngle()) / reduction;
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
@@ -120,19 +120,27 @@ void Motor_Loop(void)
  ******************************************************************************/
 static void Motor_MsgHandler(service_t *service, msg_t *msg)
 {
-    if ((msg->header.cmd == ANGULAR_POSITION))
+    switch (msg->header.cmd)
     {
-        AngularOD_PositionFromMsg((angular_position_t *)&angle_command, msg);
-    }
+        case ANGULAR_POSITION:
+            AngularOD_PositionFromMsg((angular_position_t *)&angle_command, msg);
+            break;
 
-    if ((msg->header.cmd == GET_CMD))
-    {
-        // Report management
-        msg_t pub_msg;
-        pub_msg.header.target_mode = msg->header.target_mode;
-        pub_msg.header.target      = msg->header.source;
+        case GET_CMD:
+            // Report management
+            msg_t pub_msg;
+            pub_msg.header.target_mode = msg->header.target_mode;
+            pub_msg.header.target      = msg->header.source;
 
-        AngularOD_PositionToMsg((angular_position_t *)&angle_read, &pub_msg);
-        Luos_SendMsg(service, &pub_msg);
+            AngularOD_PositionToMsg((angular_position_t *)&angle_read, &pub_msg);
+            Luos_SendMsg(service, &pub_msg);
+            break;
+
+        case REDUCTION:
+            // set the motor reduction
+            memcpy((void *)&reduction, msg->data, sizeof(float));
+
+        default:
+            break;
     }
 }
