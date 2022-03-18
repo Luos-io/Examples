@@ -26,9 +26,11 @@ BLDCMotor motor       = BLDCMotor(14);
 BLDCDriver3PWM driver = BLDCDriver3PWM(9, 5, 6, 8);
 
 // angular prosition command
-float reduction     = GEAR_RATE;
-float angle_command = 0.0f;
-float angle_read    = 0.0f;
+float reduction       = GEAR_RATE;
+float angle_command   = 0.0f;
+float angle_read      = 0.0f;
+asserv_pid_t coef_pid = {0.2f, 20, 0};
+
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -66,9 +68,9 @@ void Motor_Init(void)
     // default parameters in defaults.h
 
     // velocity PI controller parameters
-    motor.PID_velocity.P = 0.2f;
-    motor.PID_velocity.I = 20;
-    motor.PID_velocity.D = 0;
+    motor.PID_velocity.P = coef_pid.p;
+    motor.PID_velocity.I = coef_pid.i;
+    motor.PID_velocity.D = coef_pid.d;
     // maximal voltage to be set to the motor
     motor.voltage_limit = 2.0;
 
@@ -139,6 +141,12 @@ static void Motor_MsgHandler(service_t *service, msg_t *msg)
         case REDUCTION:
             // set the motor reduction
             memcpy((void *)&reduction, msg->data, sizeof(float));
+
+        case PID:
+        {
+            // only position control is enable, we can save PID for positioning
+            PidOD_PidFromMsg(&coef_pid, msg);
+        }
 
         default:
             break;
