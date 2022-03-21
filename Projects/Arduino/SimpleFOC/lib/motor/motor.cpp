@@ -30,7 +30,7 @@ float reduction       = GEAR_RATE;
 float angle_command   = 0.0f;
 float angle_read      = 0.0f;
 asserv_pid_t coef_pid = {0.2f, 20, 0};
-
+float speed_limit     = 20.0;
 /*******************************************************************************
  * Function
  ******************************************************************************/
@@ -81,7 +81,7 @@ void Motor_Init(void)
     // angle P controller
     motor.P_angle.P = 20;
     // maximal velocity of the position control
-    motor.velocity_limit = 20.0;
+    motor.velocity_limit = speed_limit;
 
     // init motor hardware
     motor.init();
@@ -141,12 +141,17 @@ static void Motor_MsgHandler(service_t *service, msg_t *msg)
         case REDUCTION:
             // set the motor reduction
             memcpy((void *)&reduction, msg->data, sizeof(float));
+            break;
 
         case PID:
-        {
             // only position control is enable, we can save PID for positioning
             PidOD_PidFromMsg(&coef_pid, msg);
-        }
+            break;
+
+        case ANGULAR_SPEED_LIMIT:
+            // set the motor angular speed limit
+            AngularOD_SpeedFromMsg((angular_speed_t *)&speed_limit, msg);
+            break;
 
         default:
             break;
