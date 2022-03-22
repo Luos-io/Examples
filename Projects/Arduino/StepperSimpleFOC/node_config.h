@@ -50,6 +50,16 @@
 #define ARDUINO_PTPA_PIN 19
 #define ARDUINO_PTPB_PIN 7
 
+#define LUOS_TIMER_LOCK_ENABLE()                                                                                                    \
+    do                                                                                                                              \
+    {                                                                                                                               \
+        GCLK->CLKCTRL.reg = (uint16_t)(GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_TC4_TC5_Val) | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_CLKEN); \
+        PM->APBCMASK.reg |= PM_APBCMASK_TC4;                                                                                        \
+    } while (0U)
+#define LUOS_TIMER              TC4
+#define LUOS_TIMER_IRQ          TC4_IRQn
+#define LUOS_TIMER_IRQHANDLER() TC4_Handler()
+
 /*******************************************************************************
  * LUOS HAL LIBRARY DEFINITION
 *******************************************************************************

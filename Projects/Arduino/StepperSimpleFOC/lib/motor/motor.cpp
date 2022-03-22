@@ -19,11 +19,9 @@ using namespace std;
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-SPIClass SPI_FOC(&sercom1, 12, 13, 11, SPI_PAD_0_SCK_1, SERCOM_RX_PAD_3);
-MagneticSensorSPI sensor = MagneticSensorSPI(AS5047_SPI, 10);
 
-BLDCMotor motor       = BLDCMotor(14);
-BLDCDriver3PWM driver = BLDCDriver3PWM(9, 5, 6, 8);
+StepperDriver4PWM driver = StepperDriver4PWM(5, 6, 9, 10);
+StepperMotor motor       = StepperMotor(50);
 
 // angular prosition command
 float reduction       = GEAR_RATE;
@@ -42,51 +40,31 @@ static void Motor_MsgHandler(service_t *service, msg_t *msg);
  ******************************************************************************/
 void Motor_Init(void)
 {
-    // initialize sensor
-    sensor.init(&SPI_FOC);
 
-    pinPeripheral(11, PIO_SERCOM);
-    pinPeripheral(12, PIO_SERCOM);
-    pinPeripheral(13, PIO_SERCOM);
+    driver.pwm_frequency = NOT_SET;
 
-    // initialize driver
     driver.voltage_power_supply = 12;
+    // limit the maximal dc voltage the driver can set
+    // as a protection measure for the low-resistance motors
+    // this value is fixed on startup
+    driver.voltage_limit = 6;
     driver.init();
-
-    // initialize motor
-    motor.linkSensor(&sensor);
+    // link the motor and the driver
     motor.linkDriver(&driver);
 
-    // choose FOC modulation (optional)
-    motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
-
-    // set motion control loop to be used
-    motor.controller = MotionControlType::angle;
-    // motor.controller = MotionControlType::velocity;
-
-    // contoller configuration
-    // default parameters in defaults.h
-
-    // velocity PI controller parameters
-    motor.PID_velocity.P = coef_pid.p;
-    motor.PID_velocity.I = coef_pid.i;
-    motor.PID_velocity.D = coef_pid.d;
-    // maximal voltage to be set to the motor
-    motor.voltage_limit = 2.0;
-
-    // velocity low pass filtering time constant
-    // the lower the less filtered
-    motor.LPF_velocity.Tf = 0.01f;
-
-    // angle P controller
-    motor.P_angle.P = 20;
-    // maximal velocity of the position control
-    motor.velocity_limit = speed_limit;
+    // limiting motor movements
+    // limit the voltage to be set to the motor
+    // start very low for high resistance motors
+    // currnet = resistance*voltage, so try to be well under 1Amp
+    motor.voltage_limit = 3.0; // [V]
+    // limit/set the velocity of the transition in between
+    // target angles
+    motor.velocity_limit = 5; // [rad/s] cca 50rpm
+    // open loop control config
+    motor.controller = MotionControlType::angle_openloop;
 
     // init motor hardware
     motor.init();
-    // align sensor and start FOC
-    motor.initFOC();
 
     // initialize service
     revision_t revision = {1, 0, 0};
@@ -99,20 +77,12 @@ void Motor_Init(void)
  ******************************************************************************/
 void Motor_Loop(void)
 {
-    // main FOC algorithm function
-    // the faster you run this function the better
-    // Arduino UNO loop  ~1kHz
-    // Bluepill loop ~10kHz
-    motor.loopFOC();
 
     // Motion control function
     // velocity, position or voltage (defined in motor.controller)
     // this function can be run at much lower frequency than loopFOC() function
     // You can also use motor.move() and set the motor.target in the code
     motor.move(AngularOD_PositionTo_rad(angle_command) * reduction);
-
-    // update sensor position
-    angle_read = AngularOD_PositionFrom_rad(sensor.getAngle()) / reduction;
 }
 /******************************************************************************
  * @brief Msg Handler call back when a msg receive for this service
