@@ -43,11 +43,11 @@ void Motor_Init(void)
 
     driver.pwm_frequency = NOT_SET;
 
-    driver.voltage_power_supply = 12;
+    driver.voltage_power_supply = 16;
     // limit the maximal dc voltage the driver can set
     // as a protection measure for the low-resistance motors
     // this value is fixed on startup
-    driver.voltage_limit = 6;
+    driver.voltage_limit = 12;
     driver.init();
     // link the motor and the driver
     motor.linkDriver(&driver);
@@ -56,10 +56,10 @@ void Motor_Init(void)
     // limit the voltage to be set to the motor
     // start very low for high resistance motors
     // currnet = resistance*voltage, so try to be well under 1Amp
-    motor.voltage_limit = 3.0; // [V]
+    motor.voltage_limit = 6.0; // [V]
     // limit/set the velocity of the transition in between
     // target angles
-    motor.velocity_limit = 5; // [rad/s] cca 50rpm
+    motor.velocity_limit = 20; // [rad/s] cca 50rpm
     // open loop control config
     motor.controller = MotionControlType::angle_openloop;
 
